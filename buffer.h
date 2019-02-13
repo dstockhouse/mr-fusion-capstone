@@ -14,16 +14,17 @@
  *
 \***************************************************************************/
 
-#define FIFO_LEN (16384)
+#define BYTE_BUFFER_LEN (16384)
 
 typedef struct {
-	int size;
-	int start;
+	int length;
 	int end;
-	unsigned char buffer[FIFO_LEN];
+	unsigned char buffer[BYTE_BUFFER_LEN];
 } BYTE_BUFFER;
 
-int FIFOAdd(BYTE_BUFFER *fifo, unsigned char data);
+int BufferAdd(BYTE_BUFFER *buf, unsigned char data);
 
-int FIFOAddArray(BYTE_BUFFER *fifo, unsigned char *data, int length);
+int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int length);
+
+int BufferRemove(BYTE_BUFFER *buf, int numToRemove);
 
