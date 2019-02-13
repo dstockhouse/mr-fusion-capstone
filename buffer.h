@@ -28,3 +28,5 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int length);
 
 int BufferRemove(BYTE_BUFFER *buf, int numToRemove);
 
+int BufferClear(BYTE_BUFFER *buf);
+
