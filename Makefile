@@ -19,4 +19,4 @@ uarttest: $(OBJS) $(DEPS) uarttest.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	$(RM) $(OBJS) $(MAIN)
+	$(RM) $(OBJS) $(MAIN) buftest uarttest
