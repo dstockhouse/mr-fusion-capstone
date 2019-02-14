@@ -1,10 +1,10 @@
 /****************************************************************************\
  *
  * File:
- * 	fifo.h
+ * 	uart.h
  *
  * Description:
- * 	Header files and function headers for the FIFO module
+ * 	Header files and function headers for the UART interface
  *
  * Author:
  * 	David Stockhouse
@@ -15,17 +15,4 @@
 \***************************************************************************/
 
 #define UART_DEV "/dev/ttyUSB0"
-
-#define FIFO_LEN (16384)
-
-typedef struct {
-	int size;
-	int start;
-	int end;
-	unsigned char buffer[FIFO_LEN];
-} BYTE_FIFO;
-
-int FIFOAdd(BYTE_FIFO *fifo, unsigned char data) {
-
-}
 
