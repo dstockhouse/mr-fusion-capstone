@@ -17,14 +17,20 @@
 
 #include "buffer.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+
 
 /**** Function BufferAdd ****
  *
  * Adds a value to a BYTE_BUFFER instance
  *
  * Arguments: 
- * 	buf      - Pointer to BYTE_BUFFER instance to empty
- * 	data     - Single byte to add to array
+ * 	buf  - Pointer to BYTE_BUFFER instance to modify
+ * 	data - Single byte to add to array
  *
  * Return value:
  * 	Returns number of elements added (1 or 0)
@@ -41,8 +47,8 @@ int BufferAdd(BYTE_BUFFER *buf, unsigned char data) {
 	if(buf->length < BYTE_BUFFER_LEN - 1) {
 
 		// Increase length and put element at end of buffer
-		buf->length += 1;
 		buf->buffer[buf->length] = data;
+		buf->length += 1;
 
 		// Added one element
 		return 1;
@@ -60,9 +66,9 @@ int BufferAdd(BYTE_BUFFER *buf, unsigned char data) {
  * Adds a supplied array of values to a BYTE_BUFFER instance
  *
  * Arguments: 
- * 	buf      - Pointer to BYTE_BUFFER instance to empty
- * 	data     - Array containing data to add to array
- * 	numToAdd - Number of elements to remove from buffer
+ * 	buf      - Pointer to BYTE_BUFFER instance to modify
+ * 	data     - Array containing data to add to buf
+ * 	numToAdd - Number of elements to add to buffer
  *
  * Return value:
  * 	On success returns number of elements successfully added
@@ -96,7 +102,7 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
  * Removes a number of values from the start of a BYTE_BUFFER instance
  *
  * Arguments: 
- * 	buf         - Pointer to BYTE_BUFFER instance to empty
+ * 	buf         - Pointer to BYTE_BUFFER instance to modify
  * 	numToRemove - Number of elements to remove from buffer
  *
  * Return value:

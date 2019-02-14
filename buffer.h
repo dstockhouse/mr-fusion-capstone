@@ -14,6 +14,15 @@
  *
 \***************************************************************************/
 
+#ifndef __BUFFER_H
+#define __BUFFER_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+
 #define BYTE_BUFFER_LEN (16384)
 
 typedef struct {
@@ -28,5 +37,7 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int length);
 
 int BufferRemove(BYTE_BUFFER *buf, int numToRemove);
 
-int BufferClear(BYTE_BUFFER *buf);
+int BufferEmpty(BYTE_BUFFER *buf);
+
+#endif
 
