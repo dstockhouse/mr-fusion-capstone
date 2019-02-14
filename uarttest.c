@@ -51,10 +51,18 @@ int main(void) {
 
 	while(1) {
 
+		// Ping for new characters
 		numRead = pingUSBPoll(&dev);
 
 		// Print chars received in hex
 		for(i = 0; i < dev.inbuf.length; i++) {
+
+			// Search for packet start
+			if(dev.inbuf.buffer[i] == 0xfe) {
+				printf("\n\n\t");
+				col = 0;
+			}
+
 			printf("%02x", dev.inbuf.buffer[i]);
 			col++;
 			if(col % 2 == 0) {
@@ -64,7 +72,7 @@ int main(void) {
 				printf(" ");
 			}
 			if(col % 16 == 0) {
-				printf("\t");
+				printf("\n\t");
 			}
 		}
 		// pingUSBConsume(&dev, dev.inbuf.length);

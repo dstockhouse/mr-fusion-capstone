@@ -19,15 +19,21 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdarg.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
 #include <errno.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 
 /**** Function UARTInit ****
  *
- * Opens and initializes a UART device. Based on Derek Molloy's RPi book
+ * Opens and initializes a UART device. Based in part on Derek Molloy's RPi book
+ * and wiringPi serial library source
  *
  * Arguments: 
  * 	devName - String name of the file the UART device is at
@@ -40,7 +46,7 @@
 int UARTInit(char *devName, int baud) {
 
 	struct termios uartOptions;
-	int uart_fd, rc;
+	int uart_fd, ioctl_status, rc;
 
 	// Exit on error if invalid pointer
 	if(devName == NULL) {
@@ -79,10 +85,10 @@ int UARTInit(char *devName, int baud) {
 
 	// Push changed options to device (after flushing input and output)
 	rc = tcflush(uart_fd, TCIOFLUSH);
-	if(rc) {
-		perror("tcflush() failed for UART device");
-		return -4;
-	}
+ 	if(rc) {
+ 		perror("tcflush() failed for UART device");
+ 		return -4;
+ 	}
 
 	rc = tcsetattr(uart_fd, TCSANOW, &uartOptions);
 	if(rc) {
@@ -126,6 +132,7 @@ int UARTRead(int uart_fd, char *buf, int length) {
 
 	// Attempt to read from UART device at most length bytes
 	numRead = read(uart_fd, buf, length);
+	// printf("UARTRead: read %d chars\n", numRead);
 	if(numRead < 0 && errno != EWOULDBLOCK) {
 		perror("read() failed for UART device");
 		return -2;
@@ -202,7 +209,7 @@ int pingUSBInit(USB_RECV *dev) {
  */
 int pingUSBPoll(USB_RECV *dev) {
 
-	int numToRead, numRead;
+	int numToRead, numRead, rc, ioctl_status;
 	unsigned char *startBuf;
 
 	// Exit on error if invalid pointer
@@ -217,12 +224,22 @@ int pingUSBPoll(USB_RECV *dev) {
 		return -2;
 	}
 
+	// Check if UART data avail
+	rc = ioctl (dev->fd, FIONREAD, &ioctl_status);
+	if(rc) {
+		perror("UART: ioctl() failed");
+		return -1;
+	}
+	// printf("%d bytes avail...\n", ioctl_status);
+
 	// Calculate length and pointer to proper position in array
 	numToRead = BYTE_BUFFER_LEN - dev->inbuf.length;
 	startBuf = &(dev->inbuf.buffer[dev->inbuf.length]);
 
 	// Read without blocking from pingUSB UART device
 	numRead = UARTRead(dev->fd, startBuf, numToRead);
+
+	dev->inbuf.length += numRead;
 
 	// Return number successfully read (may be 0)
 	return numRead;
