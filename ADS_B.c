@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #define COM_PORT "/dev/TTYUSB0"
 
@@ -35,9 +36,12 @@ enum flags { LatLon = 0x0001, Altitude = 0x0002, Heading = 0x0004,
              Baro = 0x0100, Source_UAT = 0x8000 };
 
 typedef struct {
-    int messageID;
-    int payloadLength;
-    int CRCExtra;
+    uint8_t startFlg;
+    uint8_t length;
+    uint8_t sequence;
+    uint8_t sysID;
+    uint8_t component;
+    uint8_t messageID;
 } MsgHeader;
 
 typedef struct {
@@ -47,7 +51,7 @@ typedef struct {
     int32_t altitude; // Altitude in Meters *1E3
     uint16_t heading; // Course over ground in degrees *10E2
     uint16_t hor_velocity; // Horizontal Velocity (m/s) * 1E2
-    int ver_velocity; // Vertical Velocity (m/s) * 1E2
+    uint32_t ver_velocity; // Vertical Velocity (m/s) * 1E2
     uint16_t validFlags; // Flags
     uint16_t squawk; // Squawk code (0xFFFF = no code)
     uint8_t altitude_type; // Reference point for altitude
@@ -57,21 +61,36 @@ typedef struct {
 } MsgData246;
 
 typedef struct {
-    MsgHeader header;
-    MsgData data;
+    uint8_t checksumA;
+    uint8_t checksumB;
+} MsgFooter;
 
+typedef struct {
+    MsgHeader header;
+    MsgData246 data246;
+    MsgFooter;
 } Message246;
 /*
 * Function -> main()
 * retval -> 1 on success
 */
 int main(void) {
-    int conAttempts = 0; // connection Attemps (limit = 3)
-    int rv = 0; // Ret val from other functions
-    for (conAttempts = 0; (conAttempts < 3) && (rv != 1); conAttempts++) {
-        rv = connectPort(); // Attempt Connection to port
-    }
+    uint32_t rv = 0;
+    uint8_t* testHeader = "\xfe\x26\x28\x00\x00\xf6"; // just the header for now
+    uint8_t* testData = "\xFF\xEA\x00\x00\xC0\xE2\xA1\x14\x4B\x6B\xF9\xBC\x10\xCA\x00\x00\x00\x00\x00\x00\x00\x1F\x80\x00\x00\x00\x49\x43\x41\x52\x55\x53\x31\x00\x00\x0E\x01\x65\xDF";
+    uint8_t* testFooter = "\x4a\x39";
+    MsgHeader header;
+    MsgData246 data;
 
+    rv = parseHeader(testHeader, &header);
+    printf("Header\n");
+    printf("start flg: %d\n", header.startFlg);
+    printf("message ID: %d\n", header.messageID);
+    printf("lenght: %d\n", header.length);
+
+    rv = parseData(testData, &data);
+    printf("data\n");
+    printf("Callsign: %s", data.callsign);
 }
 
 /*
@@ -83,12 +102,61 @@ int connectPort(void){
 }
 
 /*
-* Function -> adsbParser
-* Purpose -> read through data and parse adsb messages
+* Function -> parseMessage
+* Purpose -> parse adsb messages of single message
 * Input -> single message binary
-* Output -> Pointer to struct of message field values
+* Output -> Pointer to struct of message field values,
+*           -1 on failure, and 0 on messages other than 246
 */
-int adsbParser(char* message) {
+int parseMessage(char* message) {
 
-    return 0;
+}
+
+/*
+* Function -> parseData
+* Purpose -> parse adsb data for a single message
+* Input -> single data binary
+* Output -> Pointer to struct of data field values
+*/
+int parseData(uint8_t* data, MsgData246* msgData) {
+    int idx = 0;
+    msgData->ICAO_adress = ((data[0] << 0x18) | (data[1] << 0x10) |
+                            (data[2] << 0x08) | (data[3]));
+    msgData->lat = ((data[4] << 0x18) | (data[5] << 0x10) |
+                    (data[6] << 0x08) | (data[7]));
+    msgData->lon = ((data[8] << 0x18) | (data[9] << 0x10) |
+                    (data[10] << 0x08) | (data[11]));
+    msgData->altitude = ((data[12] << 0x18) | (data[13] << 0x10) |
+                         (data[14] << 0x08) | (data[15]));
+    msgData->heading = ((data[16] << 0x08) | (data[17]));
+    msgData->hor_velocity = ((data[18] << 0x08) | (data[19]));
+    msgData->ver_velocity = ((data[20] << 0x08) | (data[21]));
+    msgData->validFlags = ((data[22] << 0x08) | (data[23]));
+    msgData->squawk= ((data[24] << 0x08) | (data[25]));
+    msgData->altitude_type = data[26];
+    printf("%c\n%c\n", data[26], data[27]);
+    for (idx = 0;idx < 9;idx++) {
+        printf("%c\n", data[27+idx]);
+        msgData->callsign[idx] = data[27+idx];
+    }
+    msgData->emitter_type = data[36];
+    msgData->tslc = data[37];
+}
+
+
+int parseHeader(uint8_t* message, MsgHeader* header) {
+    // Find Message id
+    header->startFlg = message[0]; // Find start flag
+
+    // verify that start flag is expected value
+    if (header->startFlg == 0xfe) {
+        // parse the header
+        header->length = message[1];
+        header->sequence = message[2];
+        header->sysID = message[3];
+        header->component = message[4];
+        header->messageID = message[5];
+        return 1;
+    }
+    return -1;
 }
