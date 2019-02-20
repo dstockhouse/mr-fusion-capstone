@@ -4,13 +4,13 @@
  * 	buffer.h
  *
  * Description:
- * 	Header files and function headers for the buffer
+ * 	Function and type declarations and constants for buffer.c
  *
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 2/13/2019
+ * 	Last edited 2/20/2019
  *
 \***************************************************************************/
 
@@ -23,17 +23,19 @@
 #include <unistd.h>
 #include <termios.h>
 
+// 16K buffer, for now
 #define BYTE_BUFFER_LEN (16384)
 
 typedef struct {
 	int length;
+	int start;
 	int end;
-	unsigned char buffer[BYTE_BUFFER_LEN];
+	char buffer[BYTE_BUFFER_LEN];
 } BYTE_BUFFER;
 
-int BufferAdd(BYTE_BUFFER *buf, unsigned char data);
+int BufferAdd(BYTE_BUFFER *buf, char data);
 
-int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int length);
+int BufferAddArray(BYTE_BUFFER *buf, char *data, int length);
 
 int BufferRemove(BYTE_BUFFER *buf, int numToRemove);
 

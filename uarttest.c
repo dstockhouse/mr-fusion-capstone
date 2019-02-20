@@ -56,6 +56,7 @@ int main(void) {
 
 		// Ping for new characters
 		numRead = pingUSBPoll(&dev);
+		// printf("Read %d chars\n", numRead);
 
 		// Print chars received in hex
 		for(i = 0; i < dev.inbuf.length; i++) {

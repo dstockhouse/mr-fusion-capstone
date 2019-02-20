@@ -4,13 +4,17 @@
  * 	uart.c
  *
  * Description:
- * 	Interfaces with the ADS-B reciever connected to serial port through USB
+ * 	Interfaces with an ADS-B reciever connected to serial port through USB
  *
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
  * 	Last edited 2/13/2019
+ *
+ * Revision 0.2
+ * 	Included integration with logger
+ * 	Last edited 2/20/2019
  *
 \***************************************************************************/
 
@@ -34,8 +38,7 @@
 
 /**** Function UARTInit ****
  *
- * Opens and initializes a UART device. Based in part on Derek Molloy's RPi book
- * and wiringPi serial library source
+ * Opens and initializes a UART device. Based mostly on Derek Molloy's RPi book
  *
  * Arguments: 
  * 	devName - String name of the file the UART device is at
@@ -48,7 +51,7 @@
 int UARTInit(char *devName, int baud) {
 
 	struct termios uartOptions;
-	int uart_fd, ioctl_status, rc;
+	int uart_fd, rc;
 
 	// Exit on error if invalid pointer
 	if(devName == NULL) {
@@ -159,7 +162,13 @@ int UARTRead(int uart_fd, char *buf, int length) {
  */
 int UARTClose(int uart_fd) {
 
-	close(uart_fd);
+	int rc;
+
+	rc = close(uart_fd);
+	if(rc) {
+		perror("Couldn't close UART file");
+		return -1;
+	}
 
 	return 0;
 
@@ -215,7 +224,7 @@ int pingUSBInit(USB_RECV *dev) {
 int pingUSBPoll(USB_RECV *dev) {
 
 	int numToRead, numRead, rc, ioctl_status;
-	unsigned char *startBuf;
+	char *startBuf;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -230,7 +239,7 @@ int pingUSBPoll(USB_RECV *dev) {
 	}
 
 	// Check if UART data avail
-	rc = ioctl (dev->fd, FIONREAD, &ioctl_status);
+	rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
 	if(rc) {
 		perror("UART: ioctl() failed");
 		return -1;
@@ -243,6 +252,9 @@ int pingUSBPoll(USB_RECV *dev) {
 
 	// Read without blocking from pingUSB UART device
 	numRead = UARTRead(dev->fd, startBuf, numToRead);
+
+	// Log newly read data to file
+	LogUpdate(&(dev->logFile), startBuf, numRead);
 
 	dev->inbuf.length += numRead;
 

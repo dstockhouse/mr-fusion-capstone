@@ -41,8 +41,8 @@ int main(void) {
 	int i;
 
 	BYTE_BUFFER testbuf;
-	unsigned char testval = 200;
-	unsigned char data[DATA_LEN];
+	char testval = 200;
+	char data[DATA_LEN];
 
 	// Fill data array
 	for(i = 0; i < DATA_LEN; i++) {

@@ -41,7 +41,6 @@ int main(void) {
 	int i, rc;
 
 	LOG_FILE testlog;
-	char testval = 200;
 	char data[DATA_LEN];
 
 	rc = LogInit(&testlog, "logdirtest", "test", 1);

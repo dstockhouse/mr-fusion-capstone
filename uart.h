@@ -4,13 +4,17 @@
  * 	uart.h
  *
  * Description:
- * 	Header files and function headers for the UART interface
+ * 	Function and type declarations and constants for uart.c
  *
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
  * 	Last edited 2/13/2019
+ *
+ * Revision 0.2
+ * 	Included integration with logger
+ * 	Last edited 2/20/2019
  *
 \***************************************************************************/
 

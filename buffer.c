@@ -4,14 +4,14 @@
  * 	buffer.c
  *
  * Description:
- * 	Buffer struct for storing bytes from an input serial port and handlers
- * 	for managing the buf
+ * 	Queue-like buffer for storing data that is read in any order but 
+ * 	added and removed in FIFO order
  *
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 2/13/2019
+ * 	Last edited 2/20/2019
  *
 \***************************************************************************/
 
@@ -36,7 +36,7 @@
  * 	Returns number of elements added (1 or 0)
  *      If buf is NULL returns -1
  */
-int BufferAdd(BYTE_BUFFER *buf, unsigned char data) {
+int BufferAdd(BYTE_BUFFER *buf, char data) {
 
 	// Exit if buffer pointer invalid
 	if(buf == NULL) {
@@ -58,7 +58,7 @@ int BufferAdd(BYTE_BUFFER *buf, unsigned char data) {
 	// Didn't add anything
 	return 0;
 
-} // BufferAdd(BYTE_BUFFER *, unsigned char)
+} // BufferAdd(BYTE_BUFFER *, char)
 
 
 /**** Function BufferAddArray ****
@@ -74,7 +74,7 @@ int BufferAdd(BYTE_BUFFER *buf, unsigned char data) {
  * 	On success returns number of elements successfully added
  *      If buf is NULL returns -1
  */
-int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
+int BufferAddArray(BYTE_BUFFER *buf, char *data, int numToAdd) {
 
 	int i, numAdded = 0;
 
@@ -94,7 +94,7 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
 	// Return number successfully added
 	return numAdded;
 
-} // BufferAddArray(BYTE_BUFFER *, unsigned char *, int)
+} // BufferAddArray(BYTE_BUFFER *, char *, int)
 
 
 /**** Function BufferRemove ****
