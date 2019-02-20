@@ -15,7 +15,9 @@
 \***************************************************************************/
 
 #include "uart.h"
+
 #include "buffer.h"
+#include "logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -185,6 +187,9 @@ int pingUSBInit(USB_RECV *dev) {
 	// Initialize the input buffer
 	BufferEmpty(&(dev->inbuf));
 
+	// Initialize log file
+	LogInit(&(dev->logFile), "SampleData", "ADS_B", 1);
+
 	dev->fd = UARTInit(USB_RECV_DEV, USB_RECV_BAUD);
 	if(dev->fd < 0) {
 		printf("Couldn't initialize pingUSB receiver\n");
@@ -264,6 +269,9 @@ int pingUSBDestroy(USB_RECV *dev) {
 	if(dev == NULL) {
 		return -1;
 	}
+
+	// Close log file
+	LogClose(&(dev->logFile));
 
 	// Close UART fd associated with device
 	UARTClose(dev->fd);

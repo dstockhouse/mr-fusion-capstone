@@ -18,6 +18,7 @@
 #define __UART_H
 
 #include "buffer.h"
+#include "logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +34,7 @@
 typedef struct {
 	int fd;
 	BYTE_BUFFER inbuf;
+	LOG_FILE logFile;
 } USB_RECV;
 
 int UARTInit(char *devName, int baud);

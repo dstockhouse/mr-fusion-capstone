@@ -4,7 +4,7 @@
  * 	logger.h
  *
  * Description:
- * 	Function declarations and constants for logger.c
+ * 	Function and type declarations and constants for logger.c
  *
  * Author:
  * 	David Stockhouse
@@ -14,12 +14,15 @@
  *
 \***************************************************************************/
 
+#ifndef __LOGGER_H
+#define __LOGGER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
 
-// To use localtime_r
+// To use localtime_r from generateFilename
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE
 #endif
@@ -32,10 +35,16 @@ typedef struct {
 	char filename[LOG_FILENAME_LENGTH];
 	int filenameLength;
 	time_t timestamp;
-} LOG;
+} LOG_FILE;
 
 int generateFilename(char *buf, int bufSize, time_t *time, 
 		const char *dir, const char *pre, const char *ext);
 
-int initLog(const char *dir, const char *pre, int bin);
+int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin);
+
+int LogUpdate(LOG_FILE *logFile, const char *buf, int length);
+
+int LogClose(LOG_FILE *logFile);
+
+#endif
 

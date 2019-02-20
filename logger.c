@@ -4,7 +4,7 @@
  * 	logger.c
  *
  * Description:
- * 	Generates a filename from a timestamp and string arguments
+ * 	Sets up a binary or text log file timestamped at open
  *
  * Author:
  * 	David Stockhouse
@@ -55,7 +55,7 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 
 	// Create filename using date/time and input string
 	charsWritten = snprintf(buf, bufSize, 
-			"%s%s-%02d.%02d.%04d_%02d-%02d-%02d.%s",
+			"%s/%s-%02d.%02d.%04d_%02d-%02d-%02d.%s",
 			dir, pre,
 			currentTime.tm_mon + 1,
 			currentTime.tm_mday,
@@ -71,43 +71,41 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 } // generateFilename(char *, int, time_t, char *, char *, char *)
 
 
-/**** Function initLog ****
+/**** Function LogInit ****
  *
  * Creates a timestamp and log file
  *
  * Arguments:
- * 	dir - String name of the directory to create the log file in
- * 	pre - String prefix to use for the log file
- * 	bin - Boolean, 1 if binary log file, 0 if plaintext log file
+ * 	logFile - Pointer to LOG object to initialize
+ * 	dir     - String name of the directory to create the log file in
+ * 	pre     - String prefix to use for the log file
+ * 	bin     - Boolean, 1 if binary log file, 0 if plaintext log file
  *
  * Return value:
- * 	On success, returns a file descriptor for the log file
+ * 	On success, returns 0, otherwise returns a negative number
  */
-int initLog(const char *dir, const char *pre, int bin) {
+int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
 
-	int rc, log_fd;
-
-	char logFilename[LOG_FILENAME_LENGTH];
-	int logFilenameLength;
+	int rc;
 	char ext[8];
 
-	time_t time_var;
-
 	// Get seconds since epoch
-	time_var = time(NULL);
+	logFile->timestamp = time(NULL);
 
 	// Find extension (bin or log)
 	if(bin) {
 		strcpy(ext, "bin");
+		logFile->bin = 1;
 	} else {
 		strcpy(ext, "log");
+		logFile->bin = 0;
 	}
 
 	// Generate filename for the log file
-	logFilenameLength = generateFilename(logFilename, LOG_FILENAME_LENGTH, 
-			&time_var, dir, pre, ext);
-	if(logFilenameLength < LOG_FILENAME_LENGTH) {
-		printf("Filename too long, using %s\n", logFilename);
+	logFile->filenameLength = generateFilename(logFile->filename, LOG_FILENAME_LENGTH, 
+			&(logFile->timestamp), dir, pre, ext);
+	if(logFile->filenameLength = LOG_FILENAME_LENGTH) {
+		printf("Filename too long, using %s\n", logFile->filename);
 	}
 
 	// Create directory if it doesn't exist
@@ -115,19 +113,76 @@ int initLog(const char *dir, const char *pre, int bin) {
 	if(rc && errno != EEXIST) {
 		perror("Failed to create directory");
 		printf(dir);
-		return 1;
+		return -1;
 	}
 
-	// Open and create the log file
-	log_fd = open(logFilename, O_WRONLY | O_CREAT | O_EXCL, 0666);
+	// Open and create the log file, appending if it already exists
+	logFile->fd = open(logFile->filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
 	if(rc) {
 		perror("Failed to create log file");
-		printf(logFilename);
-		return 2;
+		printf("%s\n", logFile->filename);
+		return -2;
+	}
+	printf("Created log file %s\n", logFile->filename);
+
+	// Return 0 on success
+	return 0;
+
+} // LogInit(LOG_FILE *, char *, char *, int)
+
+
+/**** Function LogUpdate ****
+ *
+ * Writes a set of bytes to an existing log file
+ *
+ * Arguments:
+ * 	logFile - Pointer to LOG object to update
+ * 	buf     - Bytes to write to log
+ * 	length  - Number of bytes in the buffer to the log file
+ *
+ * Return value:
+ * 	On success, returns number of characters written, otherwise returns a 
+ * 	negative number
+ */
+int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
+
+	int rc;
+
+	// Write data to file
+	rc = write(logFile->fd, buf, length);
+	if(rc) {
+		perror("Failed to write to log file");
+		return -1;
 	}
 
-	// Return the open file descriptor
-	return log_fd;
+	// Return bytes written
+	return rc;
 
-} // initLog(char *, char *, int)
+} // LogUpdate(LOG_FILE *, char *, int)
+
+
+/**** Function LogClose ****
+ *
+ * Closes an open log file
+ *
+ * Arguments:
+ * 	None
+ *
+ * Return value:
+ * 	On success, returns 0, otherwise returns a negative number
+ */
+int LogClose(LOG_FILE *logFile) {
+
+	int rc;
+
+	rc = close(logFile->fd);
+	if(rc) {
+		perror("Failed to close log file");
+		return -1;
+	}
+
+	// Return 0 on success
+	return 0;
+
+} // LogClose(LOG_FILE *)
 
