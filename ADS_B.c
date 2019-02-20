@@ -1,4 +1,3 @@
-
 /****************************************************************************\
  *
  * File:
@@ -68,8 +67,9 @@ typedef struct {
 typedef struct {
     MsgHeader header;
     MsgData246 data246;
-    MsgFooter;
+    MsgFooter footer;
 } Message246;
+
 /*
 * Function -> main()
 * retval -> 1 on success
@@ -82,33 +82,47 @@ int main(void) {
     MsgHeader header;
     MsgData246 data;
 
-    rv = parseHeader(testHeader, &header);
-    printf("Header\n");
-    printf("start flg: %d\n", header.startFlg);
-    printf("message ID: %d\n", header.messageID);
-    printf("lenght: %d\n", header.length);
+    // Enough room for all data in the file
+#define FILE_SIZE 221184
+    char fileData[FILE_SIZE];
+    int rc, i = 0;
 
-    rv = parseData(testData, &data);
-    printf("data\n");
-    printf("Callsign: %s", data.callsign);
-}
+    // Binary file descriptor
+    FILE *file;
 
-/*
-* Function -> connectPort
-* retval -> 1 on success, 0 on failure
-*/
-int connectPort(void){
+    // 'b' not strictly necessary, but won't hurt
+    file = fopen("SampleData/ADSB_log.bin", "rb");
 
-}
+    // Read binary data into local variable
+    rc = fread(fileData, 1, FILE_SIZE, file);
+    printf("Read %d bytes\n\n", rc);
 
-/*
-* Function -> parseMessage
-* Purpose -> parse adsb messages of single message
-* Input -> single message binary
-* Output -> Pointer to struct of message field values,
-*           -1 on failure, and 0 on messages other than 246
-*/
-int parseMessage(char* message) {
+    while(i < rc) {
+
+	    // Seek to next start of packet
+	    for( ; i < rc - 38 && fileData[i] != 0xfe && fileData[i + 1] != 0x26 && fileData[i + 5] != 246; i++) ;
+
+	    if(i >= rc - 38) {
+		    return 0;
+	    }
+
+	    printf("Parsing index %d (0x%x)\n", i, i);
+
+	    // rv = parseHeader(testHeader, &header);
+	    rv = parseHeader(&(fileData[i]), &header);
+	    printf("Header\n");
+	    printf("start flg: %d\n", header.startFlg);
+	    printf("message ID: %d\n", header.messageID);
+	    printf("lenght: %d\n", header.length);
+
+	    // rv = parseData(testData, &data);
+	    rv = parseData(&(fileData[i + 6]), &data);
+	    printf("data\n");
+	    printf("Callsign: %s\n\n", data.callsign);
+
+	    i++;
+
+    }
 
 }
 
@@ -120,6 +134,13 @@ int parseMessage(char* message) {
 */
 int parseData(uint8_t* data, MsgData246* msgData) {
     int idx = 0;
+
+    printf("Data is:\n");
+    for(idx = 0; idx < 38; idx++) {
+	    printf("%3d (%02d): (0x%x)\n", idx + 6, idx, data[idx]);
+    }
+    printf("\n");
+
     msgData->ICAO_adress = ((data[0] << 0x18) | (data[1] << 0x10) |
                             (data[2] << 0x08) | (data[3]));
     msgData->lat = ((data[4] << 0x18) | (data[5] << 0x10) |
@@ -134,9 +155,9 @@ int parseData(uint8_t* data, MsgData246* msgData) {
     msgData->validFlags = ((data[22] << 0x08) | (data[23]));
     msgData->squawk= ((data[24] << 0x08) | (data[25]));
     msgData->altitude_type = data[26];
-    printf("%c\n%c\n", data[26], data[27]);
+    // printf("%c\n%c\n", data[26], data[27]);
     for (idx = 0;idx < 9;idx++) {
-        printf("%c\n", data[27+idx]);
+        printf("idx: %d, d: (0x%x)\n", idx, data[27+idx]);
         msgData->callsign[idx] = data[27+idx];
     }
     msgData->emitter_type = data[36];
@@ -145,6 +166,13 @@ int parseData(uint8_t* data, MsgData246* msgData) {
 
 
 int parseHeader(uint8_t* message, MsgHeader* header) {
+	int idx;
+    printf("Data is:\n");
+    for(idx = 0; idx < 6; idx++) {
+	    printf("%3d: (0x%x)\n", idx, message[idx]);
+    }
+    printf("\n");
+
     // Find Message id
     header->startFlg = message[0]; // Find start flag
 
