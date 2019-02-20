@@ -36,7 +36,7 @@
  */
 int main(void) {
 
-	int i, rc, numRead, col = 0;
+	int i, rc, numRead, col = 0, loopCount = 0;
 
 	USB_RECV dev;
 
@@ -50,6 +50,9 @@ int main(void) {
 	printf("Entering polling loop (ctrl-c to exit)\n\n\t");
 
 	while(1) {
+
+		// printf("L: %d\n", loopCount);
+		loopCount++;
 
 		// Ping for new characters
 		numRead = pingUSBPoll(&dev);
@@ -79,7 +82,7 @@ int main(void) {
 
 		BufferRemove(&(dev.inbuf), dev.inbuf.length);
 
-		usleep(10000);
+		usleep(100000);
 	}
 
 	printf("\n\nTest complete\n\n");
