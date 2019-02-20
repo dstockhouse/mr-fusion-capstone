@@ -41,8 +41,8 @@ int main(void) {
 	int i, rc;
 
 	LOG_FILE testlog;
-	unsigned char testval = 200;
-	unsigned char data[DATA_LEN];
+	char testval = 200;
+	char data[DATA_LEN];
 
 	rc = LogInit(&testlog, "logdirtest", "test", 1);
 	if(rc) {
@@ -56,6 +56,10 @@ int main(void) {
 		data[i] = i;
 	}
 
+	printf("Writing to log...\n");
+	LogUpdate(&testlog, data, DATA_LEN);
+
+	printf("Closing log file...\n");
 	LogClose(&testlog);
 
 	printf("\n\nTest complete\n\n");

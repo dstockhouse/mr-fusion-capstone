@@ -104,7 +104,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
 	// Generate filename for the log file
 	logFile->filenameLength = generateFilename(logFile->filename, LOG_FILENAME_LENGTH, 
 			&(logFile->timestamp), dir, pre, ext);
-	if(logFile->filenameLength = LOG_FILENAME_LENGTH) {
+	if(logFile->filenameLength == LOG_FILENAME_LENGTH) {
 		printf("Filename too long, using %s\n", logFile->filename);
 	}
 
@@ -118,7 +118,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
 
 	// Open and create the log file, appending if it already exists
 	logFile->fd = open(logFile->filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
-	if(rc) {
+	if(logFile->fd < 0) {
 		perror("Failed to create log file");
 		printf("%s\n", logFile->filename);
 		return -2;
@@ -150,7 +150,7 @@ int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
 
 	// Write data to file
 	rc = write(logFile->fd, buf, length);
-	if(rc) {
+	if(rc < 0) {
 		perror("Failed to write to log file");
 		return -1;
 	}
