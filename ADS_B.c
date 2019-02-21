@@ -47,7 +47,7 @@ int main(void) {
 	FILE *file;
 
 	// 'b' not strictly necessary, but won't hurt
-	file = fopen("SampleData/ADSB_log.bin", "rb");
+	file = fopen("SampleData/ADS_B-02.20.2019_18-15-14.bin", "rb");
 
 	// Read binary data into local variable
 	rc = fread(fileData, 1, FILE_SIZE, file);
@@ -56,7 +56,7 @@ int main(void) {
 	while(i < rc) {
 
 		// Seek to next start of packet
-		for( ; i < rc - 38 && fileData[i] != 0xfe && fileData[i + 1] != 0x26 && fileData[i + 5] != 246; i++) ;
+		for( ; i < rc - 38 && (fileData[i] != 0xfe || fileData[i + 1] != 0x26 || fileData[i + 5] != 246); i++) ;
 
 		if(i >= rc - 38) {
 			return 0;
@@ -73,8 +73,14 @@ int main(void) {
 
 		// rv = parseData(testData, &data);
 		rv = parseData(&(fileData[i + 6]), &data);
-		printf("data\n");
 		printf("Callsign: %s\n\n", data.callsign);
+		printf("Lat:      %.3f deg N\n", data.lat * 1e-7);
+		printf("Lon:      %.3f deg W\n", data.lon * 1e-7);
+		printf("Altitude: %.3f m\n", data.altitude * 1e-3);
+		printf("Heading:  %.3f deg\n", data.heading * 1e-2);
+		printf("V_horiz:  %.3f m/s\n", data.hor_velocity * 1e-2);
+		printf("V_vert:   %.3f m/s\n", data.ver_velocity * 1e-2);
+		printf("\nTime since last communication: %d s\n\n", data.tslc);
 
 		i++;
 
@@ -91,11 +97,11 @@ int main(void) {
 int parseData(uint8_t* data, MsgData246* msgData) {
 	int idx = 0;
 
-	printf("Data is:\n");
+	// printf("Data is:\n");
 	for(idx = 0; idx < 38; idx++) {
-		printf("%3d (%02d): (0x%x)\n", idx + 6, idx, data[idx]);
+		// printf("%3d (%02d): (0x%x)\n", idx + 6, idx, data[idx]);
 	}
-	printf("\n");
+	// printf("\n");
 
 	msgData->ICAO_adress = ((data[0] << 0x18) | (data[1] << 0x10) |
 			(data[2] << 0x08) | (data[3]));
@@ -119,10 +125,11 @@ int parseData(uint8_t* data, MsgData246* msgData) {
 	// printf("%c\n%c\n", data[26], data[27]);
 
 	for (idx = 0;idx < 9;idx++) {
-		printf("idx: %d, d: (0x%x): ", idx, data[27+idx]);
+		// printf("idx: %d, d: (0x%x): ", idx, data[27+idx]);
 		if(data[27+idx] >= 0x20 && data[27+idx] < 0xff) {
-			printf("%c\n", data[27+idx]);
+			// printf("%c", data[27+idx]);
 		}
+		// printf("\n");
 		msgData->callsign[idx] = data[27+idx];
 	}
 
@@ -133,11 +140,11 @@ int parseData(uint8_t* data, MsgData246* msgData) {
 
 int parseHeader(uint8_t* message, MsgHeader* header) {
 	int idx;
-	printf("Data is:\n");
+	// printf("Data is:\n");
 	for(idx = 0; idx < 6; idx++) {
-		printf("%3d: (0x%x)\n", idx, message[idx]);
+		// printf("%3d: (0x%x)\n", idx, message[idx]);
 	}
-	printf("\n");
+	// printf("\n");
 
 	// Find Message id
 	header->startFlg = message[0]; // Find start flag
