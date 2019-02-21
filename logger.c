@@ -148,6 +148,8 @@ int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
 
 	int rc;
 
+	// printf("In LU: attempting to read %d bytes from address %p\n", length, buf);
+
 	// Write data to file
 	rc = write(logFile->fd, buf, length);
 	if(rc < 0) {

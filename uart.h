@@ -33,7 +33,7 @@
 
 #define USB_RECV_DEV "/dev/ttyUSB0"
 // #define USB_RECV_DEV "/dev/ttyACM0"
-#define USB_RECV_BAUD 115200
+#define USB_RECV_BAUD 57600
 
 typedef struct {
 	int fd;

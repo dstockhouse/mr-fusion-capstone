@@ -42,7 +42,7 @@
  *
  * Arguments: 
  * 	devName - String name of the file the UART device is at
- * 	baud    - Requested baud rate (for now must be 115200)
+ * 	baud    - Requested baud rate (for now must be either 115200 or 57600)
  *
  * Return value:
  * 	On success, returns file descriptor corresponding to UART device
@@ -58,7 +58,8 @@ int UARTInit(char *devName, int baud) {
 		return -1;
 	}
 
-	uart_fd = open(devName, O_RDWR | O_NOCTTY | O_NDELAY);
+	// uart_fd = open(devName, O_RDWR | O_NOCTTY | O_NDELAY);
+	uart_fd = open(devName, O_RDWR | O_NOCTTY);
 	if(uart_fd < 0) {
 		perror("open() failed for UART device");
 		return uart_fd;
@@ -74,6 +75,9 @@ int UARTInit(char *devName, int baud) {
 	switch(baud) {
 		case 115200:
 			uartOptions.c_cflag |= B115200;
+			break;
+		case 57600:
+			uartOptions.c_cflag |= B57600;
 			break;
 		default:
 			printf("Unexpected baud rate: %d\n", baud);
@@ -193,17 +197,17 @@ int pingUSBInit(USB_RECV *dev) {
 		return -1;
 	}
 
-	// Initialize the input buffer
-	BufferEmpty(&(dev->inbuf));
-
-	// Initialize log file
-	LogInit(&(dev->logFile), "SampleData", "ADS_B", 1);
-
 	dev->fd = UARTInit(USB_RECV_DEV, USB_RECV_BAUD);
 	if(dev->fd < 0) {
 		printf("Couldn't initialize pingUSB receiver\n");
 		return -1;
 	}
+
+	// Initialize the input buffer
+	BufferEmpty(&(dev->inbuf));
+
+	// Initialize log file
+	LogInit(&(dev->logFile), "SampleData", "ADS_B", 1);
 
 	return 0;
 
@@ -224,7 +228,7 @@ int pingUSBInit(USB_RECV *dev) {
 int pingUSBPoll(USB_RECV *dev) {
 
 	int numToRead, numRead, rc, ioctl_status;
-	char *startBuf;
+	char *startBuf, tempBuf[BYTE_BUFFER_LEN];
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -249,12 +253,21 @@ int pingUSBPoll(USB_RECV *dev) {
 	// Calculate length and pointer to proper position in array
 	numToRead = BYTE_BUFFER_LEN - dev->inbuf.length;
 	startBuf = &(dev->inbuf.buffer[dev->inbuf.length]);
+	// printf("Poll: startBuf is %p\n", startBuf);
+	startBuf[0] = 2;
+
+	// printf("Attempting to read %d bytes from uart device...\n", numToRead);
 
 	// Read without blocking from pingUSB UART device
 	numRead = UARTRead(dev->fd, startBuf, numToRead);
+	// numRead = UARTRead(dev->fd, tempBuf, numToRead);
+	// printf("\tRead %d\n", numRead);
 
 	// Log newly read data to file
 	LogUpdate(&(dev->logFile), startBuf, numRead);
+	// LogUpdate(&(dev->logFile), tempBuf, numRead);
+
+	// memcpy(&(dev->inbuf.buffer[dev->inbuf.length]), tempBuf, numRead);
 
 	dev->inbuf.length += numRead;
 
@@ -282,11 +295,11 @@ int pingUSBDestroy(USB_RECV *dev) {
 		return -1;
 	}
 
-	// Close log file
-	LogClose(&(dev->logFile));
-
 	// Close UART fd associated with device
 	UARTClose(dev->fd);
+
+	// Close log file
+	LogClose(&(dev->logFile));
 
 	// Return 0 on success
 	return 0;

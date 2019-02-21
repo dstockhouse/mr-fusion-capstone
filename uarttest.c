@@ -24,6 +24,8 @@
 #include <termios.h>
 
 
+#define NUM_BYTES 204800
+
 /**** Function main ****
  *
  * Test of the UART module functionality
@@ -37,6 +39,7 @@
 int main(void) {
 
 	int i, rc, numRead, col = 0, loopCount = 0;
+	int numBytes = 0;
 
 	USB_RECV dev;
 
@@ -49,7 +52,7 @@ int main(void) {
 	printf("Initializing receiver... %d\n", rc);
 	printf("Entering polling loop (ctrl-c to exit)\n\n\t");
 
-	while(1) {
+	while(numBytes < NUM_BYTES) {
 
 		// printf("L: %d\n", loopCount);
 		loopCount++;
@@ -57,6 +60,8 @@ int main(void) {
 		// Ping for new characters
 		numRead = pingUSBPoll(&dev);
 		// printf("Read %d chars\n", numRead);
+
+		numBytes += numRead;
 
 		// Print chars received in hex
 		for(i = 0; i < dev.inbuf.length; i++) {
@@ -83,7 +88,7 @@ int main(void) {
 
 		BufferRemove(&(dev.inbuf), dev.inbuf.length);
 
-		usleep(100000);
+		usleep(10000);
 	}
 
 	printf("\n\nTest complete\n\n");
