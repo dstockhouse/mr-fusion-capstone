@@ -12,7 +12,7 @@
  * Revision 0.1
  * 	Last edited 2/20/19
  *
- * Revision 0.1
+ * Revision 0.2
  * 	Split into source and header files
  * 	Last edited 2/20/19
  *
@@ -20,9 +20,13 @@
 
 #include "ADS_B.h"
 
+#include "buffer.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 
 
@@ -40,25 +44,29 @@ int main(void) {
 
 	// Enough room for all data in the file
 #define FILE_SIZE 221184
-	char fileData[FILE_SIZE];
+	unsigned char fileData[FILE_SIZE];
 	int rc, i = 0;
 
 	// Binary file descriptor
-	FILE *file;
+	int fd;
 
 	// 'b' not strictly necessary, but won't hurt
-	file = fopen("SampleData/ADS_B-02.20.2019_18-15-14.bin", "rb");
+	fd = open("SampleData/ADS_B-02.20.2019_18-15-14.bin", O_RDONLY);
 
 	// Read binary data into local variable
-	rc = fread(fileData, 1, FILE_SIZE, file);
+	rc = read(fd, fileData, FILE_SIZE);
 	printf("Read %d bytes\n\n", rc);
 
 	while(i < rc) {
 
 		// Seek to next start of packet
-		for( ; i < rc - 38 && (fileData[i] != 0xfe || fileData[i + 1] != 0x26 || fileData[i + 5] != 246); i++) ;
+		// for( ; i < rc - 38 && (fileData[i] != 0xfe || fileData[i + 1] != 0x26 || fileData[i + 5] != 246); i++) ;
+		for( ; i < rc - 38 && fileData[i] != 0xfe; i++) {
+			// printf("%d: 0x%x\n", i, fileData[i]);
+		}
 
 		if(i >= rc - 38) {
+			printf("Test complete\n");
 			return 0;
 		}
 
@@ -160,4 +168,33 @@ int parseHeader(uint8_t* message, MsgHeader* header) {
 		return 1;
 	}
 	return -1;
+}
+
+int parseBuffer(BYTE_BUFFER *buf, MsgHeader *header, MsgData246 *data) {
+
+	int i, rc;
+
+	while(i < buf->length) {
+
+		/********************************************************************** Finish *************/
+
+		for( ; i < buf->length - 38 && buf->buffer[i] != 0xfe; i++) {
+			// printf("%d: 0x%x\n", i, fileData[i]);
+		}
+
+		if(i >= buf->length - 38) {
+			printf("Test complete\n");
+			return 0;
+		}
+
+		rc = parseHeader(&(buf->buffer[i]), header);
+
+		rc = parseData(&(buf->buffer[i + 6]), data);
+
+		i++;
+
+	}
+
+	return 0;
+
 }
