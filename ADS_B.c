@@ -45,7 +45,7 @@ int main(void) {
 	// Enough room for all data in the file
 #define FILE_SIZE 221184
 	unsigned char fileData[FILE_SIZE];
-	int rc, i = 0;
+	int rc, i = 0, chk;
 
 	// Binary file descriptor
 	int fd;
@@ -89,6 +89,10 @@ int main(void) {
 		printf("V_horiz:  %.3f m/s\n", data.hor_velocity * 1e-2);
 		printf("V_vert:   %.3f m/s\n", data.ver_velocity * 1e-2);
 		printf("\nTime since last communication: %d s\n\n", data.tslc);
+
+		chk = fileData[i + 38] 
+
+		printf("Read checksum: %04x\n", fileData[i+38]);
 
 		i++;
 
