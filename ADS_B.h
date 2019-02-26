@@ -47,6 +47,7 @@ typedef struct {
 	int32_t lat; // Latitude in degrees*1E7
 	int32_t lon; // Longitude in degrees * 1E7
 	int32_t altitude; // Altitude in Meters *1E3
+	int32_t altitude_inv; // Altitude in Meters *1E3
 	uint16_t heading; // Course over ground in degrees *10E2
 	uint16_t hor_velocity; // Horizontal Velocity (m/s) * 1E2
 	uint32_t ver_velocity; // Vertical Velocity (m/s) * 1E2
@@ -69,7 +70,7 @@ typedef struct {
 	MsgFooter footer;
 } Message246;
 
-int parseData(uint8_t* data, MsgData246* msgData);
+int parseData(uint8_t* data, MsgData246* msgData, int verbose);
 
-int parseHeader(uint8_t* message, MsgHeader* header);
+int parseHeader(uint8_t* message, MsgHeader* header, int verbose);
 
