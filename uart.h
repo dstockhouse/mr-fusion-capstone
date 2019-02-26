@@ -51,6 +51,8 @@ int pingUSBInit(USB_RECV *dev);
 
 int pingUSBPoll(USB_RECV *dev);
 
+int pingUSBConsume(USB_RECV *dev, int num);
+
 int pingUSBDestroy(USB_RECV *dev);
 
 #endif

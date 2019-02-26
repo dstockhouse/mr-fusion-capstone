@@ -1,3 +1,5 @@
 *.o
+*.swp
+*.swo
 a.out
 /*test

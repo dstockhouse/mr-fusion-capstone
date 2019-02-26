@@ -69,6 +69,9 @@ int main(void) {
 
 		numBytes += numRead;
 
+
+		/* Uncomment to print out hex bytes as they are read *
+
 		// Print chars received in hex
 		for(i = 0; i < dev.inbuf.length; i++) {
 
@@ -90,12 +93,14 @@ int main(void) {
 				printf("\n\t");
 			}
 		}
+		*/
+
+
+		// Remove elements from input FIFO
 		// pingUSBConsume(&dev, dev.inbuf.length);
+		// BufferRemove(&(dev.inbuf), dev.inbuf.length);
 
-
-		BufferRemove(&(dev.inbuf), dev.inbuf.length);
-
-		usleep(10000);
+		usleep(1000);
 	}
 
 	printf("\n\nTest complete\n\n");
