@@ -1,5 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
+
 #define X25_INIT_CRC 0xffff
 #define X25_VALIDATE_CRC 0xf0b8
+#define CRC_EXTRA 184
 
 /**
  * @brief Accumulate the X.25 CRC by adding one char at a time.
@@ -41,6 +47,7 @@ uint16_t crc_calculate(const uint8_t *pBuffer, uint16_t length)
 	uint16_t crcTmp;
 	crc_init(&crcTmp);
 	while (length--) crc_accumulate(*pBuffer++, &crcTmp);
+	crc_accumulate(CRC_EXTRA, &crcTmp);
 	return crcTmp;
 }
 

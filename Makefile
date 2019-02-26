@@ -1,10 +1,10 @@
 CC=gcc
 CFLAGS=-g -Wall
 LIBS=
-DEPS=buffer.h logger.h uart.h
+DEPS=buffer.h logger.h uart.h ADS_B.h crc.h
 SRCS=$(DEPS:.h=.c)
 OBJS=$(SRCS:.c=.o)
-MAIN=adsbtest
+MAIN=test
 
 $(MAIN): $(OBJS) $(DEPS)
 	$(CC) $(CFLAGS) $(LIBS) -o $(MAIN) $(OBJS)
@@ -17,6 +17,9 @@ logtest: $(OBJS) $(DEPS) logtest.c
 
 uarttest: $(OBJS) $(DEPS) uarttest.c
 	$(CC) $(CFLAGS) -o $@ uarttest.c $(OBJS)
+
+adsbtest: $(OBJS) $(DEPS) adsbtest.c
+	$(CC) $(CFLAGS) -o $@ adsbtest.c $(OBJS)
 
 .c.o: $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
