@@ -4,7 +4,7 @@
  * 	ADS_B.c
  *
  * Description:
- *  Interfaces with the ADS-B reciever
+ * 	Interfaces with the ADS-B reciever
  *
  * Author:
  * 	Joseph Kroeker & David Stockhouse
@@ -14,7 +14,7 @@
  *
  * Revision 0.2
  * 	Split into source and header files
- * 	Last edited 2/20/19
+ * 	Last edited 2/25/19
  *
 \***************************************************************************/
 

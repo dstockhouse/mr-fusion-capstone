@@ -277,6 +277,30 @@ int pingUSBPoll(USB_RECV *dev) {
 } // pingUSBPoll(USB_RECV *)
 
 
+/**** Function pingUSBConsume ****
+ *
+ * Consumes bytes in the UART input buffer
+ *
+ * Arguments: 
+ * 	dev - Pointer to USB_RECV instance to modify
+ * 	num - Number of elements to consume
+ *
+ * Return value:
+ * 	On success, returns the number of elements consumed
+ *	On failure, returns a negative number 
+ */
+int pingUSBConsume(USB_RECV *dev, int num) {
+
+	// Exit on error if invalid pointer
+	if(dev == NULL) {
+		return -1;
+	}
+
+	return BufferRemove(&(dev->inbuf), num);
+
+} // pingUSBConsume(USB_RECV *)
+
+
 /**** Function pingUSBDestroy ****
  *
  * De-initializes a pingUSB UART receiver instance

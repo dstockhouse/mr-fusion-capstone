@@ -13,6 +13,10 @@
  * Revision 0.1
  * 	Last edited 2/20/2019
  *
+ * Revision 0.2
+ * 	Changed return value of BufferRemove
+ * 	Last edited 2/25/2019
+ *
 \***************************************************************************/
 
 #include "buffer.h"
@@ -106,15 +110,19 @@ int BufferAddArray(BYTE_BUFFER *buf, char *data, int numToAdd) {
  * 	numToRemove - Number of elements to remove from buffer
  *
  * Return value:
- * 	On success returns new buffer length
+ * 	On success returns number of elements removed
  *      If buf is NULL returns -1
  */
 int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
 
-	int i;
+	int i, numRemoved;
 
 	if(buf == NULL) {
 		return -1;
+	}
+
+	if(numToRemove <= 0) {
+		return 0;
 	}
 
 	// Always remove from index 0 and shift elements backward
@@ -122,11 +130,14 @@ int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
 		buf->buffer[i] = buf->buffer[i + numToRemove];
 	}
 
+	// Calculate number of elements that were actually removed
+	numRemoved = buf->length - i;
+
 	// Update new length with the number of elements removed (how far the loop made it)
 	buf->length = i;
 
-	// Return new length of buffer
-	return buf->length;
+	// Return number actually removed
+	return numRemoved;
 
 } // BufferRemove(BYTE_BUFFER *, int)
 
