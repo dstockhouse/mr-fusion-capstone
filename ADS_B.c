@@ -90,9 +90,9 @@ int main(void) {
 		printf("V_vert:   %.3f m/s\n", data.ver_velocity * 1e-2);
 		printf("\nTime since last communication: %d s\n\n", data.tslc);
 
-		chk = fileData[i + 38] 
+		// chk = fileData[i + 38] 
 
-		printf("Read checksum: %04x\n", fileData[i+38]);
+		// printf("Read checksum: %04x\n", fileData[i+38]);
 
 		i++;
 
