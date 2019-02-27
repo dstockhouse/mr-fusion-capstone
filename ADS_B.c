@@ -29,12 +29,14 @@
 #include <fcntl.h>
 #include <string.h>
 
+// #define DEFAULT_LOG_FILE "SampleData/putty_2019.02.26_103032.log"
 
 /*
  * Function -> main()
  * retval -> 1 on success
  */
-int main(void) {
+/*
+int main(int argc, char **argv) {
 	uint32_t rv = 0;
 	// uint8_t* testHeader = "\xfe\x26\x28\x00\x00\xf6"; // just the header for now
 	// uint8_t* testData = "\xFF\xEA\x00\x00\xC0\xE2\xA1\x14\x4B\x6B\xF9\xBC\x10\xCA\x00\x00\x00\x00\x00\x00\x00\x1F\x80\x00\x00\x00\x49\x43\x41\x52\x55\x53\x31\x00\x00\x0E\x01\x65\xDF";
@@ -50,8 +52,12 @@ int main(void) {
 	// Binary file descriptor
 	int fd;
 
-	// 'b' not strictly necessary, but won't hurt
-	fd = open("SampleData/ADS_B-02.20.2019_18-15-14.bin", O_RDONLY);
+
+	if(argc > 1) {
+		fd = open(argv[1], O_RDONLY);
+	} else {
+		fd = open("SampleData/ADS_B-02.20.2019_18-15-14.bin", O_RDONLY);
+	}
 
 	// Read binary data into local variable
 	rc = read(fd, fileData, FILE_SIZE);
@@ -106,6 +112,7 @@ int main(void) {
 	}
 
 }
+*/
 
 /*
  * Function -> parseData
