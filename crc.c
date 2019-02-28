@@ -1,11 +1,33 @@
+
+#include "crc.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <math.h>
 
-#define X25_INIT_CRC 0xffff
-#define X25_VALIDATE_CRC 0xf0b8
-#define CRC_EXTRA 184
+/*
+int main(void) {
+
+#define TEST_BUF_LEN 35
+
+	int i;
+	uint16_t crc;
+	uint8_t buf[TEST_BUF_LEN];
+
+	printf("buf:\n");
+	for(i = 0; i < TEST_BUF_LEN; i++) {
+		buf[i] = (uint8_t)rand();
+		printf("\t%02x\n", buf[i]);
+	}
+	printf("\n");
+
+	crc = crc_calculate(buf, TEST_BUF_LEN);
+	printf("crc: %04x\n", 
+
+}
+*/
 
 /**
  * @brief Accumulate the X.25 CRC by adding one char at a time.

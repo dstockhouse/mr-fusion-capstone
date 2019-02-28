@@ -9,6 +9,8 @@
 
 #define X25_INIT_CRC 0xffff
 #define X25_VALIDATE_CRC 0xf0b8
+#define CRC_EXTRA 184
+
 
 void crc_accumulate(uint8_t data, uint16_t *crcAccum);
 

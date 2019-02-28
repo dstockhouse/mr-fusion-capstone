@@ -43,17 +43,19 @@ int main(int argc, char **argv) {
 	// Enough room for all data in the file
 #define FILE_SIZE 221184
 	unsigned char fileData[FILE_SIZE];
-	int rc, i = 0, chk;
+	char filename[512], parselog[512], parselogextra[512];
+	int rc, i = 0, chkRd, chkNew, packfd, improper=0, proper=0;
 
 	// Binary file descriptor
 	int fd;
 
 
 	if(argc > 1) {
-		fd = open(argv[1], O_RDONLY);
+		strcpy(filename, argv[1]);
 	} else {
-		fd = open("SampleData/ADS_B-02.20.2019_18-15-14.bin", O_RDONLY);
+		strcpy(filename, "SampleData/ADS_B-02.20.2019_18-15-14.bin");
 	}
+	fd = open(filename, O_RDONLY);
 
 	// Read binary data into local variable
 	rc = read(fd, fileData, FILE_SIZE);
@@ -63,19 +65,42 @@ int main(int argc, char **argv) {
 
 		// Seek to next start of packet
 		// for( ; i < rc - 38 && (fileData[i] != 0xfe || fileData[i + 1] != 0x26 || fileData[i + 5] != 246); i++) ;
-		for( ; i < rc - 38 && (fileData[i] != 0xfe || fileData[i + 1] != 0x26 || fileData[i + 5] != 246); i++) {
+		for( ; i < rc - 46 && (fileData[i] != 0xfe || fileData[i + 1] != 0x26 || fileData[i + 5] != 246); i++) {
 			// printf("%d: 0x%x\n", i, fileData[i]);
 		}
 
 		if(i >= rc - 38) {
-			printf("Test complete\n");
-			return 0;
+			break;
 		}
 
-		printf("Parsing index %d (0x%x)\n", i, i);
+// 		printf("Parsing index %d (0x%x)\n", i, i);
+
+		chkRd = fileData[i + 44] | (fileData[i + 45] << 8);
+		chkNew = crc_calculate(&(fileData[i+1]), 43);
+// 		printf("Read checksum: %04x\n", chkRd);
+// 		printf("Computed chks: %04x\n", chkNew);
+
+		if(chkRd != chkNew) {
+// 			printf("Failed checksum, skipping...\n\n");
+			i++;
+			improper++;
+			continue;
+		}
+// 		printf("Passed checksum, parsing...\n\n");
+		proper++;
+
+		// Log the packet at this index to its own file
+		sprintf(parselogextra, ".id%08x.pkt", i);
+		strcpy(parselog, filename);
+		strcat(parselog, parselogextra);
+		printf("Logging packet to file %s...\n", parselog);
+		packfd = open(parselog, O_WRONLY | O_CREAT);
+		write(packfd, &(fileData[i]), 46);
+		close(packfd);
+
 
 		// rv = parseHeader(testHeader, &header, 1);
-		rv = parseHeader(&(fileData[i]), &header, 1);
+		rv = parseHeader(&(fileData[i]), &header, 0);
 		// printf("Header\n");
 		// printf("start flg: %d\n", header.startFlg);
 		// printf("message ID: %d\n", header.messageID);
@@ -83,10 +108,8 @@ int main(int argc, char **argv) {
 		printf("Header:\n");
 		printHeader(&header);
 
-		printf("\n");
-
 		// rv = parseData(testData, &data);
-		rv = parseData(&(fileData[i + 6]), &data, 1);
+		rv = parseData(&(fileData[i + 6]), &data, 0);
 		// printf("Callsign: %s\n\n", data.callsign);
 		// printf("Lat:      %.3f deg N\n", data.lat * 1e-7);
 		// printf("Lon:      %.3f deg E\n", data.lon * 1e-7);
@@ -99,13 +122,11 @@ int main(int argc, char **argv) {
 		printf("Data:\n");
 		printData(&data);
 
-		chk = fileData[i + 38] | (fileData[i + 39] << 8);
-		printf("Read checksum: %04x\n", chk);
-		printf("Computed chks: %04x\n", crc_calculate(&(fileData[i+1]), 43));
-
 		i++;
 
 	}
+	printf("\n\nTest complete!\n\n");
+	printf("Found %d valid packets, %d invalid\n\n", proper, improper);
 
 }
 
