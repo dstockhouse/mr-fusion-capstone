@@ -17,6 +17,9 @@
 #ifndef __ADS_B_H
 #define __ADS_B_H
 
+#include "buffer.h"
+#include "logger.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -75,7 +78,17 @@ typedef struct {
 
 int parseData(uint8_t* data, MsgData246* msgData, int verbose);
 
+int printData(MsgData246 *data);
+
 int parseHeader(uint8_t* message, MsgHeader* header, int verbose);
+
+int printHeader(MsgHeader *header);
+
+int parseBuffer(BYTE_BUFFER *buf, MsgHeader *header, MsgData246 *data);
+
+int logDataRaw(LOG_FILE *logFile, uint8_t *data);
+
+int logDataParsed(LOG_FILE *logFile, MsgData246 *data);
 
 #endif
 

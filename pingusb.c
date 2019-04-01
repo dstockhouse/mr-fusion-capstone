@@ -159,65 +159,65 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 		return -1;
 	}
 
-	while(!valid) {
-		// Seek to next start of packet
-		for(i = 0; i < dev->inbuf.length - 46 && (dev->inbuf.buffer[i] != 0xfe || dev->inbuf.buffer[i + 1] != 0x26 || dev->inbuf.buffer[i + 5] != 246); i++) {
-			// printf("%d: 0x%x\n", i, dev->inbuf.buffer[i]);
-		}
+	printf("In pingUSBParse, %d bytes in buffer\n", dev->inbuf.length);
 
-		if(i >= dev->inbuf.length - 46) {
-			pingUSBConsume(dev, i);
-			return 0;
-		}
-
-		// 		printf("Parsing index %d (0x%x)\n", i, i);
-
-		chkRd = dev->inbuf.buffer[i + 44] | (dev->inbuf.buffer[i + 45] << 8);
-		chkNew = crc_calculate(&(dev->inbuf.buffer[i+1]), 43);
-		// 		printf("Read checksum: %04x\n", chkRd);
-		// 		printf("Computed chks: %04x\n", chkNew);
-
-		if(chkRd != chkNew) {
-			// 			printf("Failed checksum, skipping...\n\n");
-			i++;
-			improper++;
-		}
-		// 		printf("Passed checksum, parsing...\n\n");
-		proper++;
-
-		// Log the packet at this index to its own file
-		sprintf(parselogextra, ".id%08x.pkt", i);
-		strcpy(parselog, dev->logFile.filename);
-		strcat(parselog, parselogextra);
-		printf("Logging packet to file %s...\n", parselog);
-		packfd = open(parselog, O_WRONLY | O_CREAT);
-		write(packfd, &(dev->inbuf.buffer[i]), 46);
-		close(packfd);
-
-		// Initialize packet log files
-		LogInit(&packetLogFileRaw, "SampleData", "ADS_B_packet", 1);
-		LogInit(&packetLogFileParsed, "SampleData", "ADS_B_packet", 0);
-
-		rc = parseHeader(&(dev->inbuf.buffer[i]), &(dev->packetHeader), 0);
-		// printf("Header:\n");
-		// printHeader(&header);
-
-		rc = parseData(&(dev->inbuf.buffer[i + 6]), &(dev->packetData), 0);
-
-		logDataRaw(
-		logDataParsed
-
-		// printf("Data:\n");
-		// printData(&data);
-
-		i++;
-
-		pingUSBConsume(dev, i);
-
-		LogClose(&packetLogFileRaw);
-		LogClose(&packetLogFileParsed);
-
+	// Seek to next start of packet
+	for(i = 0; i < dev->inbuf.length - 46 && (dev->inbuf.buffer[i] != 0xfe || dev->inbuf.buffer[i + 1] != 0x26 || dev->inbuf.buffer[i + 5] != 246); i++) {
+		// printf("%d: 0x%x\n", i, dev->inbuf.buffer[i]);
 	}
+
+	if(i >= dev->inbuf.length - 46) {
+		printf("End of current buffer\n");
+		pingUSBConsume(dev, i);
+		return 1;
+	}
+
+	printf("Parsing index %d (0x%x)\n", i, i);
+
+	chkRd = dev->inbuf.buffer[i + 44] | (dev->inbuf.buffer[i + 45] << 8);
+	chkNew = crc_calculate(&(dev->inbuf.buffer[i+1]), 43);
+	printf("Read checksum: %04x\n", chkRd);
+	printf("Computed chks: %04x\n", chkNew);
+
+	if(chkRd != chkNew) {
+		// 			printf("Failed checksum, skipping...\n\n");
+		i++;
+		improper++;
+	}
+	printf("Passed checksum, parsing...\n\n");
+	proper++;
+
+	// Log the packet at this index to its own file
+	// sprintf(parselogextra, ".id%08x.pkt", i);
+	// strcpy(parselog, dev->logFile.filename);
+	// strcat(parselog, parselogextra);
+	// printf("Logging packet to file %s...\n", parselog);
+	// packfd = open(parselog, O_WRONLY | O_CREAT);
+	// write(packfd, &(dev->inbuf.buffer[i]), 46);
+	// close(packfd);
+
+	// Initialize packet log files
+	LogInit(&packetLogFileRaw, "SampleData", "ADS_B_packet", 1);
+	LogInit(&packetLogFileParsed, "SampleData", "ADS_B_packet", 0);
+
+	rc = parseHeader(&(dev->inbuf.buffer[i]), &(dev->packetHeader), 0);
+	// printf("Header:\n");
+	// printHeader(&header);
+
+	rc = parseData(&(dev->inbuf.buffer[i + 6]), &(dev->packetData), 0);
+
+	logDataRaw(&packetLogFileRaw, &(dev->inbuf.buffer[i + 6]));
+	logDataParsed(&packetLogFileParsed, &(dev->packetData));
+
+	// printf("Data:\n");
+	// printData(&data);
+
+	i++;
+
+	pingUSBConsume(dev, i);
+
+	LogClose(&packetLogFileRaw);
+	LogClose(&packetLogFileParsed);
 
 	return 0;
 

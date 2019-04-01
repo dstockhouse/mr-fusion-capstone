@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 	if(argc == 1) {
 
 		// Assume UART operation
-		printf("Initializing receiver... %d\n", rc);
+		printf("Initializing receiver... \n");
 		rc = pingUSBInit(&dev);
 		if(rc) {
 			printf("Couldn't intialize device: %d\n", rc);
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	printf("Entering polling loop (ctrl-c to exit)\n\n\t");
+	printf("Entering polling loop to collect %d bytes (ctrl-c to exit)\n\n\t", NUM_BYTES);
 
 	while(numBytes < NUM_BYTES) {
 
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
 		// Poll for new characters from UART
 		numRead = pingUSBPoll(&dev);
-		// printf("Read %d chars\n", numRead);
+		printf("Read %d chars\n", numRead);
 
 		numBytes += numRead;
 
@@ -110,13 +110,14 @@ int main(int argc, char **argv) {
 		// BufferRemove(&(dev.inbuf), dev.inbuf.length);
 
 		// Parse all data in USB receiver
-		while(pingUSBParse(&dev)) {
+		printf("Parsing data...\n");
+		while(!pingUSBParse(&dev)) {
 
 			printData(&(dev.packetData));
 
 		}
 
-		usleep(1000);
+		usleep(1000000);
 	}
 
 	printf("\n\nTest complete\n\n");

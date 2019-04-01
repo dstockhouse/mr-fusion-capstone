@@ -72,13 +72,29 @@ int UARTInit(char *devName, int baud) {
 		return -4;
 	}
 
+
+	// Previous
+	// uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
+	// uartOptions.c_iflag |= IGNPAR;
+
+	// Set other termios control options
+	uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
+	uartOptions.c_cflag &= ~(CSIZE | PARENB | CSTOPB | CRTSCTS);
+
+	// Set input options
+	uartOptions.c_iflag |= IGNPAR;
+
 	// Set baud rate based on input, bare minimum so far supported
 	switch(baud) {
 		case 115200:
 			uartOptions.c_cflag |= B115200;
+			cfsetispeed(&uartOptions, B115200);
+			cfsetospeed(&uartOptions, B115200);
 			break;
 		case 57600:
 			uartOptions.c_cflag |= B57600;
+			cfsetispeed(&uartOptions, B57600);
+			cfsetospeed(&uartOptions, B57600);
 			break;
 		default:
 			printf("Unexpected baud rate: %d\n", baud);
@@ -86,12 +102,6 @@ int UARTInit(char *devName, int baud) {
 			return -3;
 			break;
 	}
-
-	// Set other termios control options
-	uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
-
-	// Set input options
-	uartOptions.c_iflag |= IGNPAR;
 
 	// Push changed options to device (after flushing input and output)
 	rc = tcflush(uart_fd, TCIOFLUSH);
