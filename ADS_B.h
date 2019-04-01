@@ -14,6 +14,9 @@
  *
 \***************************************************************************/
 
+#ifndef __ADS_B_H
+#define __ADS_B_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -73,4 +76,6 @@ typedef struct {
 int parseData(uint8_t* data, MsgData246* msgData, int verbose);
 
 int parseHeader(uint8_t* message, MsgHeader* header, int verbose);
+
+#endif
 

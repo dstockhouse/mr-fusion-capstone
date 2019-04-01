@@ -14,8 +14,9 @@
  *
 \***************************************************************************/
 
-#include "buffer.h"
 #include "uart.h"
+#include "pingusb.h"
+#include "buffer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +42,7 @@ int main(void) {
 	int i, rc, numRead, col = 0, loopCount = 0;
 	int numBytes = 0;
 
-	USB_RECV dev;
+	PINGUSB_RECV dev;
 
 	rc = pingUSBInit(&dev);
 	if(rc) {

@@ -16,13 +16,14 @@
  * 	Included integration with logger
  * 	Last edited 2/20/2019
  *
+ * Revision 0.3
+ * 	Split UART and ADS-B specific receiver into separate modules
+ * 	Last edited 4/01/2019
+ *
 \***************************************************************************/
 
 #ifndef __UART_H
 #define __UART_H
-
-#include "buffer.h"
-#include "logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,29 +32,11 @@
 #include <termios.h>
 #include <errno.h>
 
-#define USB_RECV_DEV "/dev/ttyUSB0"
-// #define USB_RECV_DEV "/dev/ttyACM0"
-#define USB_RECV_BAUD 57600
-
-typedef struct {
-	int fd;
-	BYTE_BUFFER inbuf;
-	LOG_FILE logFile;
-} USB_RECV;
-
 int UARTInit(char *devName, int baud);
 
 int UARTRead(int uart_fd, char *buf, int length);
 
 int UARTClose(int uart_fd);
-
-int pingUSBInit(USB_RECV *dev);
-
-int pingUSBPoll(USB_RECV *dev);
-
-int pingUSBConsume(USB_RECV *dev, int num);
-
-int pingUSBDestroy(USB_RECV *dev);
 
 #endif
 

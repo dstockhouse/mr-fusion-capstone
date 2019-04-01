@@ -1,3 +1,18 @@
+/****************************************************************************\
+ *
+ * File:
+ * 	crc.h
+ *
+ * Description:
+ * 	Function and type declarations and constants for crc.c
+ *
+ * Author:
+ * 	Adapted from uAvionix pingUSB integration guide
+ *
+ * Revision 0.1
+ * 	Last edited 2/28/2019
+ *
+\***************************************************************************/
 
 #ifndef __CRC_H
 #define __CRC_H
@@ -7,9 +22,9 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define X25_INIT_CRC 0xffff
-#define X25_VALIDATE_CRC 0xf0b8
+// For traffic report packet
 #define CRC_EXTRA 184
+#define X25_INIT_CRC 0xffff
 
 
 void crc_accumulate(uint8_t data, uint16_t *crcAccum);

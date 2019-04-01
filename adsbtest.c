@@ -4,7 +4,7 @@
  * 	adsbtest.c
  *
  * Description:
- * 	Interfaces with the ADS-B reciever
+ * 	Tests the interface with the ADS-B reciever
  *
  * Author:
  * 	Joseph Kroeker & David Stockhouse

@@ -1,3 +1,18 @@
+/****************************************************************************\
+ *
+ * File:
+ * 	crc.c
+ *
+ * Description:
+ * 	X.25 checksum calculation for MAVLink packets
+ *
+ * Author:
+ * 	Adapted from uAvionix pingUSB integration guide
+ *
+ * Revision 0.1
+ * 	Last edited 2/28/2019
+ *
+\***************************************************************************/
 
 #include "crc.h"
 
@@ -7,27 +22,6 @@
 #include <inttypes.h>
 #include <math.h>
 
-/*
-int main(void) {
-
-#define TEST_BUF_LEN 35
-
-	int i;
-	uint16_t crc;
-	uint8_t buf[TEST_BUF_LEN];
-
-	printf("buf:\n");
-	for(i = 0; i < TEST_BUF_LEN; i++) {
-		buf[i] = (uint8_t)rand();
-		printf("\t%02x\n", buf[i]);
-	}
-	printf("\n");
-
-	crc = crc_calculate(buf, TEST_BUF_LEN);
-	printf("crc: %04x\n", 
-
-}
-*/
 
 /**
  * @brief Accumulate the X.25 CRC by adding one char at a time.
@@ -88,9 +82,3 @@ void crc_accumulate_buffer(uint16_t *crcAccum, const char *pBuffer, uint16_t len
 	while (length--) crc_accumulate(*p++, crcAccum);
 }
 
-
-// Note CRC_EXTRA is defined for each individual packet in the document.
-// crc_accumulate_buffer(&msg->checksum, _PAYLOAD(msg), msg->len);
-// crc_accumulate(CRC_EXTRA, &msg->checksum);
-// ck_a(msg) = (uint8_t)(msg->checksum & 0xFF);
-// ck_b(msg) = (uint8_t)(msg->checksum >> 8);

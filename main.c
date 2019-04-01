@@ -12,10 +12,14 @@
  * Revision 0.1
  * 	Last edited 2/25/2019
  *
+ * Revision 0.2
+ * 	Last edited 2/28/2019
+ *
 \***************************************************************************/
 
 #include "buffer.h"
 #include "uart.h"
+#include "pingusb.h"
 #include "ADS_B.h"
 
 #include <stdio.h>
@@ -34,28 +38,33 @@
  * Arguments: None
  *
  * Return value:
- * 	Returns 0 on success
- * 	Returns a negative number on failure
+ * 	Returns 0 on success, anything else on failure
  */
-int main(void) {
+int main(int argc, char **argv) {
 
 	int i, rc, numRead, col = 0, loopCount = 0;
 	int numBytes = 0;
 
-	// ADS_B parser objects
-	MsgHeader header;
-	MsgData246 data;
-
 	// USB device object
-	USB_RECV dev;
+	PINGUSB_RECV dev;
 
-	rc = pingUSBInit(&dev);
-	if(rc) {
-		printf("Couldn't intialize device: %d\n", rc);
-		return rc;
+	// Process command-line options
+	if(argc == 1) {
+
+		// Assume UART operation
+		printf("Initializing receiver... %d\n", rc);
+		rc = pingUSBInit(&dev);
+		if(rc) {
+			printf("Couldn't intialize device: %d\n", rc);
+			return rc;
+		}
+	} else {
+		// Read from list of input files
+		// Unimplemented
+		printf("Only configured to read from %s. Exiting\n", PINGUSB_RECV_DEV);
+		return -1;
 	}
 
-	printf("Initializing receiver... %d\n", rc);
 	printf("Entering polling loop (ctrl-c to exit)\n\n\t");
 
 	while(numBytes < NUM_BYTES) {
@@ -99,6 +108,13 @@ int main(void) {
 		// Remove elements from input FIFO
 		// pingUSBConsume(&dev, dev.inbuf.length);
 		// BufferRemove(&(dev.inbuf), dev.inbuf.length);
+
+		// Parse all data in USB receiver
+		while(pingUSBParse(&dev)) {
+
+			printData(&(dev.packetData));
+
+		}
 
 		usleep(1000);
 	}

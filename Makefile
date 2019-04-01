@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-g -Wall
 LIBS=
-DEPS=buffer.h logger.h uart.h ADS_B.h crc.h
-SRCS=$(DEPS:.h=.c)
+DEPS=buffer.h logger.h uart.h pingusb.h ADS_B.h crc.h
+SRCS=$(DEPS:.h=.c) main.c
 OBJS=$(SRCS:.c=.o)
 MAIN=test
 

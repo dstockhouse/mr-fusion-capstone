@@ -18,9 +18,14 @@
  *
 \***************************************************************************/
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "ADS_B.h"
 
 #include "buffer.h"
+#include "logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -353,6 +358,36 @@ int parseBuffer(BYTE_BUFFER *buf, MsgHeader *header, MsgData246 *data) {
 		i++;
 
 	}
+
+	return 0;
+
+}
+
+int logDataRaw(LOG_FILE *logFile, uint8_t *data) {
+
+	LogUpdate(logFile, data, 46);
+
+	return 0;
+
+}
+
+int logDataParsed(LOG_FILE *logFile, MsgData246 *data) {
+
+	int i;
+
+	dprintf(logFile->fd, "Lat:      %.3f deg N\n", data->lat * 1e-7);
+	dprintf(logFile->fd, "Lon:      %.3f deg E\n", data->lon * 1e-7);
+	dprintf(logFile->fd, "Altitude: %.3f m\n", data->altitude * 1e-3);
+	// dprintf(logFile->fd, "  (inv) : %.3f m\n", data->altitude_inv * 1e-3);
+	dprintf(logFile->fd, "Heading:  %.3f deg\n", data->heading * 1e-2);
+	dprintf(logFile->fd, "V_horiz:  %.3f m/s\n", data->hor_velocity * 1e-2);
+	dprintf(logFile->fd, "V_vert:   %.3f m/s\n", data->ver_velocity * 1e-2);
+	dprintf(logFile->fd, "Callsign: %s (", data->callsign);
+	for(i = 0; i < 9; i++) {
+		dprintf(logFile->fd, "%02x ", data->callsign[i]);
+	}
+	dprintf(logFile->fd, ")\n");
+	dprintf(logFile->fd, "TSLC:     %d s\n\n", data->tslc);
 
 	return 0;
 
