@@ -63,7 +63,7 @@ int pingUSBInit(PINGUSB_RECV *dev) {
 	BufferEmpty(&(dev->inbuf));
 
 	// Initialize log file
-	LogInit(&(dev->logFile), "SampleData", "ADS_B", 1);
+	LogInit(&(dev->logFile), "SampleData/ADS_B", "ADS_B", 1);
 
 	return 0;
 
@@ -188,8 +188,8 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 			// printf("Passed checksum, parsing...\n\n");
 
 			// Initialize packet log files
-			LogInit(&packetLogFileRaw, "SampleData", "ADS_B_packet", 1);
-			LogInit(&packetLogFileParsed, "SampleData", "ADS_B_packet", 0);
+			LogInit(&packetLogFileRaw, "SampleData/ADS_B", "ADS_B_packet", 1);
+			LogInit(&packetLogFileParsed, "SampleData/ADS_B", "ADS_B_packet", 0);
 
 			rc = parseHeader(&(dev->inbuf.buffer[i]), &(dev->packetHeader), 0);
 

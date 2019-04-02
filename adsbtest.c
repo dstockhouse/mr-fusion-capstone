@@ -26,7 +26,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-// #define DEFAULT_LOG_FILE "SampleData/putty_2019.02.26_103032.log"
+// #define DEFAULT_LOG_FILE "SampleData/ADS_B/putty_2019.02.26_103032.log"
 
 /*
  * Function -> main()
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 	if(argc > 1) {
 		strcpy(filename, argv[1]);
 	} else {
-		strcpy(filename, "SampleData/ADS_B-02.20.2019_18-15-14.bin");
+		strcpy(filename, "SampleData/ADS_B/ADS_B-02.20.2019_18-15-14.bin");
 	}
 	fd = open(filename, O_RDONLY);
 
