@@ -29,7 +29,7 @@
 #include <termios.h>
 
 
-#define NUM_BYTES 204800
+#define NUM_BYTES 2048
 
 /**** Function main ****
  *
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
 		// Poll for new characters from UART
 		numRead = pingUSBPoll(&dev);
-		printf("Read %d chars\n", numRead);
+		// printf("Read %d chars\n", numRead);
 
 		numBytes += numRead;
 
@@ -111,13 +111,13 @@ int main(int argc, char **argv) {
 
 		// Parse all data in USB receiver
 		printf("Parsing data...\n");
-		while(!pingUSBParse(&dev)) {
+		while(pingUSBParse(&dev) > 0) {
 
 			printData(&(dev.packetData));
 
 		}
 
-		usleep(1000000);
+		// usleep(1000000);
 	}
 
 	printf("\n\nTest complete\n\n");
