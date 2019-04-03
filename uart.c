@@ -153,7 +153,7 @@ int UARTRead(int uart_fd, char *buf, int length) {
 	// Attempt to read from UART device at most length bytes
 	numRead = read(uart_fd, buf, length);
 	// printf("UARTRead: read %d chars\n", numRead);
-	if(numRead < 0 && errno != EWOULDBLOCK) {
+	if(numRead < 0) {
 		perror("read() failed for UART device");
 		return -2;
 	}
@@ -162,6 +162,42 @@ int UARTRead(int uart_fd, char *buf, int length) {
 	return numRead;
 
 } // UARTRead(int, char *, int)
+
+
+/**** Function UARTWrite ****
+ *
+ * Writes to an open and initialized file descriptor. Based on Derek Molloy's
+ * RPi book
+ *
+ * Arguments: 
+ * 	uart_fd - File descriptor for open and initialized UART device
+ *	buf     - Buffer containing data to write
+ * 	length  - Number of characters to read
+ *
+ * Return value:
+ *	Returns number of characters written
+ *	On failure, prints error message and returns a negative number 
+ */
+int UARTWrite(int uart_fd, char *buf, int length) {
+
+	int numWritten;
+
+	// Exit on error if invalid pointer
+	if(buf == NULL) {
+		return -1;
+	}
+
+	// Attempt to write to UART device length bytes
+	numWritten = write(uart_fd, buf, length);
+	if(numWritten < 0) {
+		perror("write() failed for UART device");
+		return -2;
+	}
+
+	// Return number of bytes successfully read into buffer
+	return numWritten;
+
+} // UARTWrite(int, char *, int)
 
 
 /**** Function UARTClose ****
