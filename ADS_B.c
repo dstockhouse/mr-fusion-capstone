@@ -34,7 +34,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-// #define DEFAULT_LOG_FILE "SampleData/putty_2019.02.26_103032.log"
+// #define DEFAULT_LOG_FILE "SampleData/ADS_B/putty_2019.02.26_103032.log"
 
 /*
  * Function -> main()
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 	if(argc > 1) {
 		fd = open(argv[1], O_RDONLY);
 	} else {
-		fd = open("SampleData/ADS_B-02.20.2019_18-15-14.bin", O_RDONLY);
+		fd = open("SampleData/ADS_B/ADS_B-02.20.2019_18-15-14.bin", O_RDONLY);
 	}
 
 	// Read binary data into local variable
