@@ -163,7 +163,7 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 
 	// Seek to next start of packet
 	for(i = 0; i < dev->inbuf.length - 46 && (dev->inbuf.buffer[i] != 0xfe || dev->inbuf.buffer[i + 1] != 0x26 || dev->inbuf.buffer[i + 5] != 246); i++) {
-		// printf("%d: 0x%x\n", i, dev->inbuf.buffer[i]);
+		printf("%d: 0x%02x\n", i, dev->inbuf.buffer[i]);
 	}
 
 	if(i >= dev->inbuf.length - 46) {
