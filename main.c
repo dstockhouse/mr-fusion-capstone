@@ -35,25 +35,12 @@
 #include <time.h>
 #include <sys/types.h>
 
-// Multithreading includes
-#include <pthread.h>
-#include <semaphore.h>
-#include <sched.h>
-
-/**** Global variables (shared by all threads) ****/
-
-// USB device object
-PINGUSB_RECV dev;
-// Mutex lock around usb device object
-pthread_mutex_t pingusbMutex;
-pthread_mutexattr_t pingusbMutexAttr;
-
-
 #define NUM_BYTES 2048
+
 
 /**** Function main ****
  *
- * Test of the ADS_B receiver functionality
+ * Test of the ADS-B receiver functionality
  *
  * Arguments: None
  *
@@ -82,25 +69,6 @@ int main(int argc, char **argv) {
 		printf("Only configured to read from %s. Exiting\n", PINGUSB_RECV_DEV);
 		return -1;
 	}
-
-
-	/**** Start realtime multithreading configuration ****/
-
-	// Mutex lock init
-	rc = pthread_mutexattr_init(&pingusbMutexAttr);
-	if(rc) {
-		printf("Mutex attr init failed\n");
-		return -2;
-	}
-	rc = pthread_mutex_init(&pingusbMutex, &pingusbMutexAttr);
-	if(rc) {
-		printf("Mutex init failed\n");
-		return -2;
-	}
-
-
-
-
 
 
 	printf("Entering polling loop to collect %d bytes (ctrl-c to exit)\n\n\t", NUM_BYTES);
