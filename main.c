@@ -4,7 +4,8 @@
  * 	main.c
  *
  * Description:
- * 	Tests the functionality of the combined parser and UART interface
+ * 	Tests the functionality of the combined parser and UART interface.
+ * 	This code uses realtime threads to allow more predictable timing
  *
  * Author:
  * 	David Stockhouse
@@ -15,18 +16,37 @@
  * Revision 0.2
  * 	Last edited 2/28/2019
  *
+ * Revision 0.3
+ * 	Last edited 4/05/2019
+ * 	Started realtime functionality
+ *
 \***************************************************************************/
 
-#include "buffer.h"
-#include "uart.h"
+#include "buffer/buffer.h"
+#include "uart/uart.h"
 #include "pingusb.h"
-#include "ADS_B.h"
+#include "adsb_parser/adsb_parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+#include <time.h>
+#include <sys/types.h>
+
+// Multithreading includes
+#include <pthread.h>
+#include <semaphore.h>
+#include <sched.h>
+
+/**** Global variables (shared by all threads) ****/
+
+// USB device object
+PINGUSB_RECV dev;
+// Mutex lock around usb device object
+pthread_mutex_t pingusbMutex;
+pthread_mutexattr_t pingusbMutexAttr;
 
 
 #define NUM_BYTES 2048
@@ -45,8 +65,6 @@ int main(int argc, char **argv) {
 	int i, rc, numRead, col = 0, loopCount = 0;
 	int numBytes = 0;
 
-	// USB device object
-	PINGUSB_RECV dev;
 
 	// Process command-line options
 	if(argc == 1) {
@@ -64,6 +82,26 @@ int main(int argc, char **argv) {
 		printf("Only configured to read from %s. Exiting\n", PINGUSB_RECV_DEV);
 		return -1;
 	}
+
+
+	/**** Start realtime multithreading configuration ****/
+
+	// Mutex lock init
+	rc = pthread_mutexattr_init(&pingusbMutexAttr);
+	if(rc) {
+		printf("Mutex attr init failed\n");
+		return -2;
+	}
+	rc = pthread_mutex_init(&pingusbMutex, &pingusbMutexAttr);
+	if(rc) {
+		printf("Mutex init failed\n");
+		return -2;
+	}
+
+
+
+
+
 
 	printf("Entering polling loop to collect %d bytes (ctrl-c to exit)\n\n\t", NUM_BYTES);
 

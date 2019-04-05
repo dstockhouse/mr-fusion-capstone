@@ -1,10 +1,10 @@
 /****************************************************************************\
  *
  * File:
- * 	ADS_B.h
+ * 	adsb_parser.h
  *
  * Description:
- * 	Function and type declarations and constants for ADS_B.c
+ * 	Function and type declarations and constants for adsb_parser.c
  *
  * Author:
  * 	Joseph Kroeker & David Stockhouse
@@ -14,11 +14,11 @@
  *
 \***************************************************************************/
 
-#ifndef __ADS_B_H
-#define __ADS_B_H
+#ifndef __ADSB_PARSER_H
+#define __ADSB_PARSER_H
 
-#include "buffer.h"
-#include "logger.h"
+#include "../buffer/buffer.h"
+#include "../logger/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -17,10 +17,10 @@
 #ifndef __PINGUSB_H
 #define __PINGUSB_H
 
-#include "uart.h"
-#include "buffer.h"
-#include "logger.h"
-#include "ADS_B.h"
+#include "uart/uart.h"
+#include "buffer/buffer.h"
+#include "logger/logger.h"
+#include "adsb_parser/adsb_parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +39,7 @@ typedef struct {
 	MsgData246 packetData;
 	MsgHeader packetHeader;
 	LOG_FILE logFile;
+	LOG_FILE logFileParsed;
 } PINGUSB_RECV;
 
 int pingUSBInit(PINGUSB_RECV *dev);
