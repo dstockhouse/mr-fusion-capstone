@@ -64,6 +64,7 @@ int pingUSBInit(PINGUSB_RECV *dev) {
 
 	// Initialize log file
 	LogInit(&(dev->logFile), "SampleData/ADS_B", "ADS_B", 1);
+	LogInit(&(dev->logFileParsed), "SampleData/ADS_B", "ADS_B", 0);
 
 	return 0;
 
@@ -151,7 +152,7 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 	int i, rc, valid = 0;
 	uint16_t chkRd, chkNew;
 
-	LOG_FILE packetLogFileRaw, packetLogFileParsed;
+	// LOG_FILE packetLogFileRaw, packetLogFileParsed;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -188,15 +189,16 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 			// printf("Passed checksum, parsing...\n\n");
 
 			// Initialize packet log files
-			LogInit(&packetLogFileRaw, "SampleData/ADS_B", "ADS_B_packet", 1);
-			LogInit(&packetLogFileParsed, "SampleData/ADS_B", "ADS_B_packet", 0);
+			// LogInit(&packetLogFileRaw, "SampleData/ADS_B", "ADS_B_packet", 1);
+			// LogInit(&packetLogFileParsed, "SampleData/ADS_B", "ADS_B_packet", 0);
 
 			rc = parseHeader(&(dev->inbuf.buffer[i]), &(dev->packetHeader), 0);
 
 			rc = parseData(&(dev->inbuf.buffer[i + 6]), &(dev->packetData), 0);
 
-			logDataRaw(&packetLogFileRaw, &(dev->inbuf.buffer[i + 6]));
-			logDataParsed(&packetLogFileParsed, &(dev->packetData));
+			// logDataRaw(&packetLogFileRaw, &(dev->inbuf.buffer[i + 6]));
+			// logDataParsed(&packetLogFileParsed, &(dev->packetData));
+			logDataParsed(&(dev->logFileParsed), &(dev->packetData));
 		}
 
 		i++;
@@ -207,8 +209,8 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 
 	pingUSBConsume(dev, i);
 
-	LogClose(&packetLogFileRaw);
-	LogClose(&packetLogFileParsed);
+	// LogClose(&packetLogFileRaw);
+	// LogClose(&packetLogFileParsed);
 
 	return 1;
 
@@ -262,6 +264,7 @@ int pingUSBDestroy(PINGUSB_RECV *dev) {
 
 	// Close log file
 	LogClose(&(dev->logFile));
+	LogClose(&(dev->logFileParsed));
 
 	// Return 0 on success
 	return 0;

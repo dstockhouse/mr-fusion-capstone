@@ -39,6 +39,7 @@ typedef struct {
 	MsgData246 packetData;
 	MsgHeader packetHeader;
 	LOG_FILE logFile;
+	LOG_FILE logFileParsed;
 } PINGUSB_RECV;
 
 int pingUSBInit(PINGUSB_RECV *dev);
