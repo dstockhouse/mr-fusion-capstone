@@ -71,6 +71,14 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 } // generateFilename(char *, int, time_t, char *, char *, char *)
 
 
+// Implement later, reference
+// https://gist.github.com/JonathonReinhart/8c0d90191c38af2dcadb102c4e202950
+int mkdir_p(char *dir, mode_t mode) {
+
+	return 0;
+}
+
+
 /**** Function LogInit ****
  *
  * Creates a timestamp and log file
@@ -109,6 +117,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
 	}
 
 	// Create directory if it doesn't exist
+	// rc = mkdir_p(dir, 0777);
 	rc = mkdir(dir, 0777);
 	if(rc && errno != EEXIST) {
 		perror("Failed to create directory");

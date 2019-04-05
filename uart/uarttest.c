@@ -15,8 +15,8 @@
 \***************************************************************************/
 
 #include "uart.h"
-#include "pingusb.h"
-#include "buffer.h"
+#include "../pingusb.h"
+#include "../buffer/buffer.h"
 
 #include <stdio.h>
 #include <stdlib.h>

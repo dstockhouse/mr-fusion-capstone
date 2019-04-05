@@ -1,7 +1,7 @@
 /****************************************************************************\
  *
  * File:
- * 	ADS_B.c
+ * 	adsb_parser.c
  *
  * Description:
  * 	Interfaces with the ADS-B reciever
@@ -22,10 +22,10 @@
 #define _GNU_SOURCE
 #endif
 
-#include "ADS_B.h"
+#include "adsb_parser.h"
 
-#include "buffer.h"
-#include "logger.h"
+#include "../buffer/buffer.h"
+#include "../logger/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>

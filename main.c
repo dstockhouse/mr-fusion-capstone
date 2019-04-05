@@ -17,10 +17,10 @@
  *
 \***************************************************************************/
 
-#include "buffer.h"
-#include "uart.h"
+#include "buffer/buffer.h"
+#include "uart/uart.h"
 #include "pingusb.h"
-#include "ADS_B.h"
+#include "adsb_parser/adsb_parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>

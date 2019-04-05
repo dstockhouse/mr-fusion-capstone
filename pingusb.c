@@ -16,11 +16,11 @@
 
 #include "pingusb.h"
 
-#include "uart.h"
-#include "buffer.h"
-#include "logger.h"
-#include "crc.h"
-#include "ADS_B.h"
+#include "uart/uart.h"
+#include "buffer/buffer.h"
+#include "logger/logger.h"
+#include "adsb_parser/crc.h"
+#include "adsb_parser/adsb_parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
