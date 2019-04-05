@@ -50,13 +50,12 @@ int pingUSBInit(PINGUSB_RECV *dev) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
-		return -1;
-	}
+		return -1; }
 
 	dev->fd = UARTInit(PINGUSB_RECV_DEV, PINGUSB_RECV_BAUD);
 	if(dev->fd < 0) {
 		printf("Couldn't initialize pingUSB receiver\n");
-		return -1;
+		return -2;
 	}
 
 	// Initialize the input buffer

@@ -1,10 +1,10 @@
 /***************************************************************************\
  *
  * File:
- * 	initialize_VN200_IMU.h
+ * 	VN200_IMU.h
  *
  * Description:
- *	Function and type declarations and constants for initialize_VN200_IMU.c
+ *	Function and type declarations and constants for VN200_IMU.c
  * 
  * Author:
  * 	Joseph Kroeker
@@ -15,15 +15,15 @@
  ***************************************************************************/
 
 
+#define VN200_IMU_DEV "/dev/ttyUSB0"
+#define VN200_IMU_BAUD 57600
+
 typedef struct {
 	int fd;
 	BYTE_BUFFER inbuf;
 	BYTE_BUFFER outbuf;
 	LOG_FILE logFile;
-} USB_IMU;
+} VN200_IMU;
 
-int IMUInit(void);
-
-int pingUSBInit(USB_IMU *dev);
-
+int VN200IMUInit(VN200_IMU *dev);
 
