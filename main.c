@@ -5,7 +5,6 @@
  *
  * Description:
  * 	Tests the functionality of the combined parser and UART interface.
- * 	This code uses realtime threads to allow more predictable timing
  *
  * Author:
  * 	David Stockhouse
@@ -15,10 +14,6 @@
  *
  * Revision 0.2
  * 	Last edited 2/28/2019
- *
- * Revision 0.3
- * 	Last edited 4/05/2019
- * 	Started realtime functionality
  *
 \***************************************************************************/
 
