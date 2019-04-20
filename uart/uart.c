@@ -20,6 +20,10 @@
  * 	Split UART and ADS-B specific receiver into separate modules
  * 	Last edited 4/01/2019
  *
+ * Revision 0.4
+ * 	Added uartWrite function
+ * 	Last edited 4/20/2019
+ *
 \***************************************************************************/
 
 #include "uart.h"
