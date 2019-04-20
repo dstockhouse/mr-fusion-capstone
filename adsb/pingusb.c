@@ -10,17 +10,22 @@
  * 	David Stockhouse
  *
  * Revision 0.1
+ * 	Split UART and ADB functionality
  * 	Last edited 4/01/2019
+ *
+ * Revision 0.2
+ * 	Renamed structure type to PINGUSB_DEV
+ * 	Last edited 4/20/2019
  *
 \***************************************************************************/
 
 #include "pingusb.h"
 
-#include "uart/uart.h"
-#include "buffer/buffer.h"
-#include "logger/logger.h"
-#include "adsb_parser/crc.h"
-#include "adsb_parser/adsb_parser.h"
+#include "../uart/uart.h"
+#include "../buffer/buffer.h"
+#include "../logger/logger.h"
+#include "crc.h"
+#include "adsb_parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,13 +45,13 @@
  * Initializes a pingUSB UART receiver instance
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to initialize
+ * 	dev - Pointer to PINGUSB_DEV instance to initialize
  *
  * Return value:
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int pingUSBInit(PINGUSB_RECV *dev) {
+int pingUSBInit(PINGUSB_DEV *dev) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -67,7 +72,7 @@ int pingUSBInit(PINGUSB_RECV *dev) {
 
 	return 0;
 
-} // pingUSBInit(PINGUSB_RECV *)
+} // pingUSBInit(PINGUSB_DEV *)
 
 
 /**** Function pingUSBPoll ****
@@ -75,13 +80,13 @@ int pingUSBInit(PINGUSB_RECV *dev) {
  * Polls a pingUSB UART receiver instance for input
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to poll
+ * 	dev - Pointer to PINGUSB_DEV instance to poll
  *
  * Return value:
  *	Returns number of bytes received (may be 0)
  *	On failure, returns a negative number
  */
-int pingUSBPoll(PINGUSB_RECV *dev) {
+int pingUSBPoll(PINGUSB_DEV *dev) {
 
 	int numToRead, numRead, rc, ioctl_status;
 	char *startBuf, tempBuf[BYTE_BUFFER_LEN];
@@ -130,7 +135,7 @@ int pingUSBPoll(PINGUSB_RECV *dev) {
 	// Return number successfully read (may be 0)
 	return numRead;
 
-} // pingUSBPoll(PINGUSB_RECV *)
+} // pingUSBPoll(PINGUSB_DEV *)
 
 
 /**** Function pingUSBParse ****
@@ -138,7 +143,7 @@ int pingUSBPoll(PINGUSB_RECV *dev) {
  * Parses one packet from the pingUSB's input buffer
  *
  * Arguments: 
- * 	dev  - Pointer to PINGUSB_RECV instance to modify
+ * 	dev  - Pointer to PINGUSB_DEV instance to modify
  * 	data - Pointer to data object to populate with parsed data
  *
  * Return value:
@@ -146,7 +151,7 @@ int pingUSBPoll(PINGUSB_RECV *dev) {
  * 	If the end of the buffer was reached, return 0
  * 	On error, returns a negative number
  */
-int pingUSBParse(PINGUSB_RECV *dev) {
+int pingUSBParse(PINGUSB_DEV *dev) {
 
 	int i, rc, valid = 0;
 	uint16_t chkRd, chkNew;
@@ -213,7 +218,7 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 
 	return 1;
 
-} // pingUSBParse(PINGUSB_RECV *)
+} // pingUSBParse(PINGUSB_DEV *)
 
 
 /**** Function pingUSBConsume ****
@@ -221,14 +226,14 @@ int pingUSBParse(PINGUSB_RECV *dev) {
  * Consumes bytes in the UART input buffer
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to modify
+ * 	dev - Pointer to PINGUSB_DEV instance to modify
  * 	num - Number of elements to consume
  *
  * Return value:
  * 	On success, returns the number of elements consumed
  *	On failure, returns a negative number 
  */
-int pingUSBConsume(PINGUSB_RECV *dev, int num) {
+int pingUSBConsume(PINGUSB_DEV *dev, int num) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -237,7 +242,7 @@ int pingUSBConsume(PINGUSB_RECV *dev, int num) {
 
 	return BufferRemove(&(dev->inbuf), num);
 
-} // pingUSBConsume(PINGUSB_RECV *, int)
+} // pingUSBConsume(PINGUSB_DEV *, int)
 
 
 /**** Function pingUSBDestroy ****
@@ -245,13 +250,13 @@ int pingUSBConsume(PINGUSB_RECV *dev, int num) {
  * De-initializes a pingUSB UART receiver instance
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to destroy
+ * 	dev - Pointer to PINGUSB_DEV instance to destroy
  *
  * Return value:
  * 	On success, returns 0
  *	On failure, returns a negative number 
  */
-int pingUSBDestroy(PINGUSB_RECV *dev) {
+int pingUSBDestroy(PINGUSB_DEV *dev) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -268,5 +273,5 @@ int pingUSBDestroy(PINGUSB_RECV *dev) {
 	// Return 0 on success
 	return 0;
 
-} // pingUSBDestroy(PINGUSB_RECV *)
+} // pingUSBDestroy(PINGUSB_DEV *)
 

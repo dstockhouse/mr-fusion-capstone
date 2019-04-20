@@ -15,12 +15,16 @@
  * Revision 0.2
  * 	Last edited 2/28/2019
  *
+ * Revision 0.3
+ * 	Changes to directory structure
+ * 	Last edited 4/20/2019
+ *
 \***************************************************************************/
 
 #include "buffer/buffer.h"
 #include "uart/uart.h"
-#include "pingusb.h"
-#include "adsb_parser/adsb_parser.h"
+#include "adsb/pingusb.h"
+#include "adsb/adsb_parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,7 +41,9 @@
  *
  * Test of the ADS-B receiver functionality
  *
- * Arguments: None
+ * Arguments:
+ * 	argc - Number of command line arguments
+ * 	argv - Pointer to array of command line argument strings
  *
  * Return value:
  * 	Returns 0 on success, anything else on failure

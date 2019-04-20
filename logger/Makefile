@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-g -Wall
 LIBS=
-DEPS=../buffer/buffer.h logger.h ../uart/uart.h ../adsb_parser/adsb_parser.h ../adsb_parser/crc.h
+DEPS=../buffer/buffer.h logger.h ../uart/uart.h ../adsb/adsb_parser.h ../adsb/crc.h
 SRCS=$(DEPS:.h=.c)
 OBJS=$(SRCS:.c=.o)
 MSRC=logtest.c
