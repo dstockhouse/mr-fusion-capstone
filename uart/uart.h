@@ -20,6 +20,10 @@
  * 	Split UART and ADS-B specific receiver into separate modules
  * 	Last edited 4/01/2019
  *
+ * Revision 0.4
+ * 	Added uartWrite function
+ * 	Last edited 4/20/2019
+ *
 \***************************************************************************/
 
 #ifndef __UART_H
@@ -35,6 +39,8 @@
 int UARTInit(char *devName, int baud);
 
 int UARTRead(int uart_fd, char *buf, int length);
+
+int UARTWrite(int uart_fd, char *buf, int length);
 
 int UARTClose(int uart_fd);
 
