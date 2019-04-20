@@ -57,7 +57,7 @@ int pingUSBInit(PINGUSB_DEV *dev) {
 	if(dev == NULL) {
 		return -1; }
 
-	dev->fd = UARTInit(PINGUSB_RECV_DEV, PINGUSB_RECV_BAUD);
+	dev->fd = UARTInit(PINGUSB_DEVNAME, PINGUSB_BAUD);
 	if(dev->fd < 0) {
 		printf("Couldn't initialize pingUSB receiver\n");
 		return -2;
@@ -67,8 +67,8 @@ int pingUSBInit(PINGUSB_DEV *dev) {
 	BufferEmpty(&(dev->inbuf));
 
 	// Initialize log file
-	LogInit(&(dev->logFile), "SampleData/ADS_B", "ADS_B", 1);
-	LogInit(&(dev->logFileParsed), "SampleData/ADS_B", "ADS_B", 0);
+	LogInit(&(dev->logFile), "../SampleData/ADS_B", "ADS_B", 1);
+	LogInit(&(dev->logFileParsed), "../SampleData/ADS_B", "ADS_B", 0);
 
 	return 0;
 
@@ -103,11 +103,11 @@ int pingUSBPoll(PINGUSB_DEV *dev) {
 		return -2;
 	}
 
-	// Check if UART data avail
+	// Check if UART data available
 	rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
 	if(rc) {
 		perror("UART: ioctl() failed");
-		return -1;
+		return -3;
 	}
 	// printf("%d bytes avail...\n", ioctl_status);
 
@@ -193,8 +193,8 @@ int pingUSBParse(PINGUSB_DEV *dev) {
 			// printf("Passed checksum, parsing...\n\n");
 
 			// Initialize packet log files
-			// LogInit(&packetLogFileRaw, "SampleData/ADS_B", "ADS_B_packet", 1);
-			// LogInit(&packetLogFileParsed, "SampleData/ADS_B", "ADS_B_packet", 0);
+			// LogInit(&packetLogFileRaw, "../SampleData/ADS_B", "ADS_B_packet", 1);
+			// LogInit(&packetLogFileParsed, "../SampleData/ADS_B", "ADS_B_packet", 0);
 
 			rc = parseHeader(&(dev->inbuf.buffer[i]), &(dev->packetHeader), 0);
 
@@ -227,10 +227,10 @@ int pingUSBParse(PINGUSB_DEV *dev) {
  *
  * Arguments: 
  * 	dev - Pointer to PINGUSB_DEV instance to modify
- * 	num - Number of elements to consume
+ * 	num - Number of bytes to consume
  *
  * Return value:
- * 	On success, returns the number of elements consumed
+ * 	On success, returns the number of bytes consumed
  *	On failure, returns a negative number 
  */
 int pingUSBConsume(PINGUSB_DEV *dev, int num) {

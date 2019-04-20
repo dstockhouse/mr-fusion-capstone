@@ -34,9 +34,9 @@
 #include <termios.h>
 #include <errno.h>
 
-#define PINGUSB_RECV_DEV "/dev/ttyUSB0"
-// #define PINGUSB_RECV_DEV "/dev/ttyACM0"
-#define PINGUSB_RECV_BAUD 57600
+#define PINGUSB_DEVNAME "/dev/ttyUSB0"
+// #define PINGUSB_DEVNAME "/dev/ttyACM0"
+#define PINGUSB_BAUD 57600
 
 typedef struct {
 	int fd;

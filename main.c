@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	} else {
 		// Read from list of input files
 		// Unimplemented
-		printf("Only configured to read from %s. Exiting\n", PINGUSB_RECV_DEV);
+		printf("Only configured to read from %s. Exiting\n", PINGUSB_DEVNAME);
 		return -1;
 	}
 
