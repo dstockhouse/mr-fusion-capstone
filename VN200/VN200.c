@@ -215,7 +215,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num) {
 	BufferAddArray(&(dev->outbuf), buf, numWritten);
 
 	// Send output buffer to UART
-	numWritten = VN200Flush(&dev);
+	numWritten = VN200FlushOutput(&dev);
 
 	return numWritten;
 
