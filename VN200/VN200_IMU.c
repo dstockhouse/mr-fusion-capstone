@@ -16,6 +16,7 @@
 
 #include "uart.h"
 #include "buffer.h"
+#include "VN200.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,12 +36,6 @@ int VN200IMUInit(VN200_IMU *dev);
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
 		return -1;
-	}
-
-	dev->fd = UARTInit(VN200_IMU_DEV, VN200_IMU_BAUD);
-	if(dev->fd < 0) {
-		printf("Couldn't initialize VN200 IMU UART device (%s)\n", VN200_IMU_DEV);
-		return -2;
 	}
 
 	// Initialize the input buffer
