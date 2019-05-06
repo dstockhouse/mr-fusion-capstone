@@ -153,7 +153,8 @@ int vn200Consume(VN200_DEV *dev, int num) {
 
 /**** Function vn200Write ****
  *
- * Writes data to the VN200 output buffer, then flushes the output to UART
+ * Writes data to the VN200 output buffer, then flushes the output to UART.
+ * Follows serial_cmd.m Matlab function
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to modify
@@ -164,13 +165,28 @@ int vn200Consume(VN200_DEV *dev, int num) {
  *	On success, returns number of bytes written
  *	On failure, returns a negative number
  */
-int vn200Write(VN200_DEV *dev, char *buf, int num) {
+int vn200Command(VN200_DEV *dev, char *cmd, int num) {
 
-	/* For item in buf, copy to dev->outbuf
-	 * 	dev->outbuf[item] = buf[item]
-	 *
-	 * compute CRC, put at end of outbuf
-	 * 	dev->outbuf[last] = "*" & crc
+	char buf[64];
+	unsigned char checksum;
+	int numWritten;
+
+	// Ensure valid pointers
+	if(dev == NULL || cmd == NULL) {
+		return -1;
+	}
+
+	// Calculate checksum of command
+	checksum = calculateChecksum(cmd, num);
+
+	// Write to device output buffer
+	numWritten = snprintf(buf, "$%s*%02x\n", cmd, checksum, dev->outbuf.length);
+	BufferAddArray(&(dev->outbuf), buf, numWritten);
+
+	// Send output buffer to UART
+	vn200Flush(&dev);
+
+	return 0;
 
 }
 
