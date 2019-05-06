@@ -50,9 +50,27 @@ int VN200IMUInit(VN200_IMU *dev);
 	LogInit(&(dev->logFile), "SampleData/VN200_IMU", "VN200_IMU", 1);
 	
 	// Request IMU serial number
-	UARTWrite(dev->outbuf, "VNRRG,03")
+	commandBufLen = snprintf(commandBuf, "%s", "VNRRG,03", CMD_BUFFER_SIZE);
+	VN200Command(dev, commandBuf, commandBufLen);
+	delay(100); 
+	VN200FlushInput(dev);
+
+	// Disable asynchronous data output
+	commandBufLen = snprintf(commandBuf, "%s", "VNWRG, 6,0", CMD_BUFFER_SIZE);
+	VN200Command(dev, commandBuf, commandBufLen);
+	
+	// Set the asynchronous data output freq
+	commandBufLen = snprintf(commandBuf, "VNWRG, 7, %d", dev->fs, CMD_BUFFER_SIZE);
+	VN200Command(dev, commandBuf, commandBufLen);
+	delay(100);
+	VN200FlushInput(dev);
+
+	// Enable async IMU Measurements on VN200
+	commandBufLen = snprintf(commandBuf, "%s", "VNWRG, 6, 19", CMD_BUFFER_SIZE);
+	VN200Command(dev, commandBuf, commandBufLen);
+	delay(100);
+	VN200FlushInput(dev);
 
 	return 0;
-
 } // VN200IMUInit(VN200_IMU *)
 
