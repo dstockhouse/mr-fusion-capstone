@@ -44,7 +44,7 @@ int vn200Poll(VN200_DEV *dev);
 
 int vn200Consume(VN200_DEV *dev, int num);
 
-int vn200Write(VN200_DEV *dev, char *buf, int num);
+int vn200Command(VN200_DEV *dev, char *buf, int num);
 
 int vn200Flush(VN200_DEV *dev);
 

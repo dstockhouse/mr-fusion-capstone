@@ -56,7 +56,7 @@ int vn200BaseInit(VN200_DEV *dev) {
 	BufferEmpty(&(dev->outbuf));
 
 	// Initialize log file
-	LogInit(&(dev->logFile), "../SampleData/VN200", "ADS_B", 1);
+	LogInit(&(dev->logFile), "../SampleData/VN200", "VN200", 1);
 
 	return 0;
 
@@ -151,7 +151,7 @@ int vn200Consume(VN200_DEV *dev, int num) {
 } // vn200Consume(VN200_DEV *, int)
 
 
-/**** Function vn200Write ****
+/**** Function vn200Command ****
  *
  * Writes data to the VN200 output buffer, then flushes the output to UART.
  * Follows serial_cmd.m Matlab function
@@ -184,13 +184,62 @@ int vn200Command(VN200_DEV *dev, char *cmd, int num) {
 	BufferAddArray(&(dev->outbuf), buf, numWritten);
 
 	// Send output buffer to UART
-	vn200Flush(&dev);
+	numWritten = vn200Flush(&dev);
+
+	return numWritten;
+
+}
+
+
+/**** Function vn200Flush ****
+ *
+ * Writes out data from VN200_DEV struct output buffer to the UART PHY
+ *
+ * Arguments: 
+ * 	dev - Pointer to VN200_DEV instance to modify
+ *
+ * Return value:
+ *	On success, returns number of bytes written
+ *	On failure, returns a negative number
+ */
+int vn200Flush(VN200_DEV *dev) {
+
+	int numWritten;
+
+	// Ensure valid pointers
+	if(dev == NULL) {
+		return -1;
+	}
+
+	numWritten = UARTWrite(dev->outbuf.buffer, dev->outbuf.length);
+
+	return numWritten;
+
+}
+
+
+/**** Function vn200Destroy ****
+ *
+ * Cleans up an initialized VN200_DEV instance
+ *
+ * Arguments: 
+ * 	dev - Pointer to VN200_DEV instance to destroy
+ *
+ * Return value:
+ *	On success, returns 0
+ *	On failure, returns a negative number
+ */
+int vn200Destroy(VN200_DEV *dev) {
+
+	if(dev == NULL) {
+		return -1;
+	}
+
+	UARTClose(dev->fd);
+
+	LogClose(&(dev->logFile));
 
 	return 0;
 
 }
-
-int vn200Flush(VN200_DEV *dev);
-
-int vn200Destroy(VN200_DEV *dev);
 
