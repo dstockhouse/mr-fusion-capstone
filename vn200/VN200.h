@@ -1,16 +1,16 @@
 /***************************************************************************\
  *
  * File:
- * 	vn200.h
+ * 	VN200.h
  *
  * Description:
- *	Function and type declarations and constants for vn200.c
+ *	Function and type declarations and constants for VN200.c
  * 
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 4/20/2019
+ * 	Last edited 5/06/2019
  *
  ***************************************************************************/
 
@@ -38,17 +38,17 @@ typedef struct {
 	LOG_FILE logFile;
 } VN200_DEV;
 
-int vn200BaseInit(VN200_DEV *dev);
+int VN200BaseInit(VN200_DEV *dev);
 
-int vn200Poll(VN200_DEV *dev);
+int VN200Poll(VN200_DEV *dev);
 
-int vn200Consume(VN200_DEV *dev, int num);
+int VN200Consume(VN200_DEV *dev, int num);
 
-int vn200Command(VN200_DEV *dev, char *buf, int num);
+int VN200Command(VN200_DEV *dev, char *buf, int num);
 
-int vn200Flush(VN200_DEV *dev);
+int VN200Flush(VN200_DEV *dev);
 
-int vn200Destroy(VN200_DEV *dev);
+int VN200Destroy(VN200_DEV *dev);
 
 #endif
 

@@ -1,7 +1,7 @@
 /***************************************************************************\
  *
  * File:
- * 	vn200.c
+ * 	VN200.c
  *
  * Description:
  *	Basic common functionality for VN200, GPS and IMU
@@ -10,11 +10,11 @@
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 4/20/2019
+ * 	Last edited 5/06/2019
  *
  ***************************************************************************/
 
-#include "vn200.h"
+#include "VN200.h"
 
 #include "../uart/uart.h"
 #include "../buffer/buffer.h"
@@ -28,7 +28,7 @@
 #include <errno.h>
 
 
-/**** Function vn200BaseInit ****
+/**** Function VN200BaseInit ****
  *
  * Initializes a VN200 IMU/GPS before it is setup for either functionality
  *
@@ -39,7 +39,7 @@
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int vn200BaseInit(VN200_DEV *dev) {
+int VN200BaseInit(VN200_DEV *dev) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -60,10 +60,10 @@ int vn200BaseInit(VN200_DEV *dev) {
 
 	return 0;
 
-} // vn200BaseInit(VN200_DEV *)
+} // VN200BaseInit(VN200_DEV *)
 
 
-/**** Function vn200Poll ****
+/**** Function VN200Poll ****
  *
  * Polls the UART file for an initialized VN200 device and populates inbuf with
  * read data
@@ -75,7 +75,7 @@ int vn200BaseInit(VN200_DEV *dev) {
  *	On success, returns the number of bytes received (may be 0)
  *	On failure, returns a negative number
  */
-int vn200Poll(VN200_DEV *dev) {
+int VN200Poll(VN200_DEV *dev) {
 
 	int numToRead, numRead, rc, ioctl_status;
 	char *startBuf, tempBuf[BYTE_BUFFER_LEN];
@@ -124,10 +124,10 @@ int vn200Poll(VN200_DEV *dev) {
 	// Return number successfully read (may be 0)
 	return numRead;
 
-} // vn200Poll(VN200_DEV *)
+} // VN200Poll(VN200_DEV *)
 
 
-/**** Function vn200Consume ****
+/**** Function VN200Consume ****
  *
  * Consumes bytes in the UART input buffer
  *
@@ -139,7 +139,7 @@ int vn200Poll(VN200_DEV *dev) {
  *	On success, returns number of bytes consumed
  *	On failure, returns a negative number
  */
-int vn200Consume(VN200_DEV *dev, int num) {
+int VN200Consume(VN200_DEV *dev, int num) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -148,10 +148,10 @@ int vn200Consume(VN200_DEV *dev, int num) {
 
 	return BufferRemove(&(dev->inbuf), num);
 
-} // vn200Consume(VN200_DEV *, int)
+} // VN200Consume(VN200_DEV *, int)
 
 
-/**** Function vn200Command ****
+/**** Function VN200Command ****
  *
  * Writes data to the VN200 output buffer, then flushes the output to UART.
  * Follows serial_cmd.m Matlab function
@@ -165,7 +165,7 @@ int vn200Consume(VN200_DEV *dev, int num) {
  *	On success, returns number of bytes written
  *	On failure, returns a negative number
  */
-int vn200Command(VN200_DEV *dev, char *cmd, int num) {
+int VN200Command(VN200_DEV *dev, char *cmd, int num) {
 
 	char buf[64];
 	unsigned char checksum;
@@ -184,14 +184,14 @@ int vn200Command(VN200_DEV *dev, char *cmd, int num) {
 	BufferAddArray(&(dev->outbuf), buf, numWritten);
 
 	// Send output buffer to UART
-	numWritten = vn200Flush(&dev);
+	numWritten = VN200Flush(&dev);
 
 	return numWritten;
 
-}
+} // VN200Command(VN200_DEV &, char *, int)
 
 
-/**** Function vn200Flush ****
+/**** Function VN200Flush ****
  *
  * Writes out data from VN200_DEV struct output buffer to the UART PHY
  *
@@ -202,7 +202,7 @@ int vn200Command(VN200_DEV *dev, char *cmd, int num) {
  *	On success, returns number of bytes written
  *	On failure, returns a negative number
  */
-int vn200Flush(VN200_DEV *dev) {
+int VN200Flush(VN200_DEV *dev) {
 
 	int numWritten;
 
@@ -215,10 +215,10 @@ int vn200Flush(VN200_DEV *dev) {
 
 	return numWritten;
 
-}
+} // VN200Flush(VN200_DEV &)
 
 
-/**** Function vn200Destroy ****
+/**** Function VN200Destroy ****
  *
  * Cleans up an initialized VN200_DEV instance
  *
@@ -229,7 +229,7 @@ int vn200Flush(VN200_DEV *dev) {
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int vn200Destroy(VN200_DEV *dev) {
+int VN200Destroy(VN200_DEV *dev) {
 
 	if(dev == NULL) {
 		return -1;
@@ -241,5 +241,5 @@ int vn200Destroy(VN200_DEV *dev) {
 
 	return 0;
 
-}
+} // VN200Destroy(VN200_DEV &)
 
