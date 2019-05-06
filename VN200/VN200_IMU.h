@@ -25,5 +25,14 @@ typedef struct {
 	LOG_FILE logFile;
 } VN200_IMU;
 
+typedef struct {
+	double compass[3]; // compass (x,y,z) Gauss
+	double accel[3]; // accel (x,y,z) m/s^2
+	double gyro[3]; // gyro (x, y, z) rad/s
+	double temp; // temp C
+	double baro; // pressure kPa
+} IMU_DATA
+
 int VN200IMUInit(VN200_IMU *dev);
 
+int VN200IMUParse(VN200_IMU *dev, IMU_DATA data);

@@ -69,3 +69,12 @@ int VN200IMUInit(VN200_IMU *dev);
 	return 0;
 } // VN200IMUInit(VN200_IMU *)
 
+int VN200IMUParse(VN200_IMU *dev, IMU_DATA data) {
+	sscanf(dev->inbuf.buffer, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", data->compass[0], data->compass[1], data->compass[2],
+			data->accel[0], data->accel[1], data->accel[2], data->gyro[0], data->gyro[1], data->gyro[2],
+			data->temp, data->baro);
+	return 0;
+}
+
+
+
