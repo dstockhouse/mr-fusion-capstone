@@ -1,28 +1,25 @@
 /***************************************************************************\
  *
  * File:
- * 	VN200_IMU.h
+ * 	VN200_GPS.h
  *
  * Description:
- *	Function and type declarations and constants for VN200_IMU.c
+ *	Function and type declarations and constants for VN200_GPS.c
  * 
  * Author:
- * 	Joseph Kroeker
+ * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 4/01/2019
- *
- * Revision 0.2
  * 	Last edited 5/06/2019
  *
  ***************************************************************************/
 
-#ifndef __VN200_IMU_H
-#define __VN200_IMU_H
+#ifndef __VN200_GPS_H
+#define __VN200_GPS_H
 
 #include "VN200.h"
 
-int VN200IMUInit(VN200_DEV *dev);
+int VN200GPSInit(VN200_DEV *dev);
 
 #endif
 

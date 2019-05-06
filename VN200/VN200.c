@@ -151,6 +151,37 @@ int VN200Consume(VN200_DEV *dev, int num) {
 } // VN200Consume(VN200_DEV *, int)
 
 
+/**** Function VN200FlushInput ****
+ *
+ * Discards all data recieved through UART
+ *
+ * Arguments: 
+ * 	dev - Pointer to VN200_DEV instance to modify
+ *
+ * Return value:
+ *	On success, returns number of bytes discarded
+ *	On failure, returns a negative number
+ */
+int VN200FlushInput(VN200_DEV *dev) {
+
+	int num;
+
+	// Exit on error if invalid pointer
+	if(dev == NULL) {
+		return -1;
+	}
+
+	// Get all waiting characters from UART
+	num = VN200Poll(dev);
+
+	// Clear all characters from input buffer
+	num = VN200Consume(dev, num);
+
+	return num;
+
+} // VN200FlushInput(VN200_DEV *)
+
+
 /**** Function VN200Command ****
  *
  * Writes data to the VN200 output buffer, then flushes the output to UART.
@@ -191,7 +222,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num) {
 } // VN200Command(VN200_DEV &, char *, int)
 
 
-/**** Function VN200Flush ****
+/**** Function VN200FlushOutput ****
  *
  * Writes out data from VN200_DEV struct output buffer to the UART PHY
  *
@@ -202,7 +233,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num) {
  *	On success, returns number of bytes written
  *	On failure, returns a negative number
  */
-int VN200Flush(VN200_DEV *dev) {
+int VN200FlushOutput(VN200_DEV *dev) {
 
 	int numWritten;
 
@@ -211,11 +242,12 @@ int VN200Flush(VN200_DEV *dev) {
 		return -1;
 	}
 
+	// Write output buffer to UART
 	numWritten = UARTWrite(dev->outbuf.buffer, dev->outbuf.length);
 
 	return numWritten;
 
-} // VN200Flush(VN200_DEV &)
+} // VN200FlushOutput(VN200_DEV &)
 
 
 /**** Function VN200Destroy ****
@@ -235,8 +267,10 @@ int VN200Destroy(VN200_DEV *dev) {
 		return -1;
 	}
 
+	// Close UART file
 	UARTClose(dev->fd);
 
+	// Close log file
 	LogClose(&(dev->logFile));
 
 	return 0;
