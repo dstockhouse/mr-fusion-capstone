@@ -50,5 +50,5 @@ int vn200Flush(VN200_DEV *dev);
 
 int vn200Destroy(VN200_DEV *dev);
 
-#define
+#endif
 
