@@ -12,6 +12,9 @@
  * Revision 0.1
  * 	Last edited 4/16/2019
  *
+ * Revision 0.2
+ * 	Last edited 5/06/2019
+ *
 \***************************************************************************/
 
 #include "VN200_GPS.h"
@@ -39,34 +42,23 @@
  * Initializes a pingUSB UART receiver instance
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to initialize
+ * 	dev - Pointer to VN200_DEV instance to initialize
  *
  * Return value:
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int VN200GPSInit(PINGUSB_RECV *dev) {
+int VN200GPSInit(VN200_DEV *dev) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
 		return -1; }
 
-	dev->fd = UARTInit(PINGUSB_RECV_DEV, PINGUSB_RECV_BAUD);
-	if(dev->fd < 0) {
-		printf("Couldn't initialize GPS receiver\n");
-		return -2;
-	}
-
-	// Initialize the input buffer
-	BufferEmpty(&(dev->inbuf));
-
-	// Initialize log file
-	LogInit(&(dev->logFile), "SampleData/ADS_B", "ADS_B", 1);
-	LogInit(&(dev->logFileParsed), "SampleData/ADS_B", "ADS_B", 0);
+	vn200BaseInit(dev, 
 
 	return 0;
 
-} // VN200GPSInit(PINGUSB_RECV *)
+} // VN200GPSInit(VN200_DEV *)
 
 
 /**** Function pingUSBPoll ****
@@ -74,13 +66,13 @@ int VN200GPSInit(PINGUSB_RECV *dev) {
  * Polls a pingUSB UART receiver instance for input
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to poll
+ * 	dev - Pointer to VN200_DEV instance to poll
  *
  * Return value:
  *	Returns number of bytes received (may be 0)
  *	On failure, returns a negative number
  */
-int pingUSBPoll(PINGUSB_RECV *dev) {
+int pingUSBPoll(VN200_DEV *dev) {
 
 	int numToRead, numRead, rc, ioctl_status;
 	char *startBuf, tempBuf[BYTE_BUFFER_LEN];
@@ -129,7 +121,7 @@ int pingUSBPoll(PINGUSB_RECV *dev) {
 	// Return number successfully read (may be 0)
 	return numRead;
 
-} // pingUSBPoll(PINGUSB_RECV *)
+} // pingUSBPoll(VN200_DEV *)
 
 
 /**** Function pingUSBParse ****
@@ -137,7 +129,7 @@ int pingUSBPoll(PINGUSB_RECV *dev) {
  * Parses one packet from the pingUSB's input buffer
  *
  * Arguments: 
- * 	dev  - Pointer to PINGUSB_RECV instance to modify
+ * 	dev  - Pointer to VN200_DEV instance to modify
  * 	data - Pointer to data object to populate with parsed data
  *
  * Return value:
@@ -145,7 +137,7 @@ int pingUSBPoll(PINGUSB_RECV *dev) {
  * 	If the end of the buffer was reached, return 0
  * 	On error, returns a negative number
  */
-int pingUSBParse(PINGUSB_RECV *dev) {
+int pingUSBParse(VN200_DEV *dev) {
 
 	int i, rc, valid = 0;
 	uint16_t chkRd, chkNew;
@@ -212,7 +204,7 @@ int pingUSBParse(PINGUSB_RECV *dev) {
 
 	return 1;
 
-} // pingUSBParse(PINGUSB_RECV *)
+} // pingUSBParse(VN200_DEV *)
 
 
 /**** Function pingUSBConsume ****
@@ -220,14 +212,14 @@ int pingUSBParse(PINGUSB_RECV *dev) {
  * Consumes bytes in the UART input buffer
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to modify
+ * 	dev - Pointer to VN200_DEV instance to modify
  * 	num - Number of elements to consume
  *
  * Return value:
  * 	On success, returns the number of elements consumed
  *	On failure, returns a negative number 
  */
-int pingUSBConsume(PINGUSB_RECV *dev, int num) {
+int pingUSBConsume(VN200_DEV *dev, int num) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -236,7 +228,7 @@ int pingUSBConsume(PINGUSB_RECV *dev, int num) {
 
 	return BufferRemove(&(dev->inbuf), num);
 
-} // pingUSBConsume(PINGUSB_RECV *, int)
+} // pingUSBConsume(VN200_DEV *, int)
 
 
 /**** Function pingUSBDestroy ****
@@ -244,13 +236,13 @@ int pingUSBConsume(PINGUSB_RECV *dev, int num) {
  * De-initializes a pingUSB UART receiver instance
  *
  * Arguments: 
- * 	dev - Pointer to PINGUSB_RECV instance to destroy
+ * 	dev - Pointer to VN200_DEV instance to destroy
  *
  * Return value:
  * 	On success, returns 0
  *	On failure, returns a negative number 
  */
-int pingUSBDestroy(PINGUSB_RECV *dev) {
+int pingUSBDestroy(VN200_DEV *dev) {
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -267,5 +259,5 @@ int pingUSBDestroy(PINGUSB_RECV *dev) {
 	// Return 0 on success
 	return 0;
 
-} // pingUSBDestroy(PINGUSB_RECV *)
+} // pingUSBDestroy(VN200_DEV *)
 
