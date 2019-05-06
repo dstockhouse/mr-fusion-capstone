@@ -3,5 +3,5 @@
 *.swo
 *~
 a.out
-/*test
+*test
 *.pkt
