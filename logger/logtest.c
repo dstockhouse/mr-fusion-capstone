@@ -43,7 +43,7 @@ int main(void) {
 	LOG_FILE testlog;
 	char data[DATA_LEN];
 
-	rc = LogInit(&testlog, "logdirtest", "test", 1);
+	rc = LogInit(&testlog, "start/logdirtest/howdy/deep2/tester", "test", 1);
 	if(rc) {
 		perror("failed in main");
 		return 1;
