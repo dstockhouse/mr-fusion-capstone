@@ -140,6 +140,7 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 			data->accel[0], data->accel[1], data->accel[2],
 			data->gyro[0], data->gyro[1], data->gyro[2],
 			data->temp, data->baro);
+
 	return 0;
 
 } // VN200IMUParse(VN200_DEV *, IMU_DATA *)
