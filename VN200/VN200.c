@@ -129,7 +129,7 @@ int VN200Poll(VN200_DEV *dev) {
 
 /**** Function VN200Consume ****
  *
- * Consumes bytes in the UART input buffer
+ * Consumes bytes in the input buffer
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to modify

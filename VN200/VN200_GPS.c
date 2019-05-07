@@ -98,7 +98,7 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
  * 	dev - Pointer to VN200_DEV instance to initialize
  *
  * Return value:
- *	On success, returns 0
+ *	On success, returns number of bytes parsed from buffer
  *	On failure, returns a negative number
  */
 int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
@@ -136,7 +136,7 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 		dev->inbuf.buffer[packetEnd] != '*'; packetEnd++) ;
 
 	if(packetStart >= dev->inbuf.length - 3 || packetEnd >= dev->inbuf.length - 3) {
-		return -2;
+		return 0;
 	}
 
 	if(packetEnd - packetStart > PACKET_BUF_SIZE - 1) {
@@ -155,9 +155,9 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 	for(i = 1; i < NUM_GPS_FIELDS && tokenList[i-1] != NULL; i++) {
 		tokenList[i] = strtok(NULL, ",");
 	}
-	print("Read %d GPS comma delimited fields\n", i-1);
+	print("Read %d GPS comma delimited fields from %d characters\n", i-1, packetEnd);
 
-	// Get time from position 0
+	// Get time
 	sscanf(tokenList[0], "%lf", &(parsedData->time));
 
 	// Get number of GPS satellites
@@ -172,9 +172,7 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 	// Get Altitude
 	sscanf(tokenList[6], "%lf", &(parsedData->Altitude));
 
+	return packetEnd;
 
-
-	return 0;
-
-} // VN200GPSParse(VN200_DEV *)
+} // VN200GPSParse(VN200_DEV *, GPS_DATA *)
 
