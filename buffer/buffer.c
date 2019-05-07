@@ -5,7 +5,8 @@
  *
  * Description:
  * 	Queue-like buffer for storing data that is read in any order but 
- * 	added and removed in FIFO order
+ * 	added and removed in FIFO order. It is not a ring buffer, data always
+ * 	starts at index 0 until length-1
  *
  * Author:
  * 	David Stockhouse
