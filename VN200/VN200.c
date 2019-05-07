@@ -15,6 +15,7 @@
  ***************************************************************************/
 
 #include "VN200.h"
+#include "crc.h"
 
 #include "../uart/uart.h"
 #include "../buffer/buffer.h"
@@ -26,6 +27,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 
 /**** Function VN200BaseInit ****
@@ -211,11 +213,11 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num) {
 	checksum = calculateChecksum(cmd, num);
 
 	// Write to device output buffer
-	numWritten = snprintf(buf, "$%s*%02x\n", cmd, checksum, dev->outbuf.length);
+	numWritten = snprintf(buf, dev->outbuf.length, "$%s*%02x\n", cmd, checksum);
 	BufferAddArray(&(dev->outbuf), buf, numWritten);
 
 	// Send output buffer to UART
-	numWritten = VN200FlushOutput(&dev);
+	numWritten = VN200FlushOutput(dev);
 
 	return numWritten;
 
@@ -243,7 +245,7 @@ int VN200FlushOutput(VN200_DEV *dev) {
 	}
 
 	// Write output buffer to UART
-	numWritten = UARTWrite(dev->outbuf.buffer, dev->outbuf.length);
+	numWritten = UARTWrite(dev->fd, dev->outbuf.buffer, dev->outbuf.length);
 
 	return numWritten;
 

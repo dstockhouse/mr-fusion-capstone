@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <inttypes.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -65,12 +66,12 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 	VN200BaseInit(dev);
 
 	// Disable asynchronous output
-	commandBufLen = snprintf(commandBuf, "%s", "VNWRG,6,0", CMD_BUFFER_SIZE);
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,0");
 	VN200Command(dev, commandBuf, commandBufLen);
 
 	// Set sampling frequency
 	dev->fs = fs;
-	snprintf(commandBuf, "%s%d", "VNWRG,7,", dev->fs, CMD_BUFFER_SIZE);
+	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,7,", dev->fs);
 	VN200Command(dev, commandBuf, commandBufLen);
 
 	// Clear input buffer (temporary)
@@ -79,7 +80,7 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 	usleep(100000);
 
 	// Enable asynchronous GPS data output
-	snprintf(commandBuf, "%s", "VNWRG,6,20", CMD_BUFFER_SIZE);
+	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,20");
 	VN200Command(dev, commandBuf, commandBufLen);
 
 	// Clear input buffer (temporary)
@@ -155,7 +156,7 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 	for(i = 1; i < NUM_GPS_FIELDS && tokenList[i-1] != NULL; i++) {
 		tokenList[i] = strtok(NULL, ",");
 	}
-	print("Read %d GPS comma delimited fields from %d characters\n", i-1, packetEnd);
+	printf("Read %d GPS comma delimited fields from %d characters\n", i-1, packetEnd);
 
 	// Get time
 	sscanf(tokenList[0], "%lf", &(parsedData->time));

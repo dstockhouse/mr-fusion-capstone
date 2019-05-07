@@ -19,6 +19,8 @@
 
 #include "VN200.h"
 
+#include <inttypes.h>
+
 typedef struct {
 	double time;      // 0: Time of the week in seconds
 	uint16_t week;    // 1: GPS week
