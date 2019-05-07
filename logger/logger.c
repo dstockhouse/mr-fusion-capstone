@@ -98,7 +98,7 @@ int mkdir_p(const char *pathname, mode_t mode) {
 	// Copy to local string to allow (temp) modifications
 	strcpy(localpathname, pathname);
 
-	for(dir = pathname + 1; *dir != '\0'; dir++) {
+	for(dir = localpathname + 1; *dir != '\0'; dir++) {
 
 		// If end of directory, mkdir everything before this
 		if(*dir == '/') {
@@ -166,8 +166,8 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
 	}
 
 	// Create directory if it doesn't exist
-	// rc = mkdir_p(dir, 0777);
-	rc = mkdir(dir, 0777);
+	rc = mkdir_p(dir, 0777);
+	// rc = mkdir(dir, 0777);
 	if(rc && errno != EEXIST) {
 		perror("Failed to create directory");
 		printf(dir);
