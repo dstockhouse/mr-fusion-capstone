@@ -15,6 +15,7 @@
  ***************************************************************************/
 
 #include "VN200.h"
+#include "crc.h"
 
 #include "../uart/uart.h"
 #include "../buffer/buffer.h"
@@ -26,6 +27,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 
 /**** Function VN200BaseInit ****
@@ -129,7 +131,7 @@ int VN200Poll(VN200_DEV *dev) {
 
 /**** Function VN200Consume ****
  *
- * Consumes bytes in the UART input buffer
+ * Consumes bytes in the input buffer
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to modify
@@ -149,6 +151,37 @@ int VN200Consume(VN200_DEV *dev, int num) {
 	return BufferRemove(&(dev->inbuf), num);
 
 } // VN200Consume(VN200_DEV *, int)
+
+
+/**** Function VN200FlushInput ****
+ *
+ * Discards all data recieved through UART
+ *
+ * Arguments: 
+ * 	dev - Pointer to VN200_DEV instance to modify
+ *
+ * Return value:
+ *	On success, returns number of bytes discarded
+ *	On failure, returns a negative number
+ */
+int VN200FlushInput(VN200_DEV *dev) {
+
+	int num;
+
+	// Exit on error if invalid pointer
+	if(dev == NULL) {
+		return -1;
+	}
+
+	// Get all waiting characters from UART
+	num = VN200Poll(dev);
+
+	// Clear all characters from input buffer
+	num = VN200Consume(dev, num);
+
+	return num;
+
+} // VN200FlushInput(VN200_DEV *)
 
 
 /**** Function VN200Command ****
@@ -180,18 +213,18 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num) {
 	checksum = calculateChecksum(cmd, num);
 
 	// Write to device output buffer
-	numWritten = snprintf(buf, "$%s*%02x\n", cmd, checksum, dev->outbuf.length);
+	numWritten = snprintf(buf, dev->outbuf.length, "$%s*%02x\n", cmd, checksum);
 	BufferAddArray(&(dev->outbuf), buf, numWritten);
 
 	// Send output buffer to UART
-	numWritten = VN200Flush(&dev);
+	numWritten = VN200FlushOutput(dev);
 
 	return numWritten;
 
 } // VN200Command(VN200_DEV &, char *, int)
 
 
-/**** Function VN200Flush ****
+/**** Function VN200FlushOutput ****
  *
  * Writes out data from VN200_DEV struct output buffer to the UART PHY
  *
@@ -202,7 +235,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num) {
  *	On success, returns number of bytes written
  *	On failure, returns a negative number
  */
-int VN200Flush(VN200_DEV *dev) {
+int VN200FlushOutput(VN200_DEV *dev) {
 
 	int numWritten;
 
@@ -211,11 +244,12 @@ int VN200Flush(VN200_DEV *dev) {
 		return -1;
 	}
 
-	numWritten = UARTWrite(dev->outbuf.buffer, dev->outbuf.length);
+	// Write output buffer to UART
+	numWritten = UARTWrite(dev->fd, dev->outbuf.buffer, dev->outbuf.length);
 
 	return numWritten;
 
-} // VN200Flush(VN200_DEV &)
+} // VN200FlushOutput(VN200_DEV &)
 
 
 /**** Function VN200Destroy ****
@@ -235,8 +269,10 @@ int VN200Destroy(VN200_DEV *dev) {
 		return -1;
 	}
 
+	// Close UART file
 	UARTClose(dev->fd);
 
+	// Close log file
 	LogClose(&(dev->logFile));
 
 	return 0;

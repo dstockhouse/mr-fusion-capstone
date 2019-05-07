@@ -10,20 +10,17 @@
  * 	Joseph Kroeker
  *
  * Revision 0.1
- * 	Last edited 4/1/2019
+ * 	Last edited 4/01/2019
+ *
+ * Revision 0.2
+ * 	Last edited 5/07/2019
  *
  ***************************************************************************/
 
+#ifndef __VN200_IMU_H
+#define __VN200_IMU_H
 
-#define VN200_IMU_DEV "/dev/ttyUSB0"
-#define VN200_IMU_BAUD 57600
-
-typedef struct {
-	int fd;
-	BYTE_BUFFER inbuf;
-	BYTE_BUFFER outbuf;
-	LOG_FILE logFile;
-} VN200_IMU;
+#include "VN200.h"
 
 typedef struct {
 	double compass[3]; // compass (x,y,z) Gauss
@@ -31,8 +28,10 @@ typedef struct {
 	double gyro[3]; // gyro (x, y, z) rad/s
 	double temp; // temp C
 	double baro; // pressure kPa
-} IMU_DATA
+} IMU_DATA;
 
 int VN200IMUInit(VN200_IMU *dev);
 
-int VN200IMUParse(VN200_IMU *dev, IMU_DATA data);
+int VN200IMUParse(VN200_IMU *dev, IMU_DATA *data);
+
+#endif

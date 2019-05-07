@@ -27,7 +27,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <stdarg.h>
+#include <inttypes.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -43,221 +45,135 @@
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to initialize
+ * 	fs  - Sampling frequency to initialize the module to
  *
  * Return value:
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int VN200GPSInit(VN200_DEV *dev) {
+int VN200GPSInit(VN200_DEV *dev, int fs) {
+
+#define CMD_BUFFER_SIZE 64
+	char commandBuf[CMD_BUFFER_SIZE];
+	int commandBufLen;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
-		return -1; }
+		return -1;
+	}
 
-	vn200BaseInit(dev, 
+	// Initialize UART for use
+	VN200BaseInit(dev);
+
+	// Disable asynchronous output
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,0");
+	VN200Command(dev, commandBuf, commandBufLen);
+
+	// Set sampling frequency
+	dev->fs = fs;
+	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,7,", dev->fs);
+	VN200Command(dev, commandBuf, commandBufLen);
+
+	// Clear input buffer (temporary)
+	usleep(100000);
+	VN200FlushInput(dev);
+	usleep(100000);
+
+	// Enable asynchronous GPS data output
+	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,20");
+	VN200Command(dev, commandBuf, commandBufLen);
+
+	// Clear input buffer (temporary)
+	VN200FlushInput(dev);
 
 	return 0;
 
-} // VN200GPSInit(VN200_DEV *)
+} // VN200GPSInit(VN200_DEV *, int)
 
 
-/**** Function pingUSBPoll ****
+/**** Function VN200GPSParse ****
  *
- * Polls a pingUSB UART receiver instance for input
+ * Initializes a pingUSB UART receiver instance
  *
  * Arguments: 
- * 	dev - Pointer to VN200_DEV instance to poll
+ * 	dev - Pointer to VN200_DEV instance to initialize
  *
  * Return value:
- *	Returns number of bytes received (may be 0)
+ *	On success, returns number of bytes parsed from buffer
  *	On failure, returns a negative number
  */
-int pingUSBPoll(VN200_DEV *dev) {
+int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 
-	int numToRead, numRead, rc, ioctl_status;
-	char *startBuf, tempBuf[BYTE_BUFFER_LEN];
+	// Make extra sure there is enough room in the buffer
+#define PACKET_BUF_SIZE 1024
+	char currentPacket[PACKET_BUF_SIZE];
 
-	// Exit on error if invalid pointer
-	if(dev == NULL) {
-		return -1;
-	}
+#define NUM_GPS_FIELDS 15
+	char *tokenList[NUM_GPS_FIELDS];
 
-	// Ensure length of buffer is long enough to hold more data
-	if(dev->inbuf.length >= BYTE_BUFFER_LEN) {
-		printf("Can't poll pingUSB receiver: input buffer is full (%d bytes)",
-				dev->inbuf.length);
-		return -2;
-	}
+	unsigned char chkOld, chkNew;
 
-	// Check if UART data avail
-	rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
-	if(rc) {
-		perror("UART: ioctl() failed");
-		return -1;
-	}
-	// printf("%d bytes avail...\n", ioctl_status);
-
-	// Calculate length and pointer to proper position in array
-	numToRead = BYTE_BUFFER_LEN - dev->inbuf.length;
-	startBuf = &(dev->inbuf.buffer[dev->inbuf.length]);
-	// printf("Poll: startBuf is %p\n", startBuf);
-	startBuf[0] = 2;
-
-	// printf("Attempting to read %d bytes from uart device...\n", numToRead);
-
-	// Read without blocking from pingUSB UART device
-	numRead = UARTRead(dev->fd, startBuf, numToRead);
-	// numRead = UARTRead(dev->fd, tempBuf, numToRead);
-	// printf("\tRead %d\n", numRead);
-
-	// Log newly read data to file
-	LogUpdate(&(dev->logFile), startBuf, numRead);
-	// LogUpdate(&(dev->logFile), tempBuf, numRead);
-
-	// memcpy(&(dev->inbuf.buffer[dev->inbuf.length]), tempBuf, numRead);
-
-	dev->inbuf.length += numRead;
-
-	// Return number successfully read (may be 0)
-	return numRead;
-
-} // pingUSBPoll(VN200_DEV *)
-
-
-/**** Function pingUSBParse ****
- *
- * Parses one packet from the pingUSB's input buffer
- *
- * Arguments: 
- * 	dev  - Pointer to VN200_DEV instance to modify
- * 	data - Pointer to data object to populate with parsed data
- *
- * Return value:
- * 	If a packet was parsed, returns 1
- * 	If the end of the buffer was reached, return 0
- * 	On error, returns a negative number
- */
-int pingUSBParse(VN200_DEV *dev) {
-
-	int i, rc, valid = 0;
-	uint16_t chkRd, chkNew;
-
-	// LOG_FILE packetLogFileRaw, packetLogFileParsed;
+	int packetStart, packetEnd, i;
 
 	// Exit on error if invalid pointer
-	if(dev == NULL) {
+	if(dev == NULL || parsedData == NULL) {
 		return -1;
 	}
 
-	i = 0;
-	while(!valid) {
-		// printf("In pingUSBParse, %d bytes in buffer\n", dev->inbuf.length);
-
-		// Seek to next start of packet
-		for( ; i < dev->inbuf.length - 46 && (dev->inbuf.buffer[i] != 0xfe || dev->inbuf.buffer[i + 1] != 0x26 || dev->inbuf.buffer[i + 5] != 246); i++) {
-			// printf("%d: 0x%x\n", i, dev->inbuf.buffer[i]);
-		}
-
-		// printf("Attempt stop at index %d\n", i);
-
-		if(i >= dev->inbuf.length - 46) {
-			printf("End of current buffer\n");
-			pingUSBConsume(dev, i);
-			return 0;
-		}
-
-		// printf("Parsing index %d (0x%x)\n", i, i);
-
-		chkRd = dev->inbuf.buffer[i + 44] | (dev->inbuf.buffer[i + 45] << 8);
-		chkNew = crc_calculate(&(dev->inbuf.buffer[i+1]), 43);
-		// printf("Read checksum: %04x\n", chkRd);
-		// printf("Computed chks: %04x\n", chkNew);
-
-		if(chkRd == chkNew) {
-			valid = 1;
-
-			// printf("Passed checksum, parsing...\n\n");
-
-			// Initialize packet log files
-			// LogInit(&packetLogFileRaw, "SampleData/ADS_B", "ADS_B_packet", 1);
-			// LogInit(&packetLogFileParsed, "SampleData/ADS_B", "ADS_B_packet", 0);
-
-			rc = parseHeader(&(dev->inbuf.buffer[i]), &(dev->packetHeader), 0);
-
-			rc = parseData(&(dev->inbuf.buffer[i + 6]), &(dev->packetData), 0);
-
-			// logDataRaw(&packetLogFileRaw, &(dev->inbuf.buffer[i + 6]));
-			// logDataParsed(&packetLogFileParsed, &(dev->packetData));
-			logDataParsed(&(dev->logFileParsed), &(dev->packetData));
-		}
-
-		i++;
-
-		// printf("Resetting loop at index %d\n", i);
-
-	} // while(!valid)
-
-	pingUSBConsume(dev, i);
-
-	// LogClose(&packetLogFileRaw);
-	// LogClose(&packetLogFileParsed);
-
-	return 1;
-
-} // pingUSBParse(VN200_DEV *)
-
-
-/**** Function pingUSBConsume ****
- *
- * Consumes bytes in the UART input buffer
- *
- * Arguments: 
- * 	dev - Pointer to VN200_DEV instance to modify
- * 	num - Number of elements to consume
- *
- * Return value:
- * 	On success, returns the number of elements consumed
- *	On failure, returns a negative number 
- */
-int pingUSBConsume(VN200_DEV *dev, int num) {
-
-	// Exit on error if invalid pointer
-	if(dev == NULL) {
-		return -1;
+	// Initialize token list to null
+	for(i = 0; i < NUM_GPS_FIELDS; i++) {
+		tokenList[i] = NULL;
 	}
 
-	return BufferRemove(&(dev->inbuf), num);
+	packetStart = 0;
+	// while(!valid) {
 
-} // pingUSBConsume(VN200_DEV *, int)
+	// Find start of a packet ($)
+	for( ; packetStart < dev->inbuf.length && 
+			dev->inbuf.buffer[packetStart] != '$'; packetStart++) ;
 
+	// Find end of packet (*)
+	for(packetEnd = packetStart; packetEnd < dev->inbuf.length - 3 && 
+		dev->inbuf.buffer[packetEnd] != '*'; packetEnd++) ;
 
-/**** Function pingUSBDestroy ****
- *
- * De-initializes a pingUSB UART receiver instance
- *
- * Arguments: 
- * 	dev - Pointer to VN200_DEV instance to destroy
- *
- * Return value:
- * 	On success, returns 0
- *	On failure, returns a negative number 
- */
-int pingUSBDestroy(VN200_DEV *dev) {
-
-	// Exit on error if invalid pointer
-	if(dev == NULL) {
-		return -1;
+	if(packetStart >= dev->inbuf.length - 3 || packetEnd >= dev->inbuf.length - 3) {
+		return 0;
 	}
 
-	// Close UART fd associated with device
-	UARTClose(dev->fd);
+	if(packetEnd - packetStart > PACKET_BUF_SIZE - 1) {
+		return -3;
+	}
 
-	// Close log file
-	LogClose(&(dev->logFile));
-	LogClose(&(dev->logFileParsed));
+	// Verify checksum
+	// sscanf(dev->inbuf.buffer[packetEnd + 1], "%x", &chkOld);
+	// chkNew = calculateChecksum(dev->inbuf.buffer[packetStart], packetEnd - packetStart);
 
-	// Return 0 on success
-	return 0;
+	// Copy string to be modified by strtok
+	strncpy(currentPacket, &(dev->inbuf.buffer[packetStart]), packetEnd-packetStart);
 
-} // pingUSBDestroy(VN200_DEV *)
+	// Parse between commas (not exactly safe)
+	tokenList[0] = strtok(currentPacket, ",");
+	for(i = 1; i < NUM_GPS_FIELDS && tokenList[i-1] != NULL; i++) {
+		tokenList[i] = strtok(NULL, ",");
+	}
+	printf("Read %d GPS comma delimited fields from %d characters\n", i-1, packetEnd);
+
+	// Get time
+	sscanf(tokenList[0], "%lf", &(parsedData->time));
+
+	// Get number of GPS satellites
+	sscanf(tokenList[3], "%hhd", &(parsedData->NumSats));
+
+	// Get latitude
+	sscanf(tokenList[4], "%lf", &(parsedData->Latitude));
+
+	// Get Longitude
+	sscanf(tokenList[5], "%lf", &(parsedData->Longitude));
+
+	// Get Altitude
+	sscanf(tokenList[6], "%lf", &(parsedData->Altitude));
+
+	return packetEnd;
+
+} // VN200GPSParse(VN200_DEV *, GPS_DATA *)
 
