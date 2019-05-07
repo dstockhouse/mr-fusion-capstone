@@ -71,12 +71,61 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 } // generateFilename(char *, int, time_t, char *, char *, char *)
 
 
-// Implement later, reference
-// https://gist.github.com/JonathonReinhart/8c0d90191c38af2dcadb102c4e202950
-int mkdir_p(char *dir, mode_t mode) {
+/**** Function mkdir_p ****
+ *
+ * Implementation of mkdir -p using system service calls, adapted from
+ * https://gist.github.com/JonathonReinhart/8c0d90191c38af2dcadb102c4e202950
+ *
+ * Arguments:
+ * 	pathname - String path to the directory to create
+ * 	mode     - Directory access mode (permissions) for mkdir
+ *
+ * Return value:
+ * 	On success, returns 0, otherwise returns -1 and sets errno
+ */
+int mkdir_p(const char *pathname, mode_t mode) {
+
+	int pathnamelen, rc;
+	char localpathname[PATH_MAX], *dir;
+
+	// Ensure pathname length is small enough
+	pathnamelen = strlen(pathname);
+	if(pathnamelen > PATH_MAX - 1) {
+		errno = ENAMETOOLONG;
+		return -1;
+	}
+
+	// Copy to local string to allow (temp) modifications
+	strcpy(localpathname, pathname);
+
+	for(dir = localpathname + 1; *dir != '\0'; dir++) {
+
+		// If end of directory, mkdir everything before this
+		if(*dir == '/') {
+
+			// Temporarily terminate string here
+			*dir = '\0';
+
+			rc = mkdir(localpathname, mode);
+			if(rc && errno != EEXIST) {
+				return rc;
+			}
+
+			// Restore
+			*dir = '/';
+		}
+
+	} // for
+
+	// Make final directory
+	rc = mkdir(pathname, mode);
+	if(rc && errno != EEXIST) {
+		return rc;
+	}
 
 	return 0;
-}
+
+} // int mkdir_p(const char *, mode_t)
 
 
 /**** Function LogInit ****
@@ -117,8 +166,8 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
 	}
 
 	// Create directory if it doesn't exist
-	// rc = mkdir_p(dir, 0777);
-	rc = mkdir(dir, 0777);
+	rc = mkdir_p(dir, 0777);
+	// rc = mkdir(dir, 0777);
 	if(rc && errno != EEXIST) {
 		perror("Failed to create directory");
 		printf(dir);

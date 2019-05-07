@@ -28,8 +28,6 @@
 
 typedef struct {
 	int length;
-	int start;
-	int end;
 	char buffer[BYTE_BUFFER_LEN];
 } BYTE_BUFFER;
 

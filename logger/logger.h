@@ -27,6 +27,10 @@
 #define _POSIX_C_SOURCE
 #endif
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 #define LOG_FILENAME_LENGTH 256
 
 typedef struct {
