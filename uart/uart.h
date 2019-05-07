@@ -21,7 +21,7 @@
  * 	Last edited 4/01/2019
  *
  * Revision 0.4
- * 	Added uartWrite function
+ * 	Added UARTWrite function
  * 	Last edited 4/20/2019
  *
 \***************************************************************************/
