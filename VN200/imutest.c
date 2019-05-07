@@ -1,10 +1,10 @@
 /***************************************************************************\
  *
  * File:
- * 	gpstest.c
+ * 	imutest.c
  *
  * Description:
- *	Tests the VN200 GPS functionality
+ *	Tests the VN200 IMU functionality
  * 
  * Author:
  * 	David Stockhouse
@@ -15,7 +15,7 @@
  ***************************************************************************/
 
 #include "VN200.h"
-#include "VN200_GPS.h"
+#include "VN200_IMU.h"
 
 #include "../uart/uart.h"
 #include "../buffer/buffer.h"
@@ -34,37 +34,44 @@ int main(void) {
 	int numRead, numParsed, numConsumed;
 
 	// Instances of structure variables
-	VN200_DEV gps;
-	GPS_DATA data;
+	VN200_DEV imu;
+	IMU_DATA data;
 
-	VN200GPSInit(&gps, 1);
+	VN200IMUInit(&imu, 1);
 
 	while(1) {
 
-		numRead = VN200Poll(&gps);
+		numRead = VN200Poll(&imu);
 		printf("Read %d bytes from UART\n", numRead);
 
 		do {
 
-			numParsed = VN200GPSParse(&gps, &data);
+			numParsed = VN200IMUParse(&imu, &data);
 			printf("Parsed %d bytes from buffer\n", numParsed);
 
-			numConsumed = VN200Consume(&gps, numParsed);
+			numConsumed = VN200Consume(&imu, numParsed);
 			printf("Consumed %d bytes from buffer\n", numConsumed);
 
-			// Print out GPS data
-			printf("\nGPS data:\n");
-			printf("\tTime is %lf\n", data.time);
-			printf("\t%hhd sats locked\n", data.NumSats);
-			printf("\tLatitude is %lf\n", data.Latitude);
-			printf("\tLongitude is %lf\n", data.Longitude);
-			printf("\tAltitude is %lf\n\n", data.Altitude);
+			// Print out IMU data
+			printf("\nIMU data:\n");
+
+			printf("\tCompass: %lf, %lf, %lf\n",
+			data.compass[0], data.compass[1], data.compass[2]);
+
+			printf("\tAccel: %lf, %lf, %lf\n",
+			data.accel[0], data.accel[1], data.accel[2]);
+
+			printf("\tGyro: %lf, %lf, %lf\n",
+			data.gyro[0], data.gyro[1], data.gyro[2]);
+
+			printf("\tTemp: %lf\n", data.temp);
+			printf("\tBaro: %lf\n", data.baro);
 
 		} while(numConsumed > 0);
 
 	}
 
-	VN200Destroy(&gps);
+	VN200Destroy(&imu);
 
 	return 0;
 

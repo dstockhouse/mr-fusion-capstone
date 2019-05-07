@@ -17,6 +17,7 @@
  *
 \***************************************************************************/
 
+#include "VN200.h"
 #include "VN200_GPS.h"
 
 #include "../uart/uart.h"
@@ -65,6 +66,9 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 	// Initialize UART for use
 	VN200BaseInit(dev);
 
+	// Initialize log file
+	LogInit(&(dev->logFile), "../SampleData/VN200/GPS", "VN200", 1);
+
 	// Disable asynchronous output
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,0");
 	VN200Command(dev, commandBuf, commandBufLen);
@@ -93,10 +97,11 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 
 /**** Function VN200GPSParse ****
  *
- * Initializes a pingUSB UART receiver instance
+ * Parses data from VN200 input buffer, assuming device is configured as GPS
  *
  * Arguments: 
- * 	dev - Pointer to VN200_DEV instance to initialize
+ * 	dev  - Pointer to VN200_DEV instance to parse from
+ * 	data - Pointer to GPS_DATA instance to store parsed data
  *
  * Return value:
  *	On success, returns number of bytes parsed from buffer
@@ -112,7 +117,6 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 	char *tokenList[NUM_GPS_FIELDS];
 
 	unsigned char chkOld, chkNew;
-
 	int packetStart, packetEnd, i;
 
 	// Exit on error if invalid pointer
@@ -148,8 +152,13 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 	// sscanf(dev->inbuf.buffer[packetEnd + 1], "%x", &chkOld);
 	// chkNew = calculateChecksum(dev->inbuf.buffer[packetStart], packetEnd - packetStart);
 
+	/* Example packet:
+	 * $VNGPS,342123.000168,1890,3,05,+34.61463270,-112.45087270,+01559.954,+000.450,+000.770,-001.290,+002.940,+005.374,+007.410,+001.672,2.10E-08*23
+	 */
+
 	// Copy string to be modified by strtok
-	strncpy(currentPacket, &(dev->inbuf.buffer[packetStart]), packetEnd-packetStart);
+	strncpy(currentPacket, &(dev->inbuf.buffer[packetStart+7]), 
+			packetEnd - packetStart - 7);
 
 	// Parse between commas (not exactly safe)
 	tokenList[0] = strtok(currentPacket, ",");

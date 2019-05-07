@@ -30,8 +30,9 @@ typedef struct {
 	double baro; // pressure kPa
 } IMU_DATA;
 
-int VN200IMUInit(VN200_IMU *dev);
+int VN200IMUInit(VN200_DEV *dev, int fs);
 
-int VN200IMUParse(VN200_IMU *dev, IMU_DATA *data);
+int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data);
 
 #endif
+

@@ -32,7 +32,8 @@
 
 /**** Function VN200BaseInit ****
  *
- * Initializes a VN200 IMU/GPS before it is setup for either functionality
+ * Initializes a VN200 IMU/GPS before it is setup for either functionality.
+ * Like ADS-B UART initializer, but does not initialize log file
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to initialize
@@ -56,9 +57,6 @@ int VN200BaseInit(VN200_DEV *dev) {
 	// Initialize the input and output buffers
 	BufferEmpty(&(dev->inbuf));
 	BufferEmpty(&(dev->outbuf));
-
-	// Initialize log file
-	LogInit(&(dev->logFile), "../SampleData/VN200", "VN200", 1);
 
 	return 0;
 
