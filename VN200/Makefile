@@ -9,10 +9,10 @@ all: gpstest imutest
 
 
 gpstest: $(OBJS) gpstest.o
-	$(CC) $(CFLAGS) $(LIBS) -o $@ $<
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJS) gpstest.o
 
 imutest: $(OBJS) imutest.o
-	$(CC) $(CFLAGS) $(LIBS) -o $@ $<
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJS) imutest.o
 
 .c.o: $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<

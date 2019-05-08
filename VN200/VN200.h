@@ -29,7 +29,7 @@
 #include <errno.h>
 
 #define VN200_DEVNAME "/dev/ttyUSB0"
-#define VN200_BAUD 57600
+#define VN200_BAUD 115200
 
 typedef struct {
 	int fd;

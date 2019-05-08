@@ -42,7 +42,7 @@
 
 /**** Function VN200GPSInit ****
  *
- * Initializes a pingUSB UART receiver instance
+ * Initializes a VN200 UART device for GPS functionality
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to initialize

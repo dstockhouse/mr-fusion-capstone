@@ -87,7 +87,7 @@ int VN200Poll(VN200_DEV *dev) {
 
 	// Ensure length of buffer is long enough to hold more data
 	if(dev->inbuf.length >= BYTE_BUFFER_LEN) {
-		printf("Can't poll pingUSB receiver: input buffer is full (%d bytes)",
+		printf("Can't poll VN200 UART device: input buffer is full (%d bytes)\n",
 				dev->inbuf.length);
 		return -2;
 	}
@@ -108,10 +108,10 @@ int VN200Poll(VN200_DEV *dev) {
 
 	// printf("Attempting to read %d bytes from uart device...\n", numToRead);
 
-	// Read without blocking from pingUSB UART device
+	// Read without blocking from UART device
 	numRead = UARTRead(dev->fd, startBuf, numToRead);
 	// numRead = UARTRead(dev->fd, tempBuf, numToRead);
-	// printf("\tRead %d\n", numRead);
+	printf("\tRead %d\n", numRead);
 
 	// Log newly read data to file
 	LogUpdate(&(dev->logFile), startBuf, numRead);
@@ -146,7 +146,11 @@ int VN200Consume(VN200_DEV *dev, int num) {
 		return -1;
 	}
 
-	return BufferRemove(&(dev->inbuf), num);
+	printf("Attempting to consume %d bytes\n", num);
+	num = BufferRemove(&(dev->inbuf), num);
+	printf("Consumed %d bytes\n", num);
+
+	return num;
 
 } // VN200Consume(VN200_DEV *, int)
 
@@ -164,15 +168,23 @@ int VN200Consume(VN200_DEV *dev, int num) {
  */
 int VN200FlushInput(VN200_DEV *dev) {
 
-	int num;
+	int num, start, i;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
 		return -1;
 	}
 
+	start = dev->inbuf.length;
+
 	// Get all waiting characters from UART
 	num = VN200Poll(dev);
+
+	printf("Flushed input:\n");
+	for(i = start; i < dev->inbuf.length; i++) {
+		printf("%c", dev->inbuf.buffer[i]);
+	}
+	printf("\n");
 
 	// Clear all characters from input buffer
 	num = VN200Consume(dev, num);

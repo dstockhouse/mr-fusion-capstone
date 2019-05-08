@@ -114,6 +114,8 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 		return -1;
 	}
 
+	printf("Starting parser\n");
+
 	packetStart = 0;
 	// while(!valid) {
 
@@ -129,19 +131,28 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 		return 0;
 	}
 
+	printf("Packet (start, end): %d %d\n", packetStart, packetEnd);
+	printf("Reading checksum\n");
 	// Verify checksum
-	// sscanf(dev->inbuf.buffer[packetEnd + 1], "%x", &chkOld);
+	// sscanf(&(dev->inbuf.buffer[packetEnd + 1]), "%x", &chkOld);
 	// chkNew = calculateChecksum(dev->inbuf.buffer[packetStart], packetEnd - packetStart);
 
+	printf("Checksum (read, computed): %02x, %02x\n", chkOld, chkNew);
+
+	printf("\n\nData should be \n");
+	for(i = packetStart; i < packetEnd + 3; i++) {
+		printf("%c", dev->inbuf.buffer[i]);
+	}
+	printf("\n\n");
 
 	// Parse out values (all doubles)
-	sscanf(dev->inbuf.buffer, "$VNIMU,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
-			data->compass[0], data->compass[1], data->compass[2],
-			data->accel[0], data->accel[1], data->accel[2],
-			data->gyro[0], data->gyro[1], data->gyro[2],
-			data->temp, data->baro);
+	sscanf(&(dev->inbuf.buffer[packetStart]), "$VNIMU,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+			&(data->compass[0]), &(data->compass[1]), &(data->compass[2]),
+			&(data->accel[0]), &(data->accel[1]), &(data->accel[2]),
+			&(data->gyro[0]), &(data->gyro[1]), &(data->gyro[2]),
+			&(data->temp), &(data->baro));
 
-	return 0;
+	return packetEnd + 3;
 
 } // VN200IMUParse(VN200_DEV *, IMU_DATA *)
 

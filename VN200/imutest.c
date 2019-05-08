@@ -31,12 +31,13 @@
 
 int main(void) {
 
-	int numRead, numParsed, numConsumed;
+	int numRead, numParsed, numConsumed, i;
 
 	// Instances of structure variables
 	VN200_DEV imu;
 	IMU_DATA data;
 
+	printf("Initializing...\n");
 	VN200IMUInit(&imu, 1);
 
 	while(1) {
@@ -44,30 +45,40 @@ int main(void) {
 		numRead = VN200Poll(&imu);
 		printf("Read %d bytes from UART\n", numRead);
 
-		do {
+		if(numRead > 0) {
+			do {
 
-			numParsed = VN200IMUParse(&imu, &data);
-			printf("Parsed %d bytes from buffer\n", numParsed);
+				numParsed = VN200IMUParse(&imu, &data);
+				printf("Parsed %d bytes from buffer\n", numParsed);
 
-			numConsumed = VN200Consume(&imu, numParsed);
-			printf("Consumed %d bytes from buffer\n", numConsumed);
+				printf("\tData:\n");
+				printf("\t\t");
+				for(i = 0; i < numParsed; i++) {
+					printf("%c", imu.inbuf.buffer[i]);
+				}
 
-			// Print out IMU data
-			printf("\nIMU data:\n");
+				numConsumed = VN200Consume(&imu, numParsed);
+				printf("Consumed %d bytes from buffer\n", numConsumed);
 
-			printf("\tCompass: %lf, %lf, %lf\n",
-			data.compass[0], data.compass[1], data.compass[2]);
+				// Print out IMU data
+				printf("\nIMU data:\n");
 
-			printf("\tAccel: %lf, %lf, %lf\n",
-			data.accel[0], data.accel[1], data.accel[2]);
+				printf("\tCompass: %lf, %lf, %lf\n",
+						data.compass[0], data.compass[1], data.compass[2]);
 
-			printf("\tGyro: %lf, %lf, %lf\n",
-			data.gyro[0], data.gyro[1], data.gyro[2]);
+				printf("\tAccel: %lf, %lf, %lf\n",
+						data.accel[0], data.accel[1], data.accel[2]);
 
-			printf("\tTemp: %lf\n", data.temp);
-			printf("\tBaro: %lf\n", data.baro);
+				printf("\tGyro: %lf, %lf, %lf\n",
+						data.gyro[0], data.gyro[1], data.gyro[2]);
 
-		} while(numConsumed > 0);
+				printf("\tTemp: %lf\n", data.temp);
+				printf("\tBaro: %lf\n", data.baro);
+
+			} while(numConsumed > 0);
+		}
+
+		usleep(100000);
 
 	}
 
