@@ -38,27 +38,26 @@ int main(void) {
 	IMU_DATA data;
 
 	printf("Initializing...\n");
-	VN200IMUInit(&imu, 1);
+	VN200IMUInit(&imu, 10);
 
 	while(1) {
 
 		numRead = VN200Poll(&imu);
-		printf("Read %d bytes from UART\n", numRead);
+		// printf("Read %d bytes from UART\n", numRead);
 
-		if(numRead > 0) {
-			do {
+		do {
 
-				numParsed = VN200IMUParse(&imu, &data);
-				printf("Parsed %d bytes from buffer\n", numParsed);
+			numParsed = VN200IMUParse(&imu, &data);
 
+			if(numParsed > 0) {
+
+				/*
 				printf("\tData:\n");
 				printf("\t\t");
 				for(i = 0; i < numParsed; i++) {
 					printf("%c", imu.inbuf.buffer[i]);
 				}
-
-				numConsumed = VN200Consume(&imu, numParsed);
-				printf("Consumed %d bytes from buffer\n", numConsumed);
+				*/
 
 				// Print out IMU data
 				printf("\nIMU data:\n");
@@ -75,10 +74,22 @@ int main(void) {
 				printf("\tTemp: %lf\n", data.temp);
 				printf("\tBaro: %lf\n", data.baro);
 
-			} while(numConsumed > 0);
-		}
+			}
 
-		usleep(100000);
+			numConsumed = VN200Consume(&imu, numParsed);
+
+			/*
+			// Print remaining data
+			printf("Data left in buffer: ");
+			for(i = 0; i < imu.inbuf.length; i++) {
+				printf("%c", imu.inbuf.buffer[i]);
+			}
+			printf("\n");
+			*/
+
+		} while(numConsumed > 0);
+
+		// usleep(100000);
 
 	}
 

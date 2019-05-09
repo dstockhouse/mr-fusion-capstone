@@ -71,12 +71,12 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 
 	// Disable asynchronous output
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,0");
-	VN200Command(dev, commandBuf, commandBufLen);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
 
 	// Set sampling frequency
 	dev->fs = fs;
 	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,7,", dev->fs);
-	VN200Command(dev, commandBuf, commandBufLen);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
 
 	// Clear input buffer (temporary)
 	usleep(100000);
@@ -85,7 +85,7 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 
 	// Enable asynchronous GPS data output
 	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,20");
-	VN200Command(dev, commandBuf, commandBufLen);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
 
 	// Clear input buffer (temporary)
 	VN200FlushInput(dev);

@@ -28,8 +28,10 @@ unsigned char calculateChecksum(unsigned char data[], unsigned int length) {
 	unsigned int i;
 	unsigned char cksum = 0;
 
+	// printf("\t\t\tIn calculateChecksum:\n");
 	for(i=0; i<length; i++){
 		cksum ^= data[i];
+		// printf("\t\t\t        Adding %c; %02x\n", data[i], cksum);
 	}
 
 	return cksum;

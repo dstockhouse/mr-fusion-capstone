@@ -111,7 +111,7 @@ int VN200Poll(VN200_DEV *dev) {
 	// Read without blocking from UART device
 	numRead = UARTRead(dev->fd, startBuf, numToRead);
 	// numRead = UARTRead(dev->fd, tempBuf, numToRead);
-	printf("\tRead %d\n", numRead);
+	// printf("\tRead %d\n", numRead);
 
 	// Log newly read data to file
 	LogUpdate(&(dev->logFile), startBuf, numRead);
@@ -146,9 +146,9 @@ int VN200Consume(VN200_DEV *dev, int num) {
 		return -1;
 	}
 
-	printf("Attempting to consume %d bytes\n", num);
+	// printf("Attempting to consume %d bytes\n", num);
 	num = BufferRemove(&(dev->inbuf), num);
-	printf("Consumed %d bytes\n", num);
+	// printf("Consumed %d bytes\n", num);
 
 	return num;
 
@@ -180,11 +180,14 @@ int VN200FlushInput(VN200_DEV *dev) {
 	// Get all waiting characters from UART
 	num = VN200Poll(dev);
 
+	// /*
+	// Print input before discarding
 	printf("Flushed input:\n");
 	for(i = start; i < dev->inbuf.length; i++) {
 		printf("%c", dev->inbuf.buffer[i]);
 	}
 	printf("\n");
+	// */
 
 	// Clear all characters from input buffer
 	num = VN200Consume(dev, num);
@@ -208,30 +211,46 @@ int VN200FlushInput(VN200_DEV *dev) {
  *	On success, returns number of bytes written
  *	On failure, returns a negative number
  */
-int VN200Command(VN200_DEV *dev, char *cmd, int num) {
+int VN200Command(VN200_DEV *dev, char *cmd, int num, int sendChk) {
 
 	char buf[64];
 	unsigned char checksum;
-	int numWritten;
+	int numWritten, i;
 
 	// Ensure valid pointers
 	if(dev == NULL || cmd == NULL) {
 		return -1;
 	}
 
-	// Calculate checksum of command
-	checksum = calculateChecksum(cmd, num);
 
-	// Write to device output buffer
-	numWritten = snprintf(buf, dev->outbuf.length, "$%s*%02x\n", cmd, checksum);
+	if(sendChk) {
+
+		// Compute and send checksum
+		checksum = calculateChecksum(cmd, num);
+		numWritten = snprintf(buf, 64, "$%s*%02x\n", cmd, checksum);
+
+	} else {
+
+		// Send XX instead of checksum
+		numWritten = snprintf(buf, 64, "$%s*XX\n", cmd);
+
+	} // if(sendChk)
+
+	// Add command string to output buffer
 	BufferAddArray(&(dev->outbuf), buf, numWritten);
+
+	printf("Output buffer contents: \n");
+	for(i = 0; i < dev->outbuf.length; i++) {
+		printf("%02x", dev->outbuf.buffer[i]);
+	}
+	printf("\n");
 
 	// Send output buffer to UART
 	numWritten = VN200FlushOutput(dev);
 
 	return numWritten;
 
-} // VN200Command(VN200_DEV &, char *, int)
+} // VN200Command(VN200_DEV &, char *, int, int)
 
 
 /**** Function VN200FlushOutput ****
@@ -247,7 +266,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num) {
  */
 int VN200FlushOutput(VN200_DEV *dev) {
 
-	int numWritten;
+	int numWritten, i;
 
 	// Ensure valid pointers
 	if(dev == NULL) {
@@ -256,6 +275,15 @@ int VN200FlushOutput(VN200_DEV *dev) {
 
 	// Write output buffer to UART
 	numWritten = UARTWrite(dev->fd, dev->outbuf.buffer, dev->outbuf.length);
+
+	printf("Output: \n");
+	for(i = 0; i < dev->outbuf.length; i++) {
+		printf("%c", dev->outbuf.buffer[i]);
+	}
+	printf("\n");
+
+	// Remove the data from the output buffer
+	BufferRemove(&(dev->outbuf), numWritten);
 
 	return numWritten;
 

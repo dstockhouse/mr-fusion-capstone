@@ -67,23 +67,23 @@ int VN200IMUInit(VN200_DEV *dev, int fs) {
 
 	// Request IMU serial number
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
-	VN200Command(dev, commandBuf, commandBufLen);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
 	usleep(100000);
-	VN200FlushInput(dev);
 
 	// Disable asynchronous data output
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG, 6,0");
-	VN200Command(dev, commandBuf, commandBufLen);
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
+	VN200Command(dev, commandBuf, commandBufLen, 0);
+	usleep(100000);
 	
 	// Set the asynchronous data output freq
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "VNWRG, 7, %d", dev->fs);
-	VN200Command(dev, commandBuf, commandBufLen);
+	dev->fs = fs;
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "VNWRG,07,%d", dev->fs);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
 	usleep(100000);
-	VN200FlushInput(dev);
 
 	// Enable async IMU Measurements on VN200
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG, 6, 19");
-	VN200Command(dev, commandBuf, commandBufLen);
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,19");
+	VN200Command(dev, commandBuf, commandBufLen, 0);
 	usleep(100000);
 	VN200FlushInput(dev);
 
@@ -114,8 +114,6 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 		return -1;
 	}
 
-	printf("Starting parser\n");
-
 	packetStart = 0;
 	// while(!valid) {
 
@@ -131,19 +129,24 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 		return 0;
 	}
 
-	printf("Packet (start, end): %d %d\n", packetStart, packetEnd);
-	printf("Reading checksum\n");
+	// printf("Packet (start, end): %d %d\n", packetStart, packetEnd);
+	// printf("                     %c %c\n", dev->inbuf.buffer[packetStart], dev->inbuf.buffer[packetEnd]);
+
 	// Verify checksum
-	// sscanf(&(dev->inbuf.buffer[packetEnd + 1]), "%x", &chkOld);
-	// chkNew = calculateChecksum(dev->inbuf.buffer[packetStart], packetEnd - packetStart);
+	// printf("Reading checksum\n");
 
-	printf("Checksum (read, computed): %02x, %02x\n", chkOld, chkNew);
+	sscanf(&(dev->inbuf.buffer[packetEnd + 1]), "%hhx", &chkOld);
+	chkNew = calculateChecksum(&(dev->inbuf.buffer[packetStart]), packetEnd - packetStart);
 
+	// printf("Checksum (read, computed): %02x, %02x\n", chkOld, chkNew);
+
+	/*
 	printf("\n\nData should be \n");
 	for(i = packetStart; i < packetEnd + 3; i++) {
 		printf("%c", dev->inbuf.buffer[i]);
 	}
 	printf("\n\n");
+	*/
 
 	// Parse out values (all doubles)
 	sscanf(&(dev->inbuf.buffer[packetStart]), "$VNIMU,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
