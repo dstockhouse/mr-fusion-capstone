@@ -28,6 +28,9 @@ typedef struct {
 	double gyro[3]; // gyro (x, y, z) rad/s
 	double temp; // temp C
 	double baro; // pressure kPa
+
+	struct timespec timestamp; // System time data was collected
+
 } IMU_DATA;
 
 int VN200IMUInit(VN200_DEV *dev, int fs);

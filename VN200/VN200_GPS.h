@@ -20,6 +20,7 @@
 #include "VN200.h"
 
 #include <inttypes.h>
+#include <time.h>
 
 typedef struct {
 	double time;      // 0: Time of the week in seconds
@@ -37,6 +38,9 @@ typedef struct {
 	float VertAcc;    // 12: Vertical position accuracy estimate. (Down)
 	float SpeedAcc;   // 13: Speed accuracy estimate.
 	float TimeAcc;    // 14: Time accuracy estimate.  
+
+	struct timespec timestamp; // System time data was collected
+
 } GPS_DATA;
 
 int VN200GPSInit(VN200_DEV *dev, int fs);

@@ -106,7 +106,7 @@ int pingUSBPoll(PINGUSB_DEV *dev) {
 	// Check if UART data available
 	rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
 	if(rc) {
-		perror("UART: ioctl() failed");
+		perror("pingUSBPoll: ioctl() failed");
 		return -3;
 	}
 	// printf("%d bytes avail...\n", ioctl_status);

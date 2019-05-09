@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -95,7 +96,7 @@ int VN200Poll(VN200_DEV *dev) {
 	// Check if UART data available
 	rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
 	if(rc) {
-		perror("UART: ioctl() failed");
+		perror("VN200Poll ioctl() failed");
 		return -3;
 	}
 	// printf("%d bytes avail...\n", ioctl_status);
@@ -226,8 +227,9 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num, int sendChk) {
 	if(sendChk) {
 
 		// Compute and send checksum
-		checksum = calculateChecksum(cmd, num);
-		numWritten = snprintf(buf, 64, "$%s*%02x\n", cmd, checksum);
+		// checksum = calculateChecksum(cmd, num);
+		checksum = calculateChecksum(cmd, strlen(cmd));
+		numWritten = snprintf(buf, 64, "$%s*%02X\n", cmd, checksum);
 
 	} else {
 
@@ -241,7 +243,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num, int sendChk) {
 
 	printf("Output buffer contents: \n");
 	for(i = 0; i < dev->outbuf.length; i++) {
-		printf("%02x", dev->outbuf.buffer[i]);
+		printf("%02X", dev->outbuf.buffer[i]);
 	}
 	printf("\n");
 

@@ -31,13 +31,14 @@
 
 int main(void) {
 
-	int numRead, numParsed, numConsumed;
+	int numRead, numParsed, numConsumed, i;
 
 	// Instances of structure variables
 	VN200_DEV gps;
 	GPS_DATA data;
 
-	VN200GPSInit(&gps, 1);
+	printf("Initializing...\n");
+	VN200GPSInit(&gps, 5);
 
 	while(1) {
 
@@ -47,20 +48,34 @@ int main(void) {
 		do {
 
 			numParsed = VN200GPSParse(&gps, &data);
-			printf("Parsed %d bytes from buffer\n", numParsed);
+			// printf("Parsed %d bytes from buffer\n", numParsed);
+
+			if(numParsed > 0) {
+
+				// /*
+				printf("\tData:\n");
+				printf("\t\t");
+				for(i = 0; i < numParsed; i++) {
+					printf("%c", gps.inbuf.buffer[i]);
+				}
+				// */
+
+				// Print out GPS data
+				printf("\nGPS data:\n");
+				printf("\tTime is %lf\n", data.time);
+				printf("\t%hhd sats locked\n", data.NumSats);
+				printf("\tLatitude is %lf\n", data.Latitude);
+				printf("\tLongitude is %lf\n", data.Longitude);
+				printf("\tAltitude is %lf\n\n", data.Altitude);
+
+			}
 
 			numConsumed = VN200Consume(&gps, numParsed);
-			printf("Consumed %d bytes from buffer\n", numConsumed);
-
-			// Print out GPS data
-			printf("\nGPS data:\n");
-			printf("\tTime is %lf\n", data.time);
-			printf("\t%hhd sats locked\n", data.NumSats);
-			printf("\tLatitude is %lf\n", data.Latitude);
-			printf("\tLongitude is %lf\n", data.Longitude);
-			printf("\tAltitude is %lf\n\n", data.Altitude);
+			// printf("Consumed %d bytes from buffer\n", numConsumed);
 
 		} while(numConsumed > 0);
+
+		// usleep(100000);
 
 	}
 

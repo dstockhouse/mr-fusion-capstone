@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 #include <inttypes.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -69,23 +70,26 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 	// Initialize log file
 	LogInit(&(dev->logFile), "../SampleData/VN200/GPS", "VN200", 1);
 
+	// Request IMU serial number
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
+
 	// Disable asynchronous output
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,0");
-	VN200Command(dev, commandBuf, commandBufLen, 0);
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
 
 	// Set sampling frequency
 	dev->fs = fs;
-	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,7,", dev->fs);
-	VN200Command(dev, commandBuf, commandBufLen, 0);
-
-	// Clear input buffer (temporary)
-	usleep(100000);
-	VN200FlushInput(dev);
+	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
+	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
 
 	// Enable asynchronous GPS data output
-	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,6,20");
-	VN200Command(dev, commandBuf, commandBufLen, 0);
+	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,20");
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
 
 	// Clear input buffer (temporary)
 	VN200FlushInput(dev);
@@ -99,6 +103,9 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
  *
  * Parses data from VN200 input buffer, assuming device is configured as GPS
  *
+ * Example packet:
+ * 	$VNGPS,342123.000168,1890,3,05,+34.61463270,-112.45087270,+01559.954,+000.450,+000.770,-001.290,+002.940,+005.374,+007.410,+001.672,2.10E-08*23
+ *
  * Arguments: 
  * 	dev  - Pointer to VN200_DEV instance to parse from
  * 	data - Pointer to GPS_DATA instance to store parsed data
@@ -107,7 +114,7 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
  *	On success, returns number of bytes parsed from buffer
  *	On failure, returns a negative number
  */
-int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
+int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 
 	// Make extra sure there is enough room in the buffer
 #define PACKET_BUF_SIZE 1024
@@ -117,10 +124,10 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 	char *tokenList[NUM_GPS_FIELDS];
 
 	unsigned char chkOld, chkNew;
-	int packetStart, packetEnd, i;
+	int packetStart, packetEnd, i, rc;
 
 	// Exit on error if invalid pointer
-	if(dev == NULL || parsedData == NULL) {
+	if(dev == NULL || data == NULL) {
 		return -1;
 	}
 
@@ -134,7 +141,11 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 
 	// Find start of a packet ($)
 	for( ; packetStart < dev->inbuf.length && 
-			dev->inbuf.buffer[packetStart] != '$'; packetStart++) ;
+		strncmp(&(dev->inbuf.buffer[packetStart]), "$VNGPS", 6); 
+		packetStart++) {
+
+		// printf("start: %d, strncmp is %d\n", packetStart, strncmp(&(dev->inbuf.buffer[packetStart]), "$VNGPS", 6));
+	}
 
 	// Find end of packet (*)
 	for(packetEnd = packetStart; packetEnd < dev->inbuf.length - 3 && 
@@ -148,13 +159,34 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 		return -3;
 	}
 
-	// Verify checksum
-	// sscanf(dev->inbuf.buffer[packetEnd + 1], "%x", &chkOld);
-	// chkNew = calculateChecksum(dev->inbuf.buffer[packetStart], packetEnd - packetStart);
+	// printf("Packet (start, end): %d %d\n", packetStart, packetEnd);
+	// printf("                     %c %c\n", dev->inbuf.buffer[packetStart], dev->inbuf.buffer[packetEnd]);
 
-	/* Example packet:
-	 * $VNGPS,342123.000168,1890,3,05,+34.61463270,-112.45087270,+01559.954,+000.450,+000.770,-001.290,+002.940,+005.374,+007.410,+001.672,2.10E-08*23
-	 */
+	// Verify checksum
+	// printf("Reading checksum\n");
+	sscanf(&(dev->inbuf.buffer[packetEnd + 1]), "%hhX", &chkOld);
+	chkNew = calculateChecksum(&(dev->inbuf.buffer[packetStart + 1]), packetEnd - packetStart - 1);
+	// printf("Checksum (read, computed): %02X, %02X\n", chkOld, chkNew);
+
+	if(chkNew != chkOld) {
+		// Checksum failed, don't parse (but allow to skip to next packet)
+		return 1;
+	}
+
+	// Make timestamp
+	rc = clock_gettime(CLOCK_REALTIME, &(data->timestamp));
+	if(rc) {
+		perror("VN200GPSParse: Couldn't get timestamp");
+	}
+
+	/*
+	printf("\n\nData should be \n");
+	for(i = packetStart; i < packetEnd + 3; i++) {
+		printf("%c", dev->inbuf.buffer[i]);
+	}
+	printf("\n\n");
+	*/
+
 
 	// Copy string to be modified by strtok
 	strncpy(currentPacket, &(dev->inbuf.buffer[packetStart+7]), 
@@ -165,24 +197,60 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData) {
 	for(i = 1; i < NUM_GPS_FIELDS && tokenList[i-1] != NULL; i++) {
 		tokenList[i] = strtok(NULL, ",");
 	}
-	printf("Read %d GPS comma delimited fields from %d characters\n", i-1, packetEnd);
+	printf("Read %d GPS comma delimited fields from %d characters:\n", i-1, packetEnd);
+	/*
+	for(i = 0; i < NUM_GPS_FIELDS && tokenList[i] != NULL; i++) {
+		printf(tokenList[i]);
+		printf("\n");
+	}
+	*/
 
 	// Get time
-	sscanf(tokenList[0], "%lf", &(parsedData->time));
+	sscanf(tokenList[0], "%lf", &(data->time));
+
+	// Get week
+	sscanf(tokenList[1], "%hd", &(data->week));
+
+	// Get GPS fix
+	sscanf(tokenList[2], "%hhd", &(data->GpsFix));
 
 	// Get number of GPS satellites
-	sscanf(tokenList[3], "%hhd", &(parsedData->NumSats));
+	sscanf(tokenList[3], "%hhd", &(data->NumSats));
 
-	// Get latitude
-	sscanf(tokenList[4], "%lf", &(parsedData->Latitude));
+	// Get Latitude
+	sscanf(tokenList[4], "%lf", &(data->Latitude));
 
 	// Get Longitude
-	sscanf(tokenList[5], "%lf", &(parsedData->Longitude));
+	sscanf(tokenList[5], "%lf", &(data->Longitude));
 
 	// Get Altitude
-	sscanf(tokenList[6], "%lf", &(parsedData->Altitude));
+	sscanf(tokenList[6], "%lf", &(data->Altitude));
 
-	return packetEnd;
+	// Get NedVelX
+	sscanf(tokenList[7], "%f", &(data->NedVelX));
+
+	// Get NedVelY
+	sscanf(tokenList[8], "%f", &(data->NedVelY));
+
+	// Get NedVelZ
+	sscanf(tokenList[9], "%f", &(data->NedVelZ));
+
+	// Get North Accuracy
+	sscanf(tokenList[10], "%f", &(data->NorthAcc));
+
+	// Get East Accuracy
+	sscanf(tokenList[11], "%f", &(data->EastAcc));
+
+	// Get Vert Accuracy
+	sscanf(tokenList[12], "%f", &(data->VertAcc));
+
+	// Get Speed Accuracy
+	sscanf(tokenList[13], "%f", &(data->SpeedAcc));
+
+	// Get Time Accuracy
+	sscanf(tokenList[14], "%f", &(data->TimeAcc));
+
+	return packetEnd + 3;
 
 } // VN200GPSParse(VN200_DEV *, GPS_DATA *)
 

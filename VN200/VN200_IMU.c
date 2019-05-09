@@ -67,24 +67,26 @@ int VN200IMUInit(VN200_DEV *dev, int fs) {
 
 	// Request IMU serial number
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
-	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
 
 	// Disable asynchronous data output
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
-	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
 	
 	// Set the asynchronous data output freq
 	dev->fs = fs;
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "VNWRG,07,%d", dev->fs);
-	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
 
 	// Enable async IMU Measurements on VN200
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,19");
-	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
+
+	// Clear input buffer (temporary)
 	VN200FlushInput(dev);
 
 	return 0;
@@ -134,11 +136,20 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 
 	// Verify checksum
 	// printf("Reading checksum\n");
+	sscanf(&(dev->inbuf.buffer[packetEnd + 1]), "%hhX", &chkOld);
+	chkNew = calculateChecksum(&(dev->inbuf.buffer[packetStart + 1]), packetEnd - packetStart - 1);
+	// printf("Checksum (read, computed): %02X, %02X\n", chkOld, chkNew);
 
-	sscanf(&(dev->inbuf.buffer[packetEnd + 1]), "%hhx", &chkOld);
-	chkNew = calculateChecksum(&(dev->inbuf.buffer[packetStart]), packetEnd - packetStart);
+	if(chkNew != chkOld) {
+		// Checksum failed, don't parse (but allow to skip to next packet)
+		return 1;
+	}
 
-	// printf("Checksum (read, computed): %02x, %02x\n", chkOld, chkNew);
+	// Make timestamp
+	rc = clock_gettime(CLOCK_REALTIME, &(data->timestamp));
+	if(rc) {
+		perror("VN200IMUParse: Couldn't get timestamp");
+	}
 
 	/*
 	printf("\n\nData should be \n");
