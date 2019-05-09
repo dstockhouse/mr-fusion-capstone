@@ -109,7 +109,7 @@ int VN200IMUInit(VN200_DEV *dev, int fs) {
 int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 
 	unsigned char chkOld, chkNew;
-	int packetStart, packetEnd, i;
+	int packetStart, packetEnd, i, rc;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL || data == NULL) {

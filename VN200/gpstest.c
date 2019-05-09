@@ -43,7 +43,7 @@ int main(void) {
 	while(1) {
 
 		numRead = VN200Poll(&gps);
-		printf("Read %d bytes from UART\n", numRead);
+		// printf("Read %d bytes from UART\n", numRead);
 
 		do {
 
@@ -52,13 +52,13 @@ int main(void) {
 
 			if(numParsed > 0) {
 
-				// /*
+				/*
 				printf("\tData:\n");
 				printf("\t\t");
 				for(i = 0; i < numParsed; i++) {
 					printf("%c", gps.inbuf.buffer[i]);
 				}
-				// */
+				*/
 
 				// Print out GPS data
 				printf("\nGPS data:\n");

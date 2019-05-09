@@ -82,12 +82,12 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 
 	// Set sampling frequency
 	dev->fs = fs;
-	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
 	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
 
 	// Enable asynchronous GPS data output
-	snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,20");
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,20");
 	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
 
@@ -197,8 +197,8 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 	for(i = 1; i < NUM_GPS_FIELDS && tokenList[i-1] != NULL; i++) {
 		tokenList[i] = strtok(NULL, ",");
 	}
-	printf("Read %d GPS comma delimited fields from %d characters:\n", i-1, packetEnd);
 	/*
+	printf("Read %d GPS comma delimited fields from %d characters:\n", i-1, packetEnd);
 	for(i = 0; i < NUM_GPS_FIELDS && tokenList[i] != NULL; i++) {
 		printf(tokenList[i]);
 		printf("\n");
