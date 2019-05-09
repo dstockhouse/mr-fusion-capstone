@@ -24,6 +24,10 @@
  * 	Added UARTWrite function
  * 	Last edited 4/20/2019
  *
+ * Revision 0.5
+ * 	Added access() for permission checking
+ * 	Last edited 5/08/2019
+ *
 \***************************************************************************/
 
 #ifndef __UART_H

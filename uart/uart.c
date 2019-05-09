@@ -24,6 +24,10 @@
  * 	Added UARTWrite function
  * 	Last edited 4/20/2019
  *
+ * Revision 0.5
+ * 	Added access() for permission checking
+ * 	Last edited 5/08/2019
+ *
 \***************************************************************************/
 
 #include "uart.h"
@@ -56,6 +60,7 @@
 int UARTInit(char *devName, int baud) {
 
 	struct termios uartOptions;
+	struct stat fileStats;
 	int uart_fd, rc;
 
 	// Exit on error if invalid pointer
@@ -63,19 +68,26 @@ int UARTInit(char *devName, int baud) {
 		return -1;
 	}
 
+	// Ensure user has permissions to access UART file
+	rc = access(devName, R_OK | W_OK);
+	if(rc) {
+		perror("Cannot access UART device (try as sudo?)");
+		return rc;
+	}
+
+	// Open UART file
 	// uart_fd = open(devName, O_RDWR | O_NOCTTY | O_NDELAY);
 	uart_fd = open(devName, O_RDWR | O_NOCTTY);
 	if(uart_fd < 0) {
-		perror("open() failed for UART device");
+		perror("UARTInit open() failed for UART device");
 		return uart_fd;
 	}
 
 	rc = tcgetattr(uart_fd, &uartOptions);
 	if(rc) {
-		perror("tcgetattr() failed for UART device");
-		return -4;
+		perror("UARTInit tcgetattr() failed for UART device");
+		return rc;
 	}
-
 
 	// Previous
 	// uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
@@ -110,14 +122,14 @@ int UARTInit(char *devName, int baud) {
 	// Push changed options to device (after flushing input and output)
 	rc = tcflush(uart_fd, TCIOFLUSH);
  	if(rc) {
- 		perror("tcflush() failed for UART device");
- 		return -4;
+ 		perror("UARTInit tcflush() failed for UART device");
+ 		return rc;
  	}
 
 	rc = tcsetattr(uart_fd, TCSANOW, &uartOptions);
 	if(rc) {
-		perror("tcsetattr() failed for UART device");
-		return -4;
+		perror("UARTInit tcsetattr() failed for UART device");
+		return rc;
 	}
 
 	// Return file descriptor for UART
@@ -158,8 +170,8 @@ int UARTRead(int uart_fd, char *buf, int length) {
 	numRead = read(uart_fd, buf, length);
 	// printf("UARTRead: read %d chars\n", numRead);
 	if(numRead < 0) {
-		perror("read() failed for UART device");
-		return -2;
+		perror("UARTread read() failed for UART device");
+		return numRead;
 	}
 
 	// Return number of bytes successfully read into buffer
@@ -194,8 +206,8 @@ int UARTWrite(int uart_fd, char *buf, int length) {
 	// Attempt to write to UART device length bytes
 	numWritten = write(uart_fd, buf, length);
 	if(numWritten < 0) {
-		perror("write() failed for UART device");
-		return -2;
+		perror("UARTWrite write() failed for UART device");
+		return numWritten;
 	}
 
 	// Return number of bytes successfully read into buffer
@@ -221,8 +233,8 @@ int UARTClose(int uart_fd) {
 
 	rc = close(uart_fd);
 	if(rc) {
-		perror("Couldn't close UART file");
-		return -1;
+		perror("UARTClose Couldn't close UART file");
+		return rc;
 	}
 
 	return 0;
