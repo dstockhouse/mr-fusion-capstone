@@ -123,13 +123,14 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 
 	// Make extra sure there is enough room in the buffer
 #define PACKET_BUF_SIZE 1024
-	char currentPacket[PACKET_BUF_SIZE];
+	char currentPacket[PACKET_BUF_SIZE], logBuf[512];
 
 #define NUM_GPS_FIELDS 15
 	char *tokenList[NUM_GPS_FIELDS];
 
 	unsigned char chkOld, chkNew;
-	int packetStart, packetEnd, i, rc;
+	int packetStart, packetEnd, logBufLen, i, rc;
+	double timestampDouble;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL || data == NULL) {

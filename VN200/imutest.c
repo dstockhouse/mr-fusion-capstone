@@ -38,7 +38,7 @@ int main(void) {
 	IMU_DATA data;
 
 	printf("Initializing...\n");
-	VN200IMUInit(&imu, 10);
+	VN200IMUInit(&imu, 50);
 
 	while(1) {
 
