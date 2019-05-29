@@ -56,8 +56,8 @@
 int VN200GPSInit(VN200_DEV *dev, int fs) {
 
 #define CMD_BUFFER_SIZE 64
-	char commandBuf[CMD_BUFFER_SIZE];
-	int commandBufLen;
+	char commandBuf[CMD_BUFFER_SIZE], logBuf[256];
+	int commandBufLen, logBufLen;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
@@ -67,8 +67,13 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 	// Initialize UART for use
 	VN200BaseInit(dev);
 
-	// Initialize log file
+	// Initialize log file for raw and parsed data
 	LogInit(&(dev->logFile), "../SampleData/VN200/GPS", "VN200", 1);
+	LogInit(&(dev->logFileParsed), "../SampleData/VN200/GPS", "VN200", 0);
+
+	// Write header to CSV data
+	logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,lat,lon,alt,velx,vely,velz,nacc,eacc,vacc,tacc,timestamp\n");
+	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
 
 	// Request IMU serial number
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
@@ -249,6 +254,17 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 
 	// Get Time Accuracy
 	sscanf(tokenList[14], "%f", &(data->TimeAcc));
+
+	// Log parsed data to file in CSV format
+	timestampDouble = ((double) data->timestamp.tv_sec) + (((double) data->timestamp.tv_nsec) / 1000000000);
+	logBufLen = snprintf(logBuf, 512, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f,%lf\n",
+			data->time, data->week, data->GpsFix, data->NumSats,
+			data->Latitude, data->Longitude, data->Altitude,
+			data->NedVelX, data->NedVelY, data->NedVelZ,
+			data->NorthAcc, data->EastAcc, data->VertAcc,
+			data->SpeedAcc, data->TimeAcc, timestampDouble);
+
+	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
 
 	return packetEnd + 3;
 

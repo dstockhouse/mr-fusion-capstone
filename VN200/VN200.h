@@ -36,6 +36,7 @@ typedef struct {
 	BYTE_BUFFER inbuf;
 	BYTE_BUFFER outbuf;
 	LOG_FILE logFile;
+	LOG_FILE logFileParsed;
 	int baud; // Baud rate 115200, 128000, 230400, 460800, 921600
 	int fs; // Sampling Frequency => 100
 } VN200_DEV;
