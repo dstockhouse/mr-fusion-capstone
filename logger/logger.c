@@ -144,7 +144,7 @@ int mkdir_p(const char *pathname, mode_t mode) {
 int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 
 	int rc;
-	char ext[8];
+	char extString[8];
 
 	// Get seconds since epoch
 	logFile->timestamp = time(NULL);
@@ -152,18 +152,18 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 	// Determine filename extension, default is log
 	switch(ext) {
 		case LOG_FILEEXT_BIN:
-			strcpy(ext, "bin");
+			strcpy(extString, "bin");
 			logFile->bin = 1;
 			break;
 
 		case LOG_FILEEXT_CSV:
-			strcpy(ext, "csv");
+			strcpy(extString, "csv");
 			logFile->bin = 0;
 			break;
 
 		case LOG_FILEEXT_LOG:
 		default:
-			strcpy(ext, "log");
+			strcpy(extString, "log");
 			logFile->bin = 0;
 			break;
 
@@ -171,7 +171,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 
 	// Generate filename for the log file
 	logFile->filenameLength = generateFilename(logFile->filename, LOG_FILENAME_LENGTH, 
-			&(logFile->timestamp), dir, pre, ext);
+			&(logFile->timestamp), dir, pre, extString);
 	if(logFile->filenameLength == LOG_FILENAME_LENGTH) {
 		printf("Filename too long, using %s\n", logFile->filename);
 	}
