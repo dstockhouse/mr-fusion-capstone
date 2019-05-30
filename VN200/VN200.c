@@ -12,6 +12,10 @@
  * Revision 0.1
  * 	Last edited 5/06/2019
  *
+ * Revision 0.2
+ * 	Last edited 5/30/2019
+ * 	Major overhaul unifying GPS and IMU functionality
+ *
  ***************************************************************************/
 
 #include "VN200.h"
@@ -31,6 +35,40 @@
 #include <sys/ioctl.h>
 
 
+/**** Function getTimestamp ****
+ *
+ * Gets a system timestamp as a double and struct timespec
+ *
+ * Arguments: 
+ * 	ts - Pointer to struct timespec to be used in gettime function
+ * 	td - Pointer to double to store processed timestamp
+ *
+ * Return value:
+ *	On success, returns 0
+ *	On failure, returns a negative number
+ */
+int getTimestamp(struct timespec *ts, double *td) {
+
+	int rc;
+
+	if(ts == NULL || td == NULL) {
+		return -2;
+	}
+
+	// Get system time
+	rc = clock_gettime(CLOCK_REALTIME, ts);
+	if(rc) {
+		return rc;
+	}
+
+	// Return (by ref) time as double
+	*td = ((double) ts->tv_sec) + ((double) ts->tv_nsec) / 1000000000;
+
+	return 0;
+
+} // getTimestamp(struct timespec *, double *)
+
+
 /**** Function VN200BaseInit ****
  *
  * Initializes a VN200 IMU/GPS before it is setup for either functionality.
@@ -43,13 +81,22 @@
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int VN200BaseInit(VN200_DEV *dev) {
+int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
+
+	int i;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL) {
-		return -1; }
+		return -1;
+	}
 
-	dev->fd = UARTInit(VN200_DEVNAME, VN200_BAUD);
+	// If device name not given, use default
+	if(devname == NULL) {
+		dev->fd = UARTInit(VN200_DEVNAME, baud);
+	} else {
+		dev->fd = UARTInit(devname, baud);
+	}
+
 	if(dev->fd < 0) {
 		printf("Couldn't initialize VN200 sensor\n");
 		return -2;
@@ -58,6 +105,10 @@ int VN200BaseInit(VN200_DEV *dev) {
 	// Initialize the input and output buffers
 	BufferEmpty(&(dev->inbuf));
 	BufferEmpty(&(dev->outbuf));
+
+	// Initialize packet ring buffer
+	dev->ringbuf.start = 0;
+	dev->ringbuf.end = 0;
 
 	return 0;
 

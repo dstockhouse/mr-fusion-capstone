@@ -64,11 +64,11 @@ int VN200IMUInit(VN200_DEV *dev, int fs) {
 
 	// Initialize log file for raw and parsed data
 	LogInit(&(dev->logFile), "../SampleData/VN200/IMU", "VN200", LOG_FILEEXT_LOG);
-	LogInit(&(dev->logFileParsed), "../SampleData/VN200/IMU", "VN200", LOG_FILEEXT_CSV);
+	LogInit(&(dev->logFileIMUParsed), "../SampleData/VN200/IMU", "VN200", LOG_FILEEXT_CSV);
 
 	// Write header to CSV data
 	logBufLen = snprintf(logBuf, 256, "compx,compy,compz,accelx,accely,accelz,gyrox,gyroy,gyroz,temp,baro,timestamp\n");
-	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
+	LogUpdate(&(dev->logFileIMUParsed), logBuf, logBufLen);
 
 	// Request IMU serial number
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
@@ -185,7 +185,7 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 			data->gyro[0], data->gyro[1], data->gyro[2],
 			data->temp, data->baro, data->timestamp);
 
-	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
+	LogUpdate(&(dev->logFileIMUParsed), logBuf, logBufLen);
 
 	return packetEnd + 3;
 
