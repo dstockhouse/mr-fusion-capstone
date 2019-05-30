@@ -54,6 +54,7 @@ typedef struct {
 
 	int isParsed;     // Bool indicating that the raw data has been parsed
 	double timestamp; // Timestamp when packet start was read from UART
+	struct timespec timestamp_ts;
 
 	// Not yet implemented
 	// semaphore_t *sem;  // Pointer to a semaphore (to use if multithreaded)
@@ -77,6 +78,16 @@ typedef struct {
 int VN200Init(VN200_DEV *dev, int baud, int fs, int mode);
 
 int VN200Parse(VN200_DEV *dev, GPS_DATA *parsedData);
+
+int VN200PacketRingBufferEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
+
+int VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
+
+int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf);
+
+int VN200PacketRingBufferAddData(VN200_PACKET_RING_BUFFER *ringbuf, char data);
+
+int VN200PacketAdd(VN200_PACKET *packet, char data);
 
 #endif
 

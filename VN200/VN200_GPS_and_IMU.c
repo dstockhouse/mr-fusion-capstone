@@ -333,3 +333,91 @@ int VN200Parse(VN200_DEV *dev, GPS_DATA *data) {
 
 } // VN200Parse(VN200_DEV *, GPS_DATA *)
 
+
+int VN200PacketRingBufferEmpty(VN200_PACKET_RING_BUFFER *ringbuf) {
+
+	ringbuf->start = 0;
+	ringbuf->end = 0;
+
+	return 0;
+
+} // VN200PacketRingBufferEmpty(VN200_PACKET_RING_BUFFER *)
+
+int VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *ringbuf) {
+
+	if(ringbuf == NULL) {
+		return -1;
+	}
+
+	return 0;
+
+} // VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *)
+
+int VN200PacketRingBufferIsFull(VN200_PACKET_RING_BUFFER *ringbuf) {
+
+	if(ringbuf == NULL) {
+		return -1;
+	}
+
+	// Full if end is one behind start
+	return ringbuf->end == (ringbuf->end - 1) % 1;
+
+} // VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *)
+
+int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf) {
+
+	if(ringbuf == NULL) {
+		return -1;
+	}
+
+	if(VN200PacketRingBufferIsFull(ringbuf)) {
+		return 0;
+	}
+
+	// If room, move end one along
+	dev->ringbuf.end = (dev->ringbuf.end + 1) % VN200_RING_BUFFER_SIZE;
+
+	// Get timestamp
+	getTimestamp(&(dev->ringbuf.packets[packetIndex].timestamp_ts), &(dev->ringbuf.packets[packetIndex].timestamp));
+
+	// Empty packet data buffer
+	BufferEmpty(&(dev->ringbuf.packets[packetIndex].buf));
+
+	// Set contents type to neither GPS nor IMU
+	dev->ringbuf.packets[packetIndex].contentsType = VN200_PACKET_CONTENTS_TYPE_OTHER;
+
+	// Set not parsed
+	dev->ringbuf.packets[packetIndex].isParsed = 0;
+
+	return 1;
+
+} // VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *)
+
+int VN200PacketRingBufferAddData(VN200_PACKET_RING_BUFFER *ringbuf, char data) {
+
+	int lastIndex;
+
+	if(ringbuf == NULL) {
+		return -1;
+	}
+
+	if(VN200PacketRingBufferIsEmpty(ringbuf)) {
+		return -2;
+	}
+
+	lastIndex = (ringbuf->end - 1) % VN200_PACKET_RING_BUFFER_SIZE;
+
+	return VN200PacketAdd(&(ringbuf->packets[lastIndex]), data);
+
+} // VN200PacketRingBufferAddData(VN200_PACKET_RING_BUFFER *, char) {
+
+int VN200PacketAdd(VN200_PACKET *packet, char data) {
+
+	if(packet == NULL) {
+		return -1;
+	}
+
+	return BufferAdd(&(packet->buf), data);
+
+} // VN200PacketAdd(VN200_PACKET *, char)
+

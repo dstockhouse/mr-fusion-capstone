@@ -118,7 +118,8 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
 /**** Function VN200Poll ****
  *
  * Polls the UART file for an initialized VN200 device and populates inbuf with
- * read data
+ * read data. If it detects the start of a packet with '$' it will also move
+ * the data into the next available VN200_PACKET in the ring buffer
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to poll
@@ -154,9 +155,10 @@ int VN200Poll(VN200_DEV *dev) {
 
 	// Calculate length and pointer to proper position in array
 	numToRead = BYTE_BUFFER_LEN - dev->inbuf.length;
-	startBuf = &(dev->inbuf.buffer[dev->inbuf.length]);
+	startIndex = dev->inbuf.length;
+	startBuf = &(dev->inbuf.buffer[startIndex]);
 	// printf("Poll: startBuf is %p\n", startBuf);
-	startBuf[0] = 2;
+	// startBuf[0] = 2;
 
 	// printf("Attempting to read %d bytes from uart device...\n", numToRead);
 
@@ -172,6 +174,41 @@ int VN200Poll(VN200_DEV *dev) {
 	// memcpy(&(dev->inbuf.buffer[dev->inbuf.length]), tempBuf, numRead);
 
 	dev->inbuf.length += numRead;
+
+
+	// Populate most recent packet with data and/or start a new packet
+	for(i = 0; i < numRead; i++) {
+
+		// If start of packet, create new packet
+		if(startBuf[i] == '$') {
+
+			// Initialize new packet
+			rc = VN200PacketRingBufferAddPacket(&(dev->ringbuf));
+			if(rc < 1) {
+				printf("VN200Parse: Couldn't add packet to ring buffer\n");
+				return -1;
+			}
+
+		}
+		
+		// If ring buffer is not empty
+		// (there is a partially complete packet)
+		if(!VN200RingBufferIsEmpty(&(dev->ringbuf))) {
+
+			// Add character to packet data buffer
+			rc = VN200PacketRingBufferAddData(&(dev->ringbuf), startBuf[i]);
+			if(rc < 1) {
+				return rc;
+			}
+
+		} else {
+
+			// Printout incomplete packet data
+			printf("%c", startBuf[i]);
+
+		}
+
+	} // for(i < numRead)
 
 	// Return number successfully read (may be 0)
 	return numRead;
