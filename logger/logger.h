@@ -33,6 +33,11 @@
 
 #define LOG_FILENAME_LENGTH 256
 
+// Extension type identifiers
+#define LOG_FILEEXT_LOG 0
+#define LOG_FILEEXT_BIN 1
+#define LOG_FILEEXT_CSV 2
+
 typedef struct {
 	int fd;
 	int bin;
@@ -44,7 +49,7 @@ typedef struct {
 int generateFilename(char *buf, int bufSize, time_t *time, 
 		const char *dir, const char *pre, const char *ext);
 
-int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin);
+int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext);
 
 int LogUpdate(LOG_FILE *logFile, const char *buf, int length);
 

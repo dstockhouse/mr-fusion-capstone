@@ -29,7 +29,7 @@ typedef struct {
 	double temp; // temp C
 	double baro; // pressure kPa
 
-	struct timespec timestamp; // System time data was collected
+	double timestamp; // System time data was collected
 
 } IMU_DATA;
 

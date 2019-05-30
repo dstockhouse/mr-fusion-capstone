@@ -67,8 +67,8 @@ int pingUSBInit(PINGUSB_DEV *dev) {
 	BufferEmpty(&(dev->inbuf));
 
 	// Initialize log file
-	LogInit(&(dev->logFile), "../SampleData/ADS_B", "ADS_B", 1);
-	LogInit(&(dev->logFileParsed), "../SampleData/ADS_B", "ADS_B", 0);
+	LogInit(&(dev->logFile), "../SampleData/ADS_B", "ADS_B", LOG_FILEEXT_BIN);
+	LogInit(&(dev->logFileParsed), "../SampleData/ADS_B", "ADS_B", LOG_FILEEXT_LOG);
 
 	return 0;
 

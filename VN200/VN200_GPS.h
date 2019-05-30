@@ -39,7 +39,7 @@ typedef struct {
 	float SpeedAcc;   // 13: Speed accuracy estimate.
 	float TimeAcc;    // 14: Time accuracy estimate.  
 
-	struct timespec timestamp; // System time data was collected
+	double timestamp; // System time data was collected
 
 } GPS_DATA;
 

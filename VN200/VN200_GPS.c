@@ -68,11 +68,11 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
 	VN200BaseInit(dev);
 
 	// Initialize log file for raw and parsed data
-	LogInit(&(dev->logFile), "../SampleData/VN200/GPS", "VN200", 1);
-	LogInit(&(dev->logFileParsed), "../SampleData/VN200/GPS", "VN200", 0);
+	LogInit(&(dev->logFile), "../SampleData/VN200/GPS", "VN200", LOG_FILEEXT_LOG);
+	LogInit(&(dev->logFileParsed), "../SampleData/VN200/GPS", "VN200", LOG_FILEEXT_CSV);
 
 	// Write header to CSV data
-	logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,lat,lon,alt,velx,vely,velz,nacc,eacc,vacc,tacc,timestamp\n");
+	logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,lat,lon,alt,velx,vely,velz,nacc,eacc,vacc,sacc,tacc,timestamp\n");
 	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
 
 	// Request IMU serial number
@@ -130,7 +130,7 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 
 	unsigned char chkOld, chkNew;
 	int packetStart, packetEnd, logBufLen, i, rc;
-	double timestampDouble;
+	struct timespec timestamp_ts;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL || data == NULL) {
@@ -180,10 +180,15 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 	}
 
 	// Make timestamp
-	rc = clock_gettime(CLOCK_REALTIME, &(data->timestamp));
+	rc = clock_gettime(CLOCK_REALTIME, &timestamp_ts);
 	if(rc) {
 		perror("VN200GPSParse: Couldn't get timestamp");
+
+		// Set timestamp to 0
+		timestamp_ts.tv_sec = 0;
+		timestamp_ts.tv_nsec = 0;
 	}
+	data->timestamp = ((double) timestamp_ts.tv_sec) + ((double) timestamp_ts.tv_nsec) / 1000000000;
 
 	/*
 	printf("\n\nData should be \n");
@@ -257,13 +262,12 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 	sscanf(tokenList[14], "%f", &(data->TimeAcc));
 
 	// Log parsed data to file in CSV format
-	timestampDouble = ((double) data->timestamp.tv_sec) + (((double) data->timestamp.tv_nsec) / 1000000000);
-	logBufLen = snprintf(logBuf, 512, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f,%lf\n",
+	logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
 			data->time, data->week, data->GpsFix, data->NumSats,
 			data->Latitude, data->Longitude, data->Altitude,
 			data->NedVelX, data->NedVelY, data->NedVelZ,
 			data->NorthAcc, data->EastAcc, data->VertAcc,
-			data->SpeedAcc, data->TimeAcc, timestampDouble);
+			data->SpeedAcc, data->TimeAcc, data->timestamp);
 
 	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
 

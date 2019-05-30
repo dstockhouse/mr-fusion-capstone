@@ -63,8 +63,8 @@ int VN200IMUInit(VN200_DEV *dev, int fs) {
 	VN200BaseInit(dev);
 
 	// Initialize log file for raw and parsed data
-	LogInit(&(dev->logFile), "../SampleData/VN200/IMU", "VN200", 1);
-	LogInit(&(dev->logFileParsed), "../SampleData/VN200/IMU", "VN200", 0);
+	LogInit(&(dev->logFile), "../SampleData/VN200/IMU", "VN200", LOG_FILEEXT_LOG);
+	LogInit(&(dev->logFileParsed), "../SampleData/VN200/IMU", "VN200", LOG_FILEEXT_CSV);
 
 	// Write header to CSV data
 	logBufLen = snprintf(logBuf, 256, "compx,compy,compz,accelx,accely,accelz,gyrox,gyroy,gyroz,temp,baro,timestamp\n");
@@ -116,7 +116,7 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 	unsigned char chkOld, chkNew;
 	int packetStart, packetEnd, logBufLen, i, rc;
 	char logBuf[512];
-	double timestampDouble;
+	struct timespec timestamp_ts;
 
 	// Exit on error if invalid pointer
 	if(dev == NULL || data == NULL) {
@@ -153,14 +153,15 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 	}
 
 	// Make timestamp
-	rc = clock_gettime(CLOCK_REALTIME, &(data->timestamp));
+	rc = clock_gettime(CLOCK_REALTIME, &timestamp_ts);
 	if(rc) {
 		perror("VN200IMUParse: Couldn't get timestamp");
 
-		// Set timestamp to 10
-		data->timestamp.tv_sec = 0;
-		data->timestamp.tv_nsec = 0;
+		// Set timestamp to 0
+		timestamp_ts.tv_sec = 0;
+		timestamp_ts.tv_nsec = 0;
 	}
+	data->timestamp = ((double) timestamp_ts.tv_sec) + ((double) timestamp_ts.tv_nsec) / 1000000000;
 
 	/*
 	printf("\n\nData should be \n");
@@ -178,12 +179,11 @@ int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data) {
 			&(data->temp), &(data->baro));
 
 	// Log parsed data to file in CSV format
-	timestampDouble = ((double) data->timestamp.tv_sec) + (((double) data->timestamp.tv_nsec) / 1000000000);
-	logBufLen = snprintf(logBuf, 512, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+	logBufLen = snprintf(logBuf, 512, "%.4lf,%.4lf,%.4lf,%.3lf,%.3lf,%.3lf,%.6lf,%.6lf,%.6lf,%.1lf,%.3lf,%.9lf\n",
 			data->compass[0], data->compass[1], data->compass[2],
 			data->accel[0], data->accel[1], data->accel[2],
 			data->gyro[0], data->gyro[1], data->gyro[2],
-			data->temp, data->baro, timestampDouble);
+			data->temp, data->baro, data->timestamp);
 
 	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
 

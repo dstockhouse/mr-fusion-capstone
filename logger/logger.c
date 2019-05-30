@@ -12,7 +12,7 @@
  * Revision 0.1
  * 	Last edited 2/20/2019
  *
-\***************************************************************************/
+ \***************************************************************************/
 
 #include "logger.h"
 
@@ -136,12 +136,12 @@ int mkdir_p(const char *pathname, mode_t mode) {
  * 	logFile - Pointer to LOG object to initialize
  * 	dir     - String name of the directory to create the log file in
  * 	pre     - String prefix to use for the log file
- * 	bin     - Boolean, 1 if binary log file, 0 if plaintext log file
+ * 	ext     - Extension ID, see logger.h for LOG_FILEEXT_* constants
  *
  * Return value:
  * 	On success, returns 0, otherwise returns a negative number
  */
-int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
+int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 
 	int rc;
 	char ext[8];
@@ -149,14 +149,25 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int bin) {
 	// Get seconds since epoch
 	logFile->timestamp = time(NULL);
 
-	// Find extension (bin or log)
-	if(bin) {
-		strcpy(ext, "bin");
-		logFile->bin = 1;
-	} else {
-		strcpy(ext, "log");
-		logFile->bin = 0;
-	}
+	// Determine filename extension, default is log
+	switch(ext) {
+		case LOG_FILEEXT_BIN:
+			strcpy(ext, "bin");
+			logFile->bin = 1;
+			break;
+
+		case LOG_FILEEXT_CSV:
+			strcpy(ext, "csv");
+			logFile->bin = 0;
+			break;
+
+		case LOG_FILEEXT_LOG:
+		default:
+			strcpy(ext, "log");
+			logFile->bin = 0;
+			break;
+
+	} // switch(ext)
 
 	// Generate filename for the log file
 	logFile->filenameLength = generateFilename(logFile->filename, LOG_FILENAME_LENGTH, 
