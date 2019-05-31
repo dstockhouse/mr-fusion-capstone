@@ -167,7 +167,7 @@ int VN200Init(VN200_DEV *dev, int baud, int fs, int mode) {
 
 /**** Function VN200Parse ****
  *
- * Parses data from VN200 input buffer
+ * Parses data from VN200 input buffer and determine packet type
  *
  * Arguments: 
  * 	dev  - Pointer to VN200_DEV instance to parse from
@@ -177,39 +177,95 @@ int VN200Init(VN200_DEV *dev, int baud, int fs, int mode) {
  *	On success, returns number of bytes parsed from buffer
  *	On failure, returns a negative number
  */
-int VN200Parse(VN200_DEV *dev, GPS_DATA *data) {
+int VN200Parse(VN200_DEV *dev) {
 
 	// Make extra sure there is enough room in the buffer
 #define PACKET_BUF_SIZE 1024
-	char currentPacket[PACKET_BUF_SIZE], logBuf[512];
-
-#define NUM_GPS_FIELDS 15
-	char *tokenList[NUM_GPS_FIELDS];
+	char currentPacket[PACKET_BUF_SIZE], logBuf[512], packetID[16];
 
 	unsigned char chkOld, chkNew;
-	int packetStart, packetEnd, logBufLen, i, rc;
+	int packetIDLength, packetIndex, logBufLen, numParsed = 0, i, rc;
 	struct timespec timestamp_ts;
 
+	VN200_PACKET *packet; // Pointer to the current packet being parsed
+	VN200_PACKET_RING_BUFFER *ringbuf;
+
+
 	// Exit on error if invalid pointer
-	if(dev == NULL || data == NULL) {
+	if(dev == NULL) {
 		return -1;
 	}
 
-	// Initialize token list to null
-	for(i = 0; i < NUM_GPS_FIELDS; i++) {
-		tokenList[i] = NULL;
-	}
+	// Make local ringbuf pointer
+	ringbuf = &(dev->ringbuf);
 
-	packetStart = 0;
-	// while(!valid) {
+	// Loop through all packets in ring buffer
+	for(packetIndex = ringbuf->start; packetIndex != ringbuf->end;
+			packetIndex = (packetIndex + 1) % VN200_PACKET_RING_BUFFER_SIZE) {
 
-	// Find start of a packet ($)
-	for( ; packetStart < dev->inbuf.length && 
-		strncmp(&(dev->inbuf.buffer[packetStart]), "$VNGPS", 6); 
-		packetStart++) {
+		// Set up pointer to current packet
+		packet = &(ringbuf->packets[packetIndex]);
 
-		// printf("start: %d, strncmp is %d\n", packetStart, strncmp(&(dev->inbuf.buffer[packetStart]), "$VNGPS", 6));
-	}
+		// If packet is incomplete or already parsed, do nothing and return
+		if(VN200PacketIncomplete(packet)) {
+			return numParsed;
+		}
+
+		// Only parse if hasn't already been parsed
+		if(!(packet->isParsed)) {
+
+			// Search for end of packet ID (ex. VNGPS)
+			for(i = packet->startIndex; i < packet->endIndex && ringbuf->buf->buffer[i] != ','; i++) {
+				// Loop until comma is reached
+			}
+
+			// Length of packet ID string is the number travelled
+			packetIDLength = i - packet->startIndex;
+
+
+			// Determine type of packet and parse accordingly
+
+			// Packet is a GPS packet
+			if(packetIDLength == 6 && 
+					strncmp(ringbuf->buf->buffer[packet->startIndex], "$VNGPS", packetIDLength)) {
+
+				// Parse as GPS packet
+				rc = VN200GPSParse(&(ringbuf->buf->buffer[packet->startIndex]), &(packet->GPSData));
+
+				// Set packet stats
+				packet->contentsType = VN200_PACKET_CONTENTS_TYPE_GPS;
+				packet->isParsed = 1;
+
+
+			// Packet is an IMU packet
+			} else if(packetIDLength == 6 && 
+					strncmp(ringbuf->buf->buffer[packet->startIndex], "$VNIMU", packetIDLength)) {
+
+				// Parse as IMU packet
+				rc = VN200IMUParse(&(ringbuf->buf->buffer[packet->startIndex]), &(packet->IMUData));
+
+				// Set packet stats
+				packet->contentsType = VN200_PACKET_CONTENTS_TYPE_IMU;
+				packet->isParsed = 1;
+
+
+			// Packet is unknown type or improperly formatted
+			} else {
+
+				char tempbuf[512];
+
+				// Printout confusion message
+				printf("Unknown or improper message: ");
+
+				snprintf(tempbuf, "%s", &(ringbuf->buf->buffer[packet->startIndex]), MIN(512, packet->endIndex - packet->startIndex));
+				printf(tempbuf);
+				printf("\n");
+
+				// Set packet stats
+				packet->contentsType = VN200_PACKET_CONTENTS_TYPE_OTHER;
+				packet->isParsed = 1;
+
+			}
 
 	// Find end of packet (*)
 	for(packetEnd = packetStart; packetEnd < dev->inbuf.length - 3 && 
@@ -233,91 +289,9 @@ int VN200Parse(VN200_DEV *dev, GPS_DATA *data) {
 	// printf("Checksum (read, computed): %02X, %02X\n", chkOld, chkNew);
 
 	if(chkNew != chkOld) {
-		// Checksum failed, don't parse (but allow to skip to next packet)
+		// Checksum failed, don't parse but skip to next packet
 		return 1;
 	}
-
-	// Make timestamp
-	rc = clock_gettime(CLOCK_REALTIME, &timestamp_ts);
-	if(rc) {
-		perror("VN200GPSParse: Couldn't get timestamp");
-
-		// Set timestamp to 0
-		timestamp_ts.tv_sec = 0;
-		timestamp_ts.tv_nsec = 0;
-	}
-	data->timestamp = ((double) timestamp_ts.tv_sec) + ((double) timestamp_ts.tv_nsec) / 1000000000;
-
-	/*
-	printf("\n\nData should be \n");
-	for(i = packetStart; i < packetEnd + 3; i++) {
-		printf("%c", dev->inbuf.buffer[i]);
-	}
-	printf("\n\n");
-	*/
-
-
-	// Copy string to be modified by strtok
-	strncpy(currentPacket, &(dev->inbuf.buffer[packetStart+7]), 
-			packetEnd - packetStart - 7);
-
-	// Parse between commas (not exactly safe)
-	tokenList[0] = strtok(currentPacket, ",");
-	for(i = 1; i < NUM_GPS_FIELDS && tokenList[i-1] != NULL; i++) {
-		tokenList[i] = strtok(NULL, ",");
-	}
-	/*
-	printf("Read %d GPS comma delimited fields from %d characters:\n", i-1, packetEnd);
-	for(i = 0; i < NUM_GPS_FIELDS && tokenList[i] != NULL; i++) {
-		printf(tokenList[i]);
-		printf("\n");
-	}
-	*/
-
-	// Get time
-	sscanf(tokenList[0], "%lf", &(data->time));
-
-	// Get week
-	sscanf(tokenList[1], "%hd", &(data->week));
-
-	// Get GPS fix
-	sscanf(tokenList[2], "%hhd", &(data->GpsFix));
-
-	// Get number of GPS satellites
-	sscanf(tokenList[3], "%hhd", &(data->NumSats));
-
-	// Get Latitude
-	sscanf(tokenList[4], "%lf", &(data->Latitude));
-
-	// Get Longitude
-	sscanf(tokenList[5], "%lf", &(data->Longitude));
-
-	// Get Altitude
-	sscanf(tokenList[6], "%lf", &(data->Altitude));
-
-	// Get NedVelX
-	sscanf(tokenList[7], "%f", &(data->NedVelX));
-
-	// Get NedVelY
-	sscanf(tokenList[8], "%f", &(data->NedVelY));
-
-	// Get NedVelZ
-	sscanf(tokenList[9], "%f", &(data->NedVelZ));
-
-	// Get North Accuracy
-	sscanf(tokenList[10], "%f", &(data->NorthAcc));
-
-	// Get East Accuracy
-	sscanf(tokenList[11], "%f", &(data->EastAcc));
-
-	// Get Vert Accuracy
-	sscanf(tokenList[12], "%f", &(data->VertAcc));
-
-	// Get Speed Accuracy
-	sscanf(tokenList[13], "%f", &(data->SpeedAcc));
-
-	// Get Time Accuracy
-	sscanf(tokenList[14], "%f", &(data->TimeAcc));
 
 	// Log parsed data to file in CSV format
 	logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
@@ -329,10 +303,34 @@ int VN200Parse(VN200_DEV *dev, GPS_DATA *data) {
 
 	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
 
+		} // if packet not already parsed
+
+	} // for packets in ring buffer
+
 	return packetEnd + 3;
 
 } // VN200Parse(VN200_DEV *, GPS_DATA *)
 
+int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetOffset) {
+
+	int unrolledEnd;
+
+	if(ringbuf == NULL) {
+		return -1;
+	}
+
+	// Compute unrolled end index (without modding)
+	unrolledEnd = ringbuf->end;
+	if(ringbuf->end < ringbuf->start) {
+		unrolledEnd += VN200_PACKET_RING_BUFFER_SIZE;
+	}
+
+	// If start+offset past the end, invalid offset so stop
+	if(ringbuf->start + packetOffset >= unrolledEnd) {
+		return -2;
+	}
+
+}
 
 int VN200PacketRingBufferEmpty(VN200_PACKET_RING_BUFFER *ringbuf) {
 

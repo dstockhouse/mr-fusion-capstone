@@ -29,6 +29,8 @@
 #define VN200_INIT_MODE_IMU 2
 #define VN200_INIT_MODE_BOTH (VN200_INIT_MODE_GPS|VN200_INIT_MODE_IMU)
 
+#define MIN(S,T) ((S)<(T)?(S):(T))
+
 
 // For indicating the type of data in a packet structure
 typedef enum {
@@ -79,7 +81,7 @@ typedef struct {
 
 int VN200Init(VN200_DEV *dev, int baud, int fs, int mode);
 
-int VN200Parse(VN200_DEV *dev);
+int VN200Parse(VN200_PACKET *packet);
 
 int VN200PacketRingBufferEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
 
@@ -88,6 +90,8 @@ int VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
 int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf, int startIndex, int endIndex);
 
 int VN200PacketRingBufferUpdateEndpoint(VN200_PACKET_RING_BUFFER *ringbuf);
+
+int VN200PacketIncomplete(VN200_PACKET *packet);
 
 #endif
 

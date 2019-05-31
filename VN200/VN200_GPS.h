@@ -47,5 +47,7 @@ int VN200GPSInit(VN200_DEV *dev, int fs);
 
 int VN200GPSParse(VN200_DEV *dev, GPS_DATA *parsedData);
 
+int VN200GPSLog(VN200_DEV *dev, GPS_DATA *data);
+
 #endif
 

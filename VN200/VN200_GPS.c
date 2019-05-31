@@ -119,7 +119,7 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
  *	On success, returns number of bytes parsed from buffer
  *	On failure, returns a negative number
  */
-int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
+int VN200GPSParse(char *buf, GPS_DATA *data) {
 
 	// Make extra sure there is enough room in the buffer
 #define PACKET_BUF_SIZE 1024
@@ -213,6 +213,12 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 		printf("VN200GPSParse: Didn't match entire formatted string: %d\n", rc);
 	}
 
+	return packetEnd + 3;
+
+} // VN200GPSParse(VN200_DEV *, GPS_DATA *)
+
+int VN200GPSLog(VN200_DEV *dev, GPS_DATA *data) {
+
 	// Log parsed data to file in CSV format
 	logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
 			data->time, data->week, data->GpsFix, data->NumSats,
@@ -223,7 +229,7 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 
 	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
 
-	return packetEnd + 3;
+	return 0;
 
-} // VN200GPSParse(VN200_DEV *, GPS_DATA *)
+} // VN200GPSLog(VN200_DEV *, GPS_DATA *)
 
