@@ -94,6 +94,7 @@ int VN200GPSParse(char *buf, int len, GPS_DATA *data) {
 	packetStart = 0;
 	// while(!valid) {
 
+	/* Assume start of packet is 0
 	// Find start of a packet ($)
 	for( ; packetStart < dev->inbuf.length && 
 		strncmp(&(dev->inbuf.buffer[packetStart]), "$VNGPS", 6); 
@@ -101,12 +102,13 @@ int VN200GPSParse(char *buf, int len, GPS_DATA *data) {
 
 		// printf("start: %d, strncmp is %d\n", packetStart, strncmp(&(dev->inbuf.buffer[packetStart]), "$VNGPS", 6));
 	}
+	*/
 
 	// Find end of packet (*)
 	for(packetEnd = packetStart; packetEnd < dev->inbuf.length - 3 && 
 		dev->inbuf.buffer[packetEnd] != '*'; packetEnd++) ;
 
-	if(packetStart >= dev->inbuf.length - 3 || packetEnd >= dev->inbuf.length - 3) {
+	if(packetStart >= len - 3 || packetEnd >= len - 3) {
 		return 0;
 	}
 

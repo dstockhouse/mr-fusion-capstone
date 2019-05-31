@@ -85,6 +85,9 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 
 		// Parse as GPS packet
 		rc = VN200GPSParse(&(ringbuf->buf->buffer[packet->startIndex]), packet->endIndex - packet->startIndex, &(packet->GPSData));
+		packet->GPSData.timestamp = packet->timestamp;
+
+		************************************** Fix GPSParse function esp for timestamps
 
 		// Set packet stats
 		packet->contentsType = VN200_PACKET_CONTENTS_TYPE_GPS;
