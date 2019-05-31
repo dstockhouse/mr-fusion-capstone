@@ -84,7 +84,7 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 			strncmp(ringbuf->buf->buffer[packet->startIndex], "$VNGPS", packetIDLength)) {
 
 		// Parse as GPS packet
-		rc = VN200GPSParse(&(ringbuf->buf->buffer[packet->startIndex]), &(packet->GPSData));
+		rc = VN200GPSParse(&(ringbuf->buf->buffer[packet->startIndex]), packet->endIndex - packet->startIndex, &(packet->GPSData));
 
 		// Set packet stats
 		packet->contentsType = VN200_PACKET_CONTENTS_TYPE_GPS;

@@ -68,34 +68,27 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
  * 	$VNGPS,342123.000168,1890,3,05,+34.61463270,-112.45087270,+01559.954,+000.450,+000.770,-001.290,+002.940,+005.374,+007.410,+001.672,2.10E-08*23
  *
  * Arguments: 
- * 	dev  - Pointer to VN200_DEV instance to parse from
+ * 	buf  - Pointer to character buffer to parse from
+ * 	len  - Length of character buffer
  * 	data - Pointer to GPS_DATA instance to store parsed data
  *
  * Return value:
  *	On success, returns number of bytes parsed from buffer
  *	On failure, returns a negative number
  */
-int VN200GPSParse(char *buf, GPS_DATA *data) {
+int VN200GPSParse(char *buf, int len, GPS_DATA *data) {
 
 	// Make extra sure there is enough room in the buffer
 #define PACKET_BUF_SIZE 1024
 	char currentPacket[PACKET_BUF_SIZE], logBuf[512];
-
-#define NUM_GPS_FIELDS 15
-	char *tokenList[NUM_GPS_FIELDS];
 
 	unsigned char chkOld, chkNew;
 	int packetStart, packetEnd, logBufLen, i, rc;
 	struct timespec timestamp_ts;
 
 	// Exit on error if invalid pointer
-	if(dev == NULL || data == NULL) {
+	if(buf == NULL || data == NULL) {
 		return -1;
-	}
-
-	// Initialize token list to null
-	for(i = 0; i < NUM_GPS_FIELDS; i++) {
-		tokenList[i] = NULL;
 	}
 
 	packetStart = 0;
