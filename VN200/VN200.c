@@ -4,7 +4,7 @@
  * 	VN200.c
  *
  * Description:
- *	Basic common functionality for VN200, GPS and IMU
+ *	Common functionality for VN200, GPS and IMU
  * 
  * Author:
  * 	David Stockhouse
@@ -19,6 +19,10 @@
  ***************************************************************************/
 
 #include "VN200.h"
+
+#include "VN200Packet.h"
+#include "VN200_GPS.h"
+#include "VN200_IMU.h"
 #include "crc.h"
 
 #include "../uart/uart.h"
@@ -141,7 +145,7 @@ int VN200Poll(VN200_DEV *dev) {
 
 	// Ensure length of buffer is long enough to hold more data
 	if(dev->inbuf.length >= BYTE_BUFFER_LEN) {
-		printf("Can't poll VN200 UART device: input buffer is full (%d bytes)\n",
+		printf("VN200Poll: Input buffer is full (%d bytes)\n",
 				dev->inbuf.length);
 		return -2;
 	}
@@ -149,8 +153,8 @@ int VN200Poll(VN200_DEV *dev) {
 	// Check if UART data available
 	rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
 	if(rc) {
-		perror("VN200Poll ioctl() failed");
-		return -3;
+		perror("VN200Poll: ioctl() failed");
+		// return -3;
 	}
 	// printf("%d bytes avail...\n", ioctl_status);
 
@@ -174,9 +178,14 @@ int VN200Poll(VN200_DEV *dev) {
 
 	// memcpy(&(dev->inbuf.buffer[dev->inbuf.length]), tempBuf, numRead);
 
+	// Update input buffer endpoint
 	dev->inbuf.length += numRead;
 
 
+	// Update ring buffer endpoint
+	VN200PacketRingBufferUpdateEndpoint(&(dev->ringbuf));
+
+	/* Now handled by UpdateEndpoint function
 	// Populate most recent packet with data and/or start a new packet
 	for(i = 0; i < numRead; i++) {
 
@@ -210,6 +219,7 @@ int VN200Poll(VN200_DEV *dev) {
 		}
 
 	} // for(i < numRead)
+	*/
 
 	// Return number successfully read (may be 0)
 	return numRead;
@@ -411,4 +421,190 @@ int VN200Destroy(VN200_DEV *dev) {
 	return 0;
 
 } // VN200Destroy(VN200_DEV &)
+
+
+/**** Function VN200Init ****
+ *
+ * Initializes a VN200 UART device for both GPS and IMU functionality
+ *
+ * Arguments: 
+ * 	dev  - Pointer to VN200_DEV instance to initialize
+ * 	fs   - Sampling frequency to initialize the module to
+ * 	baud - Baud rate to configure the UART
+ * 	mode - Initialization mode (found in VN200.h)
+ *
+ * Return value:
+ *	On success, returns 0
+ *	On failure, returns a negative number
+ */
+int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
+
+#define CMD_BUFFER_SIZE 64
+	char commandBuf[CMD_BUFFER_SIZE], logBuf[256];
+	int commandBufLen, logBufLen;
+
+	char logFileDirName[512];
+	int logFileDirNameLength;
+
+	// Exit on error if invalid pointer
+	if(dev == NULL) {
+		return -1;
+	}
+
+	// Ensure valid init mode
+	if(!(mode == VN200_INIT_MODE_GPS ||
+	     mode == VN200_INIT_MODE_IMU ||
+	     mode == VN200_INIT_MODE_BOTH)) {
+
+		printf("VN200Init: Mode 0x%02x not recognized.\n", mode);
+		return -2;
+	}
+
+	// Ensure valid sample rate (later)
+
+
+
+	// Initialize UART for all modes
+	dev->baud = baud;
+	VN200BaseInit(dev, dev->baud);
+
+	// Initialize log file for raw and parsed data
+	// Since multiple log files will be generated for the run, put them in
+	// the same directory
+	logFileDirNameLength = generateFilename(logFileDirName, 512,
+			"../SampleData/VN200", "run", "d");
+	LogInit(&(dev->logFile), logFileDirName, "VN200", LOG_FILEEXT_LOG);
+
+	// If GPS enabled, init GPS log file
+	if(mode & VN200_INIT_MODE_GPS) {
+
+		// Init csv file
+		LogInit(&(dev->logFileGPSParsed), logFileDirName, "VN200_GPS", LOG_FILEEXT_CSV);
+
+		// Write header to CSV data
+		logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,lat,lon,alt,velx,vely,velz,nacc,eacc,vacc,sacc,tacc,timestamp\n");
+		LogUpdate(&(dev->logFileGPSParsed), logBuf, logBufLen);
+
+	}
+	
+	// If IMU enabled, init IMU log file
+	if(mode & VN200_INIT_MODE_IMU) {
+
+		// Init csv file
+		LogInit(&(dev->logFileIMUParsed), logFileDirName, "VN200_IMU", LOG_FILEEXT_CSV);
+
+		// Write header to CSV data
+		logBufLen = snprintf(logBuf, 256, "compx,compy,compz,accelx,accely,accelz,gyrox,gyroy,gyroz,temp,baro,timestamp\n");
+		LogUpdate(&(dev->logFileIMUParsed), logBuf, logBufLen);
+
+	}
+
+
+	/**** Initialize VN200 using commands ****/
+
+	// Request VN200 serial number
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
+
+	// Disable asynchronous output
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
+
+	// Set IMU sampling frequency
+	dev->fs = fs;
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
+
+
+	if(mode == VN200_INIT_MODE_GPS) {
+
+		// Enable asynchronous GPS data output
+		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,20");
+
+	} else if(mode == VN200_INIT_MODE_IMU) {
+
+		// Enable asynchronous IMU data output
+		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,19");
+
+	} else {
+
+		// Enable both GPS and IMU output
+		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,248");
+
+	}
+
+
+	// Send mode command to UART
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
+
+	// Clear input buffer (temporary)
+	VN200FlushInput(dev);
+
+	return 0;
+
+} // VN200Init(VN200_DEV *, int)
+
+
+/**** Function VN200Parse ****
+ *
+ * Parses data from VN200 input buffer and determine packet type. Will parse as
+ * many packets as are available in the buffer
+ *
+ * Arguments: 
+ * 	dev  - Pointer to VN200_DEV instance to parse from
+ *
+ * Return value:
+ *	On success, returns number of bytes parsed from buffer
+ *	On failure, returns a negative number
+ */
+int VN200Parse(VN200_DEV *dev) {
+
+	// Make extra sure there is enough room in the buffer
+#define PACKET_BUF_SIZE 1024
+	char currentPacket[PACKET_BUF_SIZE], logBuf[512], packetID[16];
+
+	unsigned char chkOld, chkNew;
+	int packetIDLength, packetIndex, logBufLen, numParsed = 0, i, rc;
+	struct timespec timestamp_ts;
+
+	VN200_PACKET *packet; // Pointer to the current packet being parsed
+	VN200_PACKET_RING_BUFFER *ringbuf;
+
+
+	// Exit on error if invalid pointer
+	if(dev == NULL) {
+		return -1;
+	}
+
+	// Make local ringbuf pointer
+	ringbuf = &(dev->ringbuf);
+
+	// Loop through all packets in ring buffer
+	for(packetIndex = ringbuf->start; packetIndex != ringbuf->end;
+			packetIndex = (packetIndex + 1) % VN200_PACKET_RING_BUFFER_SIZE) {
+
+		// Set up pointer to current packet
+		packet = &(ringbuf->packets[packetIndex]);
+
+		// If packet is incomplete or already parsed, do nothing and return
+		if(VN200PacketIsIncomplete(packet)) {
+			return numParsed;
+		}
+
+		// Only parse if hasn't already been parsed
+		if(!(packet->isParsed)) {
+
+			VN200PacketParse(ringbuf, packetIndex);
+
+		} // if packet not already parsed
+
+	} // for packets in ring buffer
+
+	return packetEnd + 3;
+
+} // VN200Parse(VN200_DEV *)
 

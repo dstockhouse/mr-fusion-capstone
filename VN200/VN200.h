@@ -21,6 +21,8 @@
 #ifndef __VN200_H
 #define __VN200_H
 
+#include "VN200Packet.h"
+
 #include "../uart/uart.h"
 #include "../buffer/buffer.h"
 #include "../logger/logger.h"
@@ -35,6 +37,14 @@
 #define VN200_DEVNAME "/dev/ttyUSB0"
 #define VN200_BAUD 57600
 //#define VN200_BAUD 115200
+
+// Device initialization modes
+#define VN200_INIT_MODE_GPS 1
+#define VN200_INIT_MODE_IMU 2
+#define VN200_INIT_MODE_BOTH (VN200_INIT_MODE_GPS|VN200_INIT_MODE_IMU)
+
+#define MIN(S,T) ((S)<(T)?(S):(T))
+
 
 
 /* Old method 
@@ -53,7 +63,7 @@ typedef struct {
 
 	int fd; // UART file descriptor
 
-	BYTE_BUFFER packetbuf;  // Input data buffer
+	BYTE_BUFFER inbuf;  // Input data buffer
 	BYTE_BUFFER outbuf;     // Output data buffer
 	VN200_PACKET_RING_BUFFER ringbuf; // Ring buffer for input packet data
 
@@ -65,6 +75,7 @@ typedef struct {
 	int fs; // Sampling Frequency
 
 } VN200_DEV;
+
 
 int getTimestamp(struct timespec *ts, double *td);
 
@@ -81,6 +92,10 @@ int VN200Command(VN200_DEV *dev, char *buf, int num, int sendChk);
 int VN200FlushOutput(VN200_DEV *dev);
 
 int VN200Destroy(VN200_DEV *dev);
+
+int VN200Init(VN200_DEV *dev, int baud, int fs, int mode);
+
+int VN200Parse(VN200_DEV *dev);
 
 #endif
 

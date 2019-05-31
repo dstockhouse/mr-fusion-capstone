@@ -55,51 +55,7 @@
  */
 int VN200GPSInit(VN200_DEV *dev, int fs) {
 
-#define CMD_BUFFER_SIZE 64
-	char commandBuf[CMD_BUFFER_SIZE], logBuf[256];
-	int commandBufLen, logBufLen;
-
-	// Exit on error if invalid pointer
-	if(dev == NULL) {
-		return -1;
-	}
-
-	// Initialize UART for use
-	VN200BaseInit(dev);
-
-	// Initialize log file for raw and parsed data
-	LogInit(&(dev->logFile), "../SampleData/VN200/GPS", "VN200", LOG_FILEEXT_LOG);
-	LogInit(&(dev->logFileParsed), "../SampleData/VN200/GPS", "VN200", LOG_FILEEXT_CSV);
-
-	// Write header to CSV data
-	logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,lat,lon,alt,velx,vely,velz,nacc,eacc,vacc,sacc,tacc,timestamp\n");
-	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
-
-	// Request IMU serial number
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	// Disable asynchronous output
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	// Set sampling frequency
-	dev->fs = fs;
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	// Enable asynchronous GPS data output
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,20");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	// Clear input buffer (temporary)
-	VN200FlushInput(dev);
-
-	return 0;
+	return VN200Init(dev, fs, VN200_BAUD, VN200_INIT_MODE_GPS);
 
 } // VN200GPSInit(VN200_DEV *, int)
 
@@ -217,7 +173,10 @@ int VN200GPSParse(char *buf, GPS_DATA *data) {
 
 } // VN200GPSParse(VN200_DEV *, GPS_DATA *)
 
-int VN200GPSLog(VN200_DEV *dev, GPS_DATA *data) {
+int VN200GPSLogParsed(VN200_DEV *dev, GPS_DATA *data) {
+
+	char logBuf[512];
+	int logBufLen;
 
 	// Log parsed data to file in CSV format
 	logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
@@ -227,9 +186,10 @@ int VN200GPSLog(VN200_DEV *dev, GPS_DATA *data) {
 			data->NorthAcc, data->EastAcc, data->VertAcc,
 			data->SpeedAcc, data->TimeAcc, data->timestamp);
 
-	LogUpdate(&(dev->logFileParsed), logBuf, logBufLen);
+	// Update log file
+	LogUpdate(&(dev->logFileGPSParsed), logBuf, logBufLen);
 
 	return 0;
 
-} // VN200GPSLog(VN200_DEV *, GPS_DATA *)
+} // VN200GPSLogParsed(VN200_DEV *, GPS_DATA *)
 
