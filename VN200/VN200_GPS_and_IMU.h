@@ -42,9 +42,9 @@ typedef enum {
 // Includes the raw data in a buffer and after parsing
 typedef struct {
 
-	// Raw data bufer. Could be made smaller than BYTE_BUFFER in the future
-	// for memory conservation
-	BYTE_BUFFER buf;
+	int startIndex; // Buffer offset for start of packet data
+	int endIndex;   // Buffer offset for end of complete packet data
+	// The end index is only set when entire packet data is available
 
 	// Enum indicating type of data
 	VN200_PACKET_CONTENTS_TYPE contentsType;
@@ -62,32 +62,32 @@ typedef struct {
 } VN200_PACKET;
 
 
-// Ring buffer of multiple packets
+// Input buffer for data of multiple packets
 typedef struct {
 
-	int start; // Index of first valid element
-	int end;   // Index after last valid element (to add next)
-	           // Buffer is full if start == end - 1
+	BYTE_BUFFER *buf; // Pointer to buffer for input packet data
 
 	// Buffer of packets
 	VN200_PACKET packets[VN200_PACKET_RING_BUFFER_SIZE];
+
+	int start; // Index of first valid packet element
+	int end;   // Index after last valid element (to add next)
+	           // Buffer is full if start == end - 1
 
 } VN200_PACKET_RING_BUFFER;
 
 
 int VN200Init(VN200_DEV *dev, int baud, int fs, int mode);
 
-int VN200Parse(VN200_DEV *dev, GPS_DATA *parsedData);
+int VN200Parse(VN200_DEV *dev);
 
 int VN200PacketRingBufferEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
 
 int VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
 
-int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf);
+int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf, int startIndex, int endIndex);
 
-int VN200PacketRingBufferAddData(VN200_PACKET_RING_BUFFER *ringbuf, char data);
-
-int VN200PacketAdd(VN200_PACKET *packet, char data);
+int VN200PacketRingBufferUpdateEndpoint(VN200_PACKET_RING_BUFFER *ringbuf);
 
 #endif
 

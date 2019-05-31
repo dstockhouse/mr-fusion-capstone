@@ -109,6 +109,7 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
 	// Initialize packet ring buffer
 	dev->ringbuf.start = 0;
 	dev->ringbuf.end = 0;
+	dev->ringbuf.buf = &(dev->inbuf);
 
 	return 0;
 

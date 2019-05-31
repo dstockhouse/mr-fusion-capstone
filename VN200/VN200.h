@@ -53,8 +53,8 @@ typedef struct {
 
 	int fd; // UART file descriptor
 
-	BYTE_BUFFER inbuf;  // Input data buffer
-	BYTE_BUFFER outbuf; // Output data buffer
+	BYTE_BUFFER packetbuf;  // Input data buffer
+	BYTE_BUFFER outbuf;     // Output data buffer
 	VN200_PACKET_RING_BUFFER ringbuf; // Ring buffer for input packet data
 
 	LOG_FILE logFile; // Raw data log file

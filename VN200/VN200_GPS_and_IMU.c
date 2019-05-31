@@ -364,7 +364,9 @@ int VN200PacketRingBufferIsFull(VN200_PACKET_RING_BUFFER *ringbuf) {
 
 } // VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *)
 
-int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf) {
+int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf, int startIndex, int endIndex) {
+
+	int packetIndex;
 
 	if(ringbuf == NULL) {
 		return -1;
@@ -374,50 +376,74 @@ int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf) {
 		return 0;
 	}
 
-	// If room, move end one along
-	dev->ringbuf.end = (dev->ringbuf.end + 1) % VN200_RING_BUFFER_SIZE;
+	packetIndex = ringbuf->end;
+
+	// Move end by one
+	ringbuf->end = (ringbuf->end + 1) % VN200_RING_BUFFER_SIZE;
 
 	// Get timestamp
-	getTimestamp(&(dev->ringbuf.packets[packetIndex].timestamp_ts), &(dev->ringbuf.packets[packetIndex].timestamp));
-
-	// Empty packet data buffer
-	BufferEmpty(&(dev->ringbuf.packets[packetIndex].buf));
+	getTimestamp(&(ringbuf->packets[packetIndex].timestamp_ts), &(ringbuf->packets[packetIndex].timestamp));
 
 	// Set contents type to neither GPS nor IMU
-	dev->ringbuf.packets[packetIndex].contentsType = VN200_PACKET_CONTENTS_TYPE_OTHER;
+	ringbuf->packets[packetIndex].contentsType = VN200_PACKET_CONTENTS_TYPE_OTHER;
 
 	// Set not parsed
-	dev->ringbuf.packets[packetIndex].isParsed = 0;
+	ringbuf->packets[packetIndex].isParsed = 0;
+
+	// Set packet start and end point
+	ringbuf->packets[packetIndex].startIndex = startIndex;
+	ringbuf->packets[packetIndex].endIndex = endIndex;
 
 	return 1;
 
-} // VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *)
+} // VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *, int, int)
 
-int VN200PacketRingBufferAddData(VN200_PACKET_RING_BUFFER *ringbuf, char data) {
+int VN200PacketRingBufferUpdateEndpoint(VN200_PACKET_RING_BUFFER *ringbuf) {
 
-	int lastIndex;
+	int lastPacketIndex, i;
 
 	if(ringbuf == NULL) {
 		return -1;
 	}
 
 	if(VN200PacketRingBufferIsEmpty(ringbuf)) {
-		return -2;
+		return 0;
 	}
 
-	lastIndex = (ringbuf->end - 1) % VN200_PACKET_RING_BUFFER_SIZE;
+	// Find last packet in ring buffer
+	lastPacketIndex = (ringbuf->end - 1) % VN200_PACKET_RING_BUFFER_SIZE;
 
-	return VN200PacketAdd(&(ringbuf->packets[lastIndex]), data);
+	// Loop from current ring-buffer-known end to true end of buffer
+	for(i = ringbuf->packets[lastPacketIndex].endIndex; i < ringbuf->buf->length; i++) {
 
-} // VN200PacketRingBufferAddData(VN200_PACKET_RING_BUFFER *, char) {
+		// Determine if start of new packet
+		if(ringbuf->buf->buffer[i] == '$') {
 
-int VN200PacketAdd(VN200_PACKET *packet, char data) {
+			// End previous packet
+			ringbuf->packets[lastPacketIndex].endIndex = i;
 
-	if(packet == NULL) {
+			// Create new packet
+			VN200PacketRingBufferAddPacket(ringbuf, i, i);
+
+			// Update last packet index
+			lastPacketIndex = (ringbuf->end - 1) % VN200_PACKET_RING_BUFFER_SIZE;
+
+		}
+
+	}
+
+	return 0;
+
+} // VN200PacketRingBufferUpdateEndpoint(VN200_PACKET_RING_BUFFER *) {
+
+int VN200PacketIncomplete(VN200_PACKET *packet) {
+
+	if(ringbuf == NULL) {
 		return -1;
 	}
 
-	return BufferAdd(&(packet->buf), data);
+	// Packet is incomplete if the 
+	return packet->startIndex == packet->endIndex;
 
-} // VN200PacketAdd(VN200_PACKET *, char)
+} // VN200PacketIncomplete(VN200_PACKET *)
 
