@@ -199,67 +199,19 @@ int VN200GPSParse(VN200_DEV *dev, GPS_DATA *data) {
 	*/
 
 
-	// Copy string to be modified by strtok
-	strncpy(currentPacket, &(dev->inbuf.buffer[packetStart+7]), 
-			packetEnd - packetStart - 7);
+	// Copy string into local variable
+	strncpy(currentPacket, &(dev->inbuf.buffer[packetStart]), 
+			packetEnd - packetStart);
 
-	// Parse between commas (not exactly safe)
-	tokenList[0] = strtok(currentPacket, ",");
-	for(i = 1; i < NUM_GPS_FIELDS && tokenList[i-1] != NULL; i++) {
-		tokenList[i] = strtok(NULL, ",");
+	// Scan for fields in packet string
+	rc = sscanf(currentPacket, "$VNGPS,%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f",
+		&(data->time), &(data->week), &(data->GpsFix), &(data->NumSats),
+		&(data->Latitude), &(data->Longitude), &(data->Altitude),
+		&(data->NedVelX), &(data->NedVelY), &(data->NedVelZ),
+		&(data->NorthAcc), &(data->EastAcc), &(data->VertAcc), &(data->SpeedAcc), &(data->TimeAcc));
+	if(rc < 15) {
+		printf("VN200GPSParse: Didn't match entire formatted string: %d\n", rc);
 	}
-	/*
-	printf("Read %d GPS comma delimited fields from %d characters:\n", i-1, packetEnd);
-	for(i = 0; i < NUM_GPS_FIELDS && tokenList[i] != NULL; i++) {
-		printf(tokenList[i]);
-		printf("\n");
-	}
-	*/
-
-	// Get time
-	sscanf(tokenList[0], "%lf", &(data->time));
-
-	// Get week
-	sscanf(tokenList[1], "%hd", &(data->week));
-
-	// Get GPS fix
-	sscanf(tokenList[2], "%hhd", &(data->GpsFix));
-
-	// Get number of GPS satellites
-	sscanf(tokenList[3], "%hhd", &(data->NumSats));
-
-	// Get Latitude
-	sscanf(tokenList[4], "%lf", &(data->Latitude));
-
-	// Get Longitude
-	sscanf(tokenList[5], "%lf", &(data->Longitude));
-
-	// Get Altitude
-	sscanf(tokenList[6], "%lf", &(data->Altitude));
-
-	// Get NedVelX
-	sscanf(tokenList[7], "%f", &(data->NedVelX));
-
-	// Get NedVelY
-	sscanf(tokenList[8], "%f", &(data->NedVelY));
-
-	// Get NedVelZ
-	sscanf(tokenList[9], "%f", &(data->NedVelZ));
-
-	// Get North Accuracy
-	sscanf(tokenList[10], "%f", &(data->NorthAcc));
-
-	// Get East Accuracy
-	sscanf(tokenList[11], "%f", &(data->EastAcc));
-
-	// Get Vert Accuracy
-	sscanf(tokenList[12], "%f", &(data->VertAcc));
-
-	// Get Speed Accuracy
-	sscanf(tokenList[13], "%f", &(data->SpeedAcc));
-
-	// Get Time Accuracy
-	sscanf(tokenList[14], "%f", &(data->TimeAcc));
 
 	// Log parsed data to file in CSV format
 	logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",

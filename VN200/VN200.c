@@ -181,14 +181,14 @@ int VN200FlushInput(VN200_DEV *dev) {
 	// Get all waiting characters from UART
 	num = VN200Poll(dev);
 
-	// /*
+	/*
 	// Print input before discarding
 	printf("Flushed input:\n");
 	for(i = start; i < dev->inbuf.length; i++) {
 		printf("%c", dev->inbuf.buffer[i]);
 	}
 	printf("\n");
-	// */
+	*/
 
 	// Clear all characters from input buffer
 	num = VN200Consume(dev, num);
@@ -241,11 +241,13 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num, int sendChk) {
 	// Add command string to output buffer
 	BufferAddArray(&(dev->outbuf), buf, numWritten);
 
+	/*
 	printf("Output buffer contents: \n");
 	for(i = 0; i < dev->outbuf.length; i++) {
 		printf("%02X", dev->outbuf.buffer[i]);
 	}
 	printf("\n");
+	*/
 
 	// Send output buffer to UART
 	numWritten = VN200FlushOutput(dev);
@@ -278,11 +280,13 @@ int VN200FlushOutput(VN200_DEV *dev) {
 	// Write output buffer to UART
 	numWritten = UARTWrite(dev->fd, dev->outbuf.buffer, dev->outbuf.length);
 
+	/*
 	printf("Output: \n");
 	for(i = 0; i < dev->outbuf.length; i++) {
 		printf("%c", dev->outbuf.buffer[i]);
 	}
 	printf("\n");
+	*/
 
 	// Remove the data from the output buffer
 	BufferRemove(&(dev->outbuf), numWritten);
