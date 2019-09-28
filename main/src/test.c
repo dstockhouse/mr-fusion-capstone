@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 		printf("Initializing receiver... \n");
 		rc = pingUSBInit(&dev);
 		if(rc) {
-			printf("Couldn't intialize device: %d\n", rc);
+			printf("Couldn't initalize device: %d\n", rc);
 			return rc;
 		}
 	} else {
