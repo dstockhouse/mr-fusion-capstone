@@ -17,13 +17,13 @@
 #ifndef __ADSB_PARSER_H
 #define __ADSB_PARSER_H
 
-#include "buffer.h"
-#include "logger.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+
+#include "buffer.h"
+#include "logger.h"
 
 // Altitude type options
 enum alt_type { Pressure, Geometric };
