@@ -1,7 +1,7 @@
 
 CC = gcc
-#CFLAGS = -g -Wall $(foreach inc,$(INCDIR) $(MAININCDIR),-iquote $(inc))
-CFLAGS = -g $(foreach inc,$(INCDIR) $(MAININCDIR),-iquote $(inc))
+CFLAGS = -g -Wall $(foreach inc,$(INCDIR) $(MAININCDIR),-iquote $(inc))
+#CFLAGS = -g $(foreach inc,$(INCDIR) $(MAININCDIR),-iquote $(inc))
 LIBS =
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 
@@ -21,7 +21,7 @@ OBJS = $(foreach src,$(notdir $(SRCS)),$(OBJDIR)/$(src:.c=.o))
 MAINSRCDIR = $(MAINDIR)/src
 MAININCDIR = $(MAINDIR)/inc
 
-MAIN = test
+MAIN = vn200rawtest
 MAINSRC = $(MAINSRCDIR)/$(MAIN).c
 MAINOBJ = $(OBJDIR)/$(MAIN).o
 MAINBIN = $(BINDIR)/$(MAIN)

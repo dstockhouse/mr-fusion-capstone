@@ -27,7 +27,9 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
+#include "control.h"
 #include "buffer.h"
+#include "debuglog.h"
 #include "logger.h"
 #include "uart.h"
 #include "VN200_CRC.h"
@@ -144,7 +146,7 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
  */
 int VN200Poll(VN200_DEV *dev) {
 
-	int numToRead, numRead, rc, ioctl_status;
+	int numToRead, numRead, startIndex, rc, ioctl_status;
 	char *startBuf, tempBuf[BYTE_BUFFER_LEN];
 
 	// Exit on error if invalid pointer
@@ -198,11 +200,11 @@ int VN200Poll(VN200_DEV *dev) {
 	// Update input buffer endpoint
 	dev->inbuf.length += numRead;
 
-	// Update ring buffer endpoint
-	VN200PacketRingBufferUpdateEndpoint(&(dev->ringbuf));
+	// Update ring buffer endpoints, generating new packets as needed
+	VN200PacketRingBufferUpdateEndpoints(&(dev->ringbuf));
 
 
-	// This is now handled by UpdateEndpoint function
+	// This is now handled by UpdateEndpoints function
 #if 0
 	// Populate most recent packet with data and/or start a new packet
 	for(i = 0; i < numRead; i++) {
@@ -488,12 +490,12 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 
 	// Initialize UART for all modes
 	dev->baud = baud;
-	VN200BaseInit(dev, dev->baud);
+	VN200BaseInit(dev, NULL, dev->baud);
 
 	// Initialize log file for raw and parsed data
 	// Since multiple log files will be generated for the run, put them in
 	// the same directory
-	logFileDirNameLength = generateFilename(logFileDirName, 512,
+	logFileDirNameLength = generateFilename(logFileDirName, 512, NULL,
 			"log/SampleData/VN200", "RUN", "d");
 	LogInit(&(dev->logFile), logFileDirName, "VN200", LOG_FILEEXT_LOG);
 
@@ -634,7 +636,7 @@ int VN200Parse(VN200_DEV *dev) {
 
 	} // for packets in ring buffer
 
-	return packetEnd + 3;
+	return numParsed;
 
 } // VN200Parse(VN200_DEV *)
 

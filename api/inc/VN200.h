@@ -48,7 +48,7 @@
 
 int getTimestamp(struct timespec *ts, double *td);
 
-int VN200BaseInit(VN200_DEV *dev);
+int VN200BaseInit(VN200_DEV *dev, char *devname, int baud);
 
 int VN200Poll(VN200_DEV *dev);
 

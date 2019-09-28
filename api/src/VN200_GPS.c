@@ -126,13 +126,13 @@ int VN200GPSPacketParse(char *buf, int len, GPS_DATA *data) {
 } // VN200GPSPacketParse(char *, int, GPS_DATA *)
 
 
-int VN200GPSLogParsed(LOGFILE *log, GPS_DATA *data) {
+int VN200GPSLogParsed(LOG_FILE *log, GPS_DATA *data) {
 
 	char logBuf[512];
 	int logBufLen;
 
 	// Log parsed data to file in CSV format
-	logBufLen = snlogDebug(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
+	logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
 			data->time, data->week, data->GpsFix, data->NumSats,
 			data->Latitude, data->Longitude, data->Altitude,
 			data->NedVelX, data->NedVelY, data->NedVelZ,

@@ -28,7 +28,7 @@ int VN200IMUInit(VN200_DEV *dev, int fs);
 
 int VN200IMUPacketParse(char *buf, int len, IMU_DATA *data);
 
-int VN200IMULogParsed(LOGFILE *log, IMU_DATA *data);
+int VN200IMULogParsed(LOG_FILE *log, IMU_DATA *data);
 
 #endif
 

@@ -49,6 +49,10 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 
 	// Time variables
 	struct tm currentTime;
+	time_t ltime;
+	if(time == NULL) {
+		time = &ltime;
+	}
 
 	// Get current time in UTC
 	localtime_r(time, &currentTime);

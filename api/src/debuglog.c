@@ -64,7 +64,7 @@ int logDebug(const char *fstring, ...) {
 #ifdef DEBUG_OUT_LOGFILE
 
 	// One instance of the log file
-	static LOGFILE debugLog;
+	static LOG_FILE debugLog;
 	static int initialized = 0;
 
 	// Should have mutex as well when eventually multithreaded, also in printf

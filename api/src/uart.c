@@ -30,6 +30,8 @@
  *
 \***************************************************************************/
 
+#include "control.h"
+#include "debuglog.h"
 #include "uart.h"
 
 #include <stdio.h>
