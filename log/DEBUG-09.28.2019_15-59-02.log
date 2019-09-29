@@ -1,0 +1,30 @@
+Initializing...
+Output buffer contents: 
+24564E5752472C30352C3131353230302A35380A
+Output: 
+$VNWRG,05,115200*58
+
+Output buffer contents: 
+24564E5252472C30332A37300A
+Output: 
+$VNRRG,03*70
+
+Output buffer contents: 
+24564E5752472C30362C302A36430A
+Output: 
+$VNWRG,06,0*6C
+
+Output buffer contents: 
+24564E5752472C30372C35302A35380A
+Output: 
+$VNWRG,07,50*58
+
+Output buffer contents: 
+24564E5752472C30362C3234382A36320A
+Output: 
+$VNWRG,06,248*62
+
+2507 bytes avail...
+Poll: startBuf is 0x7ee4fe80
+Attempting to read 16384 bytes from uart device...
+	Read 2507

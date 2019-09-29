@@ -38,16 +38,19 @@ int logDebug(const char *fstring, ...) {
 
 	// Initialize if this is the first time calling
 	static int initialized = 0;
-	if(!intialized) {
+	if(!initialized) {
 
 		// Initialize syslog for the program.
 		// Every log message starts with "ICARUS_HFNAV"
 		// PID included in log, errors logged to console
 		// Logged at user level
 		// Mask only DEBUG log messages
-		openlog("ICARUS_HFNAV", LOG_PID | LOG_CONS, LOG_USER);
+		char *syslogID = "ICARUS_HFNAV";
+		openlog(syslogID, LOG_PID | LOG_CONS, LOG_USER);
 		setlogmask(LOG_MASK(LOG_DEBUG));
 		initialized = 1;
+
+		printf("Logging to syslog under ID %s\n", syslogID);
 	}
 
 	// Variadic arguments to pass to syslog
@@ -74,9 +77,11 @@ int logDebug(const char *fstring, ...) {
 	char buf[buflen];
 
 	// Initialize if this is the first time calling
-	if(!intialized) {
+	if(!initialized) {
 		LogInit(&debugLog, "log", "DEBUG", LOG_FILEEXT_LOG);
 		initialized = 1;
+
+		printf("Logging to file %s\n", debugLog.filename);
 	}
 
 	// Variadic arguments to pass to sprintf
@@ -85,6 +90,15 @@ int logDebug(const char *fstring, ...) {
 
 	// Format string to output
 	int written = vsnprintf(buf, buflen, fstring, args);
+
+	/***********************************************************************************************
+	 ***********************************************************************************************
+	 ***********************************************************************************************
+	 ***********************************************************************************************
+	 ***********************************************************************************************
+	 ***********************************************************************************************
+	 ***********************************************************************************************/
+	// vprintf(fstring, args);
 
 	// Write to log file
 	LogUpdate(&debugLog, buf, written);

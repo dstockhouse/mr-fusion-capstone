@@ -41,7 +41,7 @@
  * Return value:
  * 	Returns the number of characters written to buf (length of new string)
  */
-int generateFilename(char *buf, int bufSize, time_t *time, 
+int generateFilename(char *buf, int bufSize, time_t *filetime, 
 		const char *dir, const char *pre, const char *ext) {
 
 	// Length of filename generated
@@ -50,12 +50,13 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 	// Time variables
 	struct tm currentTime;
 	time_t ltime;
-	if(time == NULL) {
-		time = &ltime;
+	if(filetime == NULL) {
+		ltime = time(NULL);
+		filetime = &ltime;
 	}
 
 	// Get current time in UTC
-	localtime_r(time, &currentTime);
+	localtime_r(filetime, &currentTime);
 
 	// Create filename using date/time and input string
 	charsWritten = snprintf(buf, bufSize, 

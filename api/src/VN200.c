@@ -495,9 +495,11 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 	// Initialize log file for raw and parsed data
 	// Since multiple log files will be generated for the run, put them in
 	// the same directory
-	logFileDirNameLength = generateFilename(logFileDirName, 512, NULL,
+	time_t dirtime = time(NULL);
+	logFileDirNameLength = generateFilename(logFileDirName, 512, &dirtime,
 			"log/SampleData/VN200", "RUN", "d");
 	LogInit(&(dev->logFile), logFileDirName, "VN200", LOG_FILEEXT_LOG);
+	logDebug("Logging to directory %s\n", logFileDirName);
 
 	// If GPS enabled, init GPS log file
 	if(mode & VN200_INIT_MODE_GPS) {
@@ -524,7 +526,14 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 	}
 
 
-	/**** Initialize VN200 through UART ****/
+	/**** Initialize VN200 through UART commands ****/
+
+	// Ensure Baud rate is 115200
+	UARTSetBaud(dev->fd, 57600);
+	char *baudCommandString = "VNWRG,05,115200";
+	VN200Command(dev, baudCommandString, strlen(baudCommandString), 1);
+	usleep(100000);
+	UARTSetBaud(dev->fd, 115200);
 
 	// Request VN200 serial number
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
@@ -536,32 +545,28 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 	VN200Command(dev, commandBuf, commandBufLen, 1);
 	usleep(100000);
 
+	dev->fs = fs;
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
+	VN200Command(dev, commandBuf, commandBufLen, 1);
+	usleep(100000);
 
 	if(mode == VN200_INIT_MODE_GPS) {
-
-		dev->fs = fs;
-		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
-		VN200Command(dev, commandBuf, commandBufLen, 1);
-		usleep(100000);
 
 		// Enable asynchronous GPS data output
 		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,20");
 
 	} else if(mode == VN200_INIT_MODE_IMU) {
 
-		dev->fs = fs;
-		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
-		VN200Command(dev, commandBuf, commandBufLen, 1);
-		usleep(100000);
-
 		// Enable asynchronous IMU data output
 		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,19");
 
 	} else { // BOTH
 
+		/*
 		// IMU/GPS Sample frequency are not the same, so use default frequencies
 		// already set for both
 		dev->fs = 0;
+		*/
 
 		// Enable both GPS and IMU output
 		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,248");

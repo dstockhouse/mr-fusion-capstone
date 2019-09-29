@@ -22,9 +22,9 @@
 #define STANDARD_DEBUG
 #define VERBOSE_DEBUG
 
-#define DEBUG_OUT_PRINTF
+#undef DEBUG_OUT_PRINTF
 #undef DEBUG_OUT_SYSLOG
-#undef DEBUG_OUT_LOGFILE
+#define DEBUG_OUT_LOGFILE
 
 #endif
 

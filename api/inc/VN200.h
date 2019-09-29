@@ -43,8 +43,6 @@
 #define VN200_INIT_MODE_IMU 2
 #define VN200_INIT_MODE_BOTH (VN200_INIT_MODE_GPS|VN200_INIT_MODE_IMU)
 
-#define MIN(S,T) ((S)<(T)?(S):(T))
-
 
 int getTimestamp(struct timespec *ts, double *td);
 

@@ -62,7 +62,6 @@
 int UARTInit(char *devName, int baud) {
 
 	struct termios uartOptions;
-	struct stat fileStats;
 	int uart_fd, rc;
 
 	// Exit on error if invalid pointer
@@ -85,17 +84,28 @@ int UARTInit(char *devName, int baud) {
 		return uart_fd;
 	}
 
-	rc = tcgetattr(uart_fd, &uartOptions);
+	// Set baud rate
+	UARTSetBaud(uart_fd, baud);
+
+	// Return file descriptor for UART
+	return uart_fd;
+
+} // UARTInit(char *, int)
+
+
+int UARTSetBaud(int fd, int baud) {
+
+	struct termios uartOptions;
+	int rc;
+
+	// Get existing device attributes
+	rc = tcgetattr(fd, &uartOptions);
 	if(rc) {
-		perror("UARTInit tcgetattr() failed for UART device");
+		perror("UARTSetBaud tcgetattr() failed for UART device");
 		return rc;
 	}
 
-	// Previous
-	// uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
-	// uartOptions.c_iflag |= IGNPAR;
-
-	// Set other termios control options
+	// Set new termios control options
 	uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
 	uartOptions.c_cflag &= ~(CSIZE | PARENB | CSTOPB | CRTSCTS);
 
@@ -116,29 +126,26 @@ int UARTInit(char *devName, int baud) {
 			break;
 		default:
 			printf("Unexpected baud rate: %d\n", baud);
-			close(uart_fd);
+			close(fd);
 			return -3;
 			break;
 	}
 
 	// Push changed options to device (after flushing input and output)
-	rc = tcflush(uart_fd, TCIOFLUSH);
+	rc = tcflush(fd, TCIOFLUSH);
  	if(rc) {
- 		perror("UARTInit tcflush() failed for UART device");
+ 		perror("UARTSetBaud tcflush() failed for UART device");
  		return rc;
  	}
 
-	rc = tcsetattr(uart_fd, TCSANOW, &uartOptions);
+	rc = tcsetattr(fd, TCSANOW, &uartOptions);
 	if(rc) {
-		perror("UARTInit tcsetattr() failed for UART device");
+		perror("UARTSetBaud tcsetattr() failed for UART device");
 		return rc;
 	}
 
-	// Return file descriptor for UART
-	return uart_fd;
-
-} // UARTInit(char *, int)
-
+	return 0;
+}
 
 /**** Function UARTRead ****
  *

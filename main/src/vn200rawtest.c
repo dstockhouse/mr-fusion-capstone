@@ -43,8 +43,10 @@ int main(void) {
 	VN200Init(&dev, 50, VN200_BAUD, VN200_INIT_MODE_BOTH);
 
 
+	/*
 	VN200Destroy(&dev);
 	return 0;
+	*/
 
 	while(1) {
 
@@ -88,7 +90,7 @@ int main(void) {
 		logDebug("Consumed %d bytes from buffer\n", numConsumed);
 #endif
 
-		usleep(10);
+		// usleep(10);
 
 	}
 
