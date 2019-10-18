@@ -531,24 +531,28 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 	// Ensure Baud rate is 115200
 	UARTSetBaud(dev->fd, 57600);
 	char *baudCommandString = "VNWRG,05,115200";
-	VN200Command(dev, baudCommandString, strlen(baudCommandString), 1);
-	usleep(100000);
+	VN200Command(dev, baudCommandString, strlen(baudCommandString), 0);
+	VN200FlushOutput(dev);
+	sleep(1);
 	UARTSetBaud(dev->fd, 115200);
+	VN200FlushInput(dev);
+	sleep(1);
 
 	// Request VN200 serial number
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
 
 	// Disable asynchronous output
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	dev->fs = fs;
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
 
 	if(mode == VN200_INIT_MODE_GPS) {
 
@@ -574,8 +578,22 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 
 
 	// Send mode command to UART
+	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
+
+	// Set sampling frequency
+	dev->fs = fs;
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%02d", "VNWRG,07,", dev->fs);
 	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
+
+	logDebug("Done UART configuring\n\n\n\n\n\n\n\n");
 
 	// Clear input buffer to prevent parsing "latent" data (temporary)
 	VN200FlushInput(dev);

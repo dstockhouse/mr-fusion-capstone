@@ -6,3 +6,5 @@ a.out
 *test
 *.pkt
 /bld/
+/log/
+/SampleData/

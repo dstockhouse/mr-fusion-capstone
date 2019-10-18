@@ -1,7 +1,7 @@
 /***************************************************************************\
  *
  * File:
- * 	vn200rawtest.c
+ * 	vn200rawgpstest.c
  *
  * Description:
  *	Tests the VN200 combined functionality, logging data without parsing
@@ -10,7 +10,7 @@
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 9/19/2019
+ * 	Last edited 9/29/2019
  *
  ***************************************************************************/
 
@@ -38,21 +38,20 @@ int main(void) {
 	// Instances of structure variables
 	VN200_DEV dev;
 
+	logDebug("Initializing...\n");
+
 	struct timespec delaytime;
 	int starttime;
 
-	logDebug("Initializing...\n");
+	// Initialize as GPS at 5 Hz
+	VN200Init(&dev, 5, VN200_BAUD, VN200_INIT_MODE_GPS);
 
-	VN200Init(&dev, 50, VN200_BAUD, VN200_INIT_MODE_BOTH);
-	sleep(1);
-
-	char *command = "VNWRG,06,248";
-	VN200Command(&dev, command, strlen(command), 0);
-	VN200FlushOutput(&dev);
+	clock_gettime(CLOCK_REALTIME, &delaytime);
+	starttime = delaytime.tv_sec;
 
 	// while(1) {
 	int cumulative = 0;
-	while(cumulative < 100000) {
+	while(cumulative < 100000 && delaytime.tv_sec < starttime + 6) {
 
 		getTimestamp(NULL, &time);
 #ifdef VERBOSE_DEBUG
@@ -96,6 +95,8 @@ int main(void) {
 #endif
 
 		usleep(10);
+
+		clock_gettime(CLOCK_REALTIME, &delaytime);
 
 	}
 

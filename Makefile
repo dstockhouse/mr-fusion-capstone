@@ -21,7 +21,7 @@ OBJS = $(foreach src,$(notdir $(SRCS)),$(OBJDIR)/$(src:.c=.o))
 MAINSRCDIR = $(MAINDIR)/src
 MAININCDIR = $(MAINDIR)/inc
 
-MAIN = vn200rawtest
+MAIN = vn200rawsimpletest
 MAINSRC = $(MAINSRCDIR)/$(MAIN).c
 MAINOBJ = $(OBJDIR)/$(MAIN).o
 MAINBIN = $(BINDIR)/$(MAIN)

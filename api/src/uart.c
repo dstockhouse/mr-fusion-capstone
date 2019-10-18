@@ -61,7 +61,6 @@
  */
 int UARTInit(char *devName, int baud) {
 
-	struct termios uartOptions;
 	int uart_fd, rc;
 
 	// Exit on error if invalid pointer
@@ -93,6 +92,50 @@ int UARTInit(char *devName, int baud) {
 } // UARTInit(char *, int)
 
 
+/**** Function UARTInitReadOnly ****
+ *
+ * Opens and initializes a UART device. Based mostly on Derek Molloy's RPi book
+ *
+ * Arguments: 
+ * 	devName - String name of the file the UART device is at
+ * 	baud    - Requested baud rate (for now must be either 115200 or 57600)
+ *
+ * Return value:
+ * 	On success, returns file descriptor corresponding to UART device
+ *	On failure, prints error message and returns a negative number 
+ */
+int UARTInitReadOnly(char *devName, int baud) {
+
+	int uart_fd, rc;
+
+	// Exit on error if invalid pointer
+	if(devName == NULL) {
+		return -1;
+	}
+
+	// Ensure user has permissions to access UART file
+	rc = access(devName, R_OK);
+	if(rc) {
+		perror("Cannot access UART device (try as sudo?)");
+		return rc;
+	}
+
+	// Open UART file
+	uart_fd = open(devName, O_RDONLY | O_NOCTTY);
+	if(uart_fd < 0) {
+		perror("UARTInit open() failed for UART device");
+		return uart_fd;
+	}
+
+	// Set baud rate
+	UARTSetBaud(uart_fd, baud);
+
+	// Return file descriptor for UART
+	return uart_fd;
+
+} // UARTInitReadOnly(char *, int)
+
+
 int UARTSetBaud(int fd, int baud) {
 
 	struct termios uartOptions;
@@ -106,11 +149,20 @@ int UARTSetBaud(int fd, int baud) {
 	}
 
 	// Set new termios control options
-	uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
 	uartOptions.c_cflag &= ~(CSIZE | PARENB | CSTOPB | CRTSCTS);
+	uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
 
 	// Set input options
-	uartOptions.c_iflag |= IGNPAR;
+	uartOptions.c_iflag &= ~(ICRNL);
+	uartOptions.c_iflag |= IGNPAR | IXON | IXOFF;
+
+	// Set output options
+	uartOptions.c_oflag &= ~(OPOST | ONLCR);
+	uartOptions.c_oflag |= OCRNL;
+
+	// Set local options
+	uartOptions.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE);
+	uartOptions.c_lflag |= 0;
 
 	// Set baud rate based on input, bare minimum so far supported
 	switch(baud) {

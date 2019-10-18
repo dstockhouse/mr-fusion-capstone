@@ -1,16 +1,16 @@
 /***************************************************************************\
  *
  * File:
- * 	test.c
+ * 	vn200rawsimpletest.c
  *
  * Description:
- *	Tests the VN200 combined functionality, as fully as possible
+ *	Tests the VN200 combined functionality, logging data without parsing
  * 
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 10/11/2019
+ * 	Last edited 9/19/2019
  *
  ***************************************************************************/
 
@@ -37,6 +37,27 @@ int main(void) {
 	int numRead, numParsed, numConsumed, i;
 	double time;
 
+	/*
+	printf("Forking child\n");
+
+	pid_t forkReturn = fork();
+	if(forkReturn == 0) {
+		printf("Child running puttyLog.sh\n");
+		system("/home/pi/icarus-dronenet/script/puttyLog.sh 57600");
+		printf("Child exiting\n");
+		return 0;
+	} else {
+		sleep(5);
+		printf("Killing child\n");
+		system("killall plink");
+		system("killall plink");
+		system("killall plink");
+		kill(forkReturn, SIGINT);
+	}
+
+	printf("Resuming execution\n");
+	*/
+
 	LOG_FILE log;
 
 	// Initialize log
@@ -47,7 +68,7 @@ int main(void) {
 
 	int fd = UARTInit(VN200_DEVNAME, 57600);
 	if(fd < 0) {
-		logDebug("Failed to open UART device\n");
+		printf("Failed to open UART device\n");
 		return 1;
 	}
 
@@ -59,6 +80,7 @@ int main(void) {
 	UARTRead(fd, buf, buflen);
 
 	// Change CPU baud
+	logDebug("Resetting UART Baud to 115200\n");
 	UARTSetBaud(fd, 115200);
 	sleep(1);
 	UARTRead(fd, buf, buflen);
@@ -103,7 +125,7 @@ int main(void) {
 	logDebug("Reopening...");
 	fd = UARTInitReadOnly(VN200_DEVNAME, 115200);
 	if(fd < 0) {
-		logDebug("Failed to open UART device\n");
+		printf("Failed to open UART device\n");
 		return 1;
 	}
 
