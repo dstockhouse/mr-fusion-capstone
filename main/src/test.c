@@ -1,139 +1,156 @@
-/****************************************************************************\
+/***************************************************************************\
  *
  * File:
  * 	test.c
  *
  * Description:
- * 	Tests the functionality of the combined parser and UART interface.
- *
+ *	Tests the VN200 combined functionality, as fully as possible
+ * 
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 2/25/2019
+ * 	Last edited 10/11/2019
  *
- * Revision 0.2
- * 	Last edited 2/28/2019
- *
- * Revision 0.3
- * 	Changes to directory structure
- * 	Last edited 4/20/2019
- *
-\***************************************************************************/
-
-#include "buffer.h"
-#include "uart.h"
-#include "pingusb.h"
-#include "adsb_parser.h"
+ ***************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+#include <errno.h>
 #include <time.h>
+#include <signal.h>
 #include <sys/types.h>
 
-#define NUM_BYTES 2048
+#include "control.h"
+#include "debuglog.h"
+#include "logger.h"
+#include "uart.h"
+#include "VN200.h"
 
 
-/**** Function main ****
- *
- * Test of the ADS-B receiver functionality
- *
- * Arguments:
- * 	argc - Number of command line arguments
- * 	argv - Pointer to array of command line argument strings
- *
- * Return value:
- * 	Returns 0 on success, anything else on failure
- */
-int main(int argc, char **argv) {
+int main(void) {
 
-	int i, rc, numRead, col = 0, loopCount = 0;
-	int numBytes = 0;
+	int numRead, numParsed, numConsumed, i;
+	double time;
 
-	PINGUSB_DEV dev;
+	LOG_FILE log;
 
-	// Process command-line options
-	if(argc == 1) {
+	// Initialize log
+	LogInit(&log, "log/SampleData/raw", "VN200", LOG_FILEEXT_LOG);
 
-		// Assume UART operation
-		printf("Initializing receiver... \n");
-		rc = pingUSBInit(&dev);
-		if(rc) {
-			printf("Couldn't initalize device: %d\n", rc);
-			return rc;
-		}
-	} else {
-		// Read from list of input files
-		// Unimplemented
-		printf("Only configured to read from %s. Exiting\n", PINGUSB_DEVNAME);
-		return -1;
+	const int buflen = 16384;
+	char buf[buflen];
+
+	int fd = UARTInit(VN200_DEVNAME, 57600);
+	if(fd < 0) {
+		logDebug("Failed to open UART device\n");
+		return 1;
+	}
+
+	// Change VN200 baud to 115200
+	char *command = "$VNWRG,05,115200*XX\n\r";
+	logDebug(command);
+	UARTWrite(fd, command, strlen(command));
+	sleep(1);
+	UARTRead(fd, buf, buflen);
+
+	// Change CPU baud
+	UARTSetBaud(fd, 115200);
+	sleep(1);
+	UARTRead(fd, buf, buflen);
+
+
+	// Configure
+
+	command = "$VNWRG,06,00*XX\n\r";
+	logDebug(command);
+	UARTWrite(fd, command, strlen(command));
+	sleep(1);
+	UARTRead(fd, buf, buflen);
+
+	command = "$VNWRG,06,19*XX\n\r";
+	logDebug(command);
+	UARTWrite(fd, command, strlen(command));
+	sleep(1);
+	UARTRead(fd, buf, buflen);
+
+	command = "$VNWRG,07,50*XX\n\r";
+	logDebug(command);
+	UARTWrite(fd, command, strlen(command));
+	sleep(1);
+	UARTRead(fd, buf, buflen);
+
+	command = "$VNWRG,06,00*XX\n\r";
+	logDebug(command);
+	UARTWrite(fd, command, strlen(command));
+	sleep(1);
+	UARTRead(fd, buf, buflen);
+
+	command = "$VNWRG,06,248*XX\n\r";
+	logDebug(command);
+	UARTWrite(fd, command, strlen(command));
+	sleep(1);
+	UARTRead(fd, buf, buflen);
+
+	logDebug("Closing...");
+	UARTClose(fd);
+	sleep(3);
+
+	logDebug("Reopening...");
+	fd = UARTInitReadOnly(VN200_DEVNAME, 115200);
+	if(fd < 0) {
+		logDebug("Failed to open UART device\n");
+		return 1;
 	}
 
 
-	printf("Entering polling loop to collect %d bytes (ctrl-c to exit)\n\n\t", NUM_BYTES);
+	int timeout = 0;
 
-	while(numBytes < NUM_BYTES) {
+	int cumulative = 0;
+	while(1) {
+	// while(cumulative < 100000 && timeout < 1000) {
 
-		// printf("L: %d\n", loopCount);
-		loopCount++;
+		getTimestamp(NULL, &time);
+		logDebug("\nCurrent Time: %lf\n", time);
 
-		// Poll for new characters from UART
-		numRead = pingUSBPoll(&dev);
-		// printf("Read %d chars\n", numRead);
+		numRead = UARTRead(fd, buf, buflen);
+		cumulative += numRead;
+		logDebug("Read %d bytes from UART\n", numRead);
 
-		numBytes += numRead;
+		if(numRead > 0) {
 
-
-		/* Uncomment to print out hex bytes as they are read *
-
-		// Print chars received in hex
-		for(i = 0; i < dev.inbuf.length; i++) {
-
-			// Search for packet start
-			if(dev.inbuf.buffer[i] == 0xfe) {
-				printf("\n\n\t");
-				col = 0;
+			if(numRead < buflen) {
+				buf[numRead] = '\0';
+			} else {
+				buf[numRead - 1] = '\0';
 			}
 
-			printf("%02x", dev.inbuf.buffer[i]);
-			col++;
-			if(col % 2 == 0) {
-				printf(" ");
+			logDebug("\tRaw Data:\n");
+			logDebug("%s", buf);
+
+			int numWritten = LogUpdate(&log, buf, numRead);
+			if(numWritten < numRead) {
+				logDebug("ERRROR: Read %d but wrote %d \n", numRead, numWritten);
 			}
-			if(col % 8 == 0) {
-				printf(" ");
-			}
-			if(col % 16 == 0) {
-				printf("\n\t");
-			}
-		}
-		*/
 
+			timeout = 0;
 
-		// Remove elements from input FIFO
-		// pingUSBConsume(&dev, dev.inbuf.length);
-		// BufferRemove(&(dev.inbuf), dev.inbuf.length);
-
-		// Parse all data in USB receiver
-		printf("Parsing data...\n");
-		while(pingUSBParse(&dev) > 0) {
-
-			printData(&(dev.packetData));
-
+		} else {
+			timeout++;
 		}
 
-		// usleep(1000000);
+		// Flush file I/O
+		close(log.fd);
+		log.fd = open(log.filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
 	}
 
-	printf("\n\nTest complete\n\n");
+	UARTClose(fd);
 
-	pingUSBDestroy(&dev);
-
-	// Success
 	return 0;
 
-} // main()
+}
 

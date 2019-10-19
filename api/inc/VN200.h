@@ -12,14 +12,14 @@
  * Revision 0.1
  * 	Last edited 5/06/2019
  *
+ * Revision 0.2
+ * 	Last edited 5/30/2019
+ * 	Major overhaul unifying GPS and IMU functionality
+ *
  ***************************************************************************/
 
 #ifndef __VN200_H
 #define __VN200_H
-
-#include "uart.h"
-#include "buffer.h"
-#include "logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,21 +28,25 @@
 #include <termios.h>
 #include <errno.h>
 
+#include "buffer.h"
+#include "logger.h"
+#include "uart.h"
+#include "VN200Struct.h"
+#include "VN200Packet.h"
+
 #define VN200_DEVNAME "/dev/ttyUSB0"
 #define VN200_BAUD 57600
 //#define VN200_BAUD 115200
 
-typedef struct {
-	int fd;
-	BYTE_BUFFER inbuf;
-	BYTE_BUFFER outbuf;
-	LOG_FILE logFile;
-	LOG_FILE logFileParsed;
-	int baud; // Baud rate 115200, 128000, 230400, 460800, 921600
-	int fs; // Sampling Frequency => 100
-} VN200_DEV;
+// Device initialization modes
+#define VN200_INIT_MODE_GPS 1
+#define VN200_INIT_MODE_IMU 2
+#define VN200_INIT_MODE_BOTH (VN200_INIT_MODE_GPS|VN200_INIT_MODE_IMU)
 
-int VN200BaseInit(VN200_DEV *dev);
+
+int getTimestamp(struct timespec *ts, double *td);
+
+int VN200BaseInit(VN200_DEV *dev, char *devname, int baud);
 
 int VN200Poll(VN200_DEV *dev);
 
@@ -55,6 +59,10 @@ int VN200Command(VN200_DEV *dev, char *buf, int num, int sendChk);
 int VN200FlushOutput(VN200_DEV *dev);
 
 int VN200Destroy(VN200_DEV *dev);
+
+int VN200Init(VN200_DEV *dev, int baud, int fs, int mode);
+
+int VN200Parse(VN200_DEV *dev);
 
 #endif
 

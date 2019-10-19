@@ -20,22 +20,15 @@
 #ifndef __VN200_IMU_H
 #define __VN200_IMU_H
 
+#include "logger.h"
+#include "VN200Struct.h"
 #include "VN200.h"
-
-typedef struct {
-	double compass[3]; // compass (x,y,z) Gauss
-	double accel[3]; // accel (x,y,z) m/s^2
-	double gyro[3]; // gyro (x, y, z) rad/s
-	double temp; // temp C
-	double baro; // pressure kPa
-
-	double timestamp; // System time data was collected
-
-} IMU_DATA;
 
 int VN200IMUInit(VN200_DEV *dev, int fs);
 
-int VN200IMUParse(VN200_DEV *dev, IMU_DATA *data);
+int VN200IMUPacketParse(char *buf, int len, IMU_DATA *data);
+
+int VN200IMULogParsed(LOG_FILE *log, IMU_DATA *data);
 
 #endif
 
