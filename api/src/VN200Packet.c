@@ -23,8 +23,11 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
+#include "control.h"
+#include "utils.h"
 #include "buffer.h"
 #include "logger.h"
+#include "debuglog.h"
 #include "uart.h"
 #include "VN200_CRC.h"
 #include "VN200Packet.h"
@@ -38,7 +41,7 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 
 	VN200_PACKET *packet;
 	char *packetBuf;
-	int packetLen;
+	int packetDataStart, packetLen;
 
 	// Check null pointer
 	if(ringbuf == NULL) {
@@ -76,7 +79,7 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 	}
 
 	// Find end of packet (*)
-	for(chkStartIndex = packet->startIndex; chkStartIndex < packet->endIndex - 3 && packetBuf[i] != '*'; chkStartIndex++) {
+	for(chkStartIndex = packet->startIndex; chkStartIndex < packet->endIndex - 3 && packetBuf[chkStartIndex] != '*'; chkStartIndex++) {
 		// Loop until asterisk is reached
 	}
 
@@ -86,7 +89,7 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 
 	if(chkNew != chkOld) {
 		// Checksum failed, don't parse but skip to next packet
-		printf("Checksum failed: Read %02X but computed %02X\n", chkOld, chkNew);
+		logDebug("Checksum failed: Read %02X but computed %02X\n", chkOld, chkNew);
 		return 1;
 	}
 
@@ -94,10 +97,21 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 	for(i = packet->startIndex; i < packet->endIndex && packetBuf[i] != ','; i++) {
 		// Loop until comma is reached
 	}
-#if
-	printf("%s: Packet ID at index %d is ", __func__, packetIndex);
-	printf("%c", packetBuf[i]);
-	printf("\n");
+
+#ifdef VERBOSE_DEBUG
+	if(i < packet->endIndex) {
+		// Terminate string temporarily
+		char temp = packetBuf[i];
+		packetBuf[i] = '\0';
+		logDebug("%s: Packet ID at index %d is %s\n", __func__, packetIndex, packetBuf);
+		packetBuf[i] = temp;
+	} else {
+		char temp = packetBuf[i-1];
+		packetBuf[i-1] = '\0';
+		logDebug("%s: End of packet reached before packet ID for %d: %s\n", __func__, packetIndex, packetBuf);
+		packetBuf[i-1] = temp;
+	}
+#endif
 
 	// Length of packet ID string is the number travelled
 	packetIDLength = i - packet->startIndex;
@@ -116,7 +130,6 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 		rc = VN200GPSPacketParse(&(packetBuf[packetDataStart]), packetLen, &(packet->GPSData));
 		packet->GPSData.timestamp = packet->timestamp;
 
-		//************************************** Fix GPSParse function esp for timestamps
 
 		// Set packet stats
 		packet->contentsType = VN200_PACKET_CONTENTS_TYPE_GPS;
@@ -143,7 +156,7 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
 		// Printout confusion message
 		printf("%s: Unknown or improper message packet: ", __func__);
 
-		snprintf(tempbuf, 512, "%s", &(packetBuf[packet->startIndex]), MIN(512, packet->endIndex - packet->startIndex));
+		snprintf(tempbuf, MIN(512, packet->endIndex - packet->startIndex), "%s", &(packetBuf[packet->startIndex]));
 		printf(tempbuf);
 		printf("\n");
 
@@ -247,7 +260,7 @@ int VN200PacketRingBufferRemovePacket(VN200_PACKET_RING_BUFFER *ringbuf) {
 } // VN200PacketRingBufferRemovePacket(VN200_PACKET_RING_BUFFER *)
 
 
-int VN200PacketRingBufferFindEndpoints(VN200_PACKET_RING_BUFFER *ringbuf) {
+int VN200PacketRingBufferUpdateEndpoints(VN200_PACKET_RING_BUFFER *ringbuf) {
 
 	int i;
 	int lastPacketIndex, packetsAdded = 0, addSuccess;
@@ -294,6 +307,9 @@ int VN200PacketRingBufferFindEndpoints(VN200_PACKET_RING_BUFFER *ringbuf) {
 			lastPacketIndex = MOD((ringbuf->end - 1), VN200_PACKET_RING_BUFFER_SIZE);
 			packet = &(ringbuf->packets[lastPacketIndex]);
 
+			getTimestamp(&(packet->timestamp_ts), &(packet->timestamp));
+			/********* *SET TIMESTAMP HERE* **********/
+
 		}
 
 	}
@@ -301,13 +317,15 @@ int VN200PacketRingBufferFindEndpoints(VN200_PACKET_RING_BUFFER *ringbuf) {
 	// Return number of packets added
 	return packetsAdded;
 
-} // VN200PacketRingBufferFindEndpoints(VN200_PACKET_RING_BUFFER *) {
+} // VN200PacketRingBufferUpdateEndpoints(VN200_PACKET_RING_BUFFER *) {
 
 
+// Disable to consider deleting
+#if 0
 int VN200PacketRingBufferSetLastEndpoint(VN200_PACKET_RING_BUFFER *ringbuf, int endpoint) {
 
 	int i;
-	int lastPacketIndex;
+	int lastPacketIndex, addStatus;
 
 	// Local copy of current packet
 	VN200_PACKET *packet;
@@ -324,7 +342,7 @@ int VN200PacketRingBufferSetLastEndpoint(VN200_PACKET_RING_BUFFER *ringbuf, int 
 
 		// Return failure if couldn't add packet
 		if(!addStatus) {
-				return -2;
+			return -2;
 		}
 
 	}
@@ -335,13 +353,14 @@ int VN200PacketRingBufferSetLastEndpoint(VN200_PACKET_RING_BUFFER *ringbuf, int 
 
 	// Invalid if end is before start for this packet
 	if(endpoint < packet->startIndex) {
-			packet->endIndex = endpoint;
-			return -3;
+		packet->endIndex = endpoint;
+		return -3;
 	}
 
 	return 0;
 
 } // VN200PacketRingBufferSetLastEndpoint(VN200_PACKET_RING_BUFFER *, int) {
+#endif
 
 
 int VN200PacketRingBufferConsume(VN200_PACKET_RING_BUFFER *ringbuf, int numToConsume) {

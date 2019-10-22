@@ -39,7 +39,7 @@ int VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
 
 int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf, int startIndex, int endIndex);
 
-int VN200PacketRingBufferUpdateEndpoint(VN200_PACKET_RING_BUFFER *ringbuf);
+int VN200PacketRingBufferUpdateEndpoints(VN200_PACKET_RING_BUFFER *ringbuf);
 
 int VN200PacketIncomplete(VN200_PACKET *packet);
 

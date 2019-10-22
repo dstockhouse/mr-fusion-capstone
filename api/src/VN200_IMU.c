@@ -51,56 +51,10 @@
  */
 int VN200IMUInit(VN200_DEV *dev, int fs) {
 
-	const int CMD_BUFFER_SIZE = 64;
-	char commandBuf[CMD_BUFFER_SIZE], logBuf[256];
-	int commandBufLen, logBufLen;
-
-	// Exit on error if invalid pointer
-	if(dev == NULL) {
-		return -1;
-	}
-
-	// Initialize UART for use
-	VN200BaseInit(dev);
-
-	// Initialize log file for raw and parsed data
-	LogInit(&(dev->logFile), "../log/SampleData/VN200/IMU", "VN200", LOG_FILEEXT_LOG);
-	LogInit(&(dev->logFileIMUParsed), "../log/SampleData/VN200/IMU", "VN200", LOG_FILEEXT_CSV);
-
-	// Write header to CSV data
-	logBufLen = snprintf(logBuf, 256, "compx,compy,compz,accelx,accely,accelz,gyrox,gyroy,gyroz,temp,baro,timestamp\n");
-	LogUpdate(&(dev->logFileIMUParsed), logBuf, logBufLen);
-
-	// Request IMU serial number
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	// Disable asynchronous data output
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-	
-	// Set the asynchronous data output freq
-	dev->fs = fs;
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "VNWRG,07,%d", dev->fs);
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	// Enable async IMU Measurements on VN200
-	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,19");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
-	// Clear input buffer (temporary)
-	VN200FlushInput(dev);
-
-	return 0;
+	return VN200Init(dev, fs, VN200_BAUD, VN200_INIT_MODE_IMU);
 
 } // VN200IMUInit(VN200_DEV *, int)
 
-
-****** Change to input single packet ptr, IMU_DATA ptr
 
 /**** Function VN200IMUParse ****
  *
@@ -119,9 +73,7 @@ int VN200IMUPacketParse(char *buf, int len, IMU_DATA *data) {
 	// 1K Should be enough for a single packet
 	const int PACKET_BUF_SIZE = 1024;
 	char currentPacket[PACKET_BUF_SIZE];
-
 	int i, rc;
-	struct timespec timestamp_ts;
 
 	// Exit on error if invalid pointer
 	if(buf == NULL || data == NULL) {
@@ -145,7 +97,7 @@ int VN200IMUPacketParse(char *buf, int len, IMU_DATA *data) {
 	strncpy(currentPacket, &(buf[0]), len);
 
 	// Parse out values (all doubles)
-	sscanf(currentPacket, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+	rc = sscanf(currentPacket, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
 			&(data->compass[0]), &(data->compass[1]), &(data->compass[2]),
 			&(data->accel[0]), &(data->accel[1]), &(data->accel[2]),
 			&(data->gyro[0]), &(data->gyro[1]), &(data->gyro[2]),
@@ -162,7 +114,7 @@ int VN200IMUPacketParse(char *buf, int len, IMU_DATA *data) {
 } // VN200IMUPacketParse(char *, int, IMU_DATA *) {
 
 
-int VN200IMULogParsed(LOGFILE *log, IMU_DATA *data) {
+int VN200IMULogParsed(LOG_FILE *log, IMU_DATA *data) {
 
 	char logBuf[512];
 	int logBufLen;

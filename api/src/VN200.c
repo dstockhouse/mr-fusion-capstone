@@ -27,7 +27,9 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
+#include "control.h"
 #include "buffer.h"
+#include "debuglog.h"
 #include "logger.h"
 #include "uart.h"
 #include "VN200_CRC.h"
@@ -144,7 +146,7 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
  */
 int VN200Poll(VN200_DEV *dev) {
 
-	int numToRead, numRead, rc, ioctl_status;
+	int numToRead, numRead, startIndex, rc, ioctl_status;
 	char *startBuf, tempBuf[BYTE_BUFFER_LEN];
 
 	// Exit on error if invalid pointer
@@ -198,11 +200,11 @@ int VN200Poll(VN200_DEV *dev) {
 	// Update input buffer endpoint
 	dev->inbuf.length += numRead;
 
-	// Update ring buffer endpoint
-	VN200PacketRingBufferUpdateEndpoint(&(dev->ringbuf));
+	// Update ring buffer endpoints, generating new packets as needed
+	VN200PacketRingBufferUpdateEndpoints(&(dev->ringbuf));
 
 
-	// This is now handled by UpdateEndpoint function
+	// This is now handled by UpdateEndpoints function
 #if 0
 	// Populate most recent packet with data and/or start a new packet
 	for(i = 0; i < numRead; i++) {
@@ -488,14 +490,16 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 
 	// Initialize UART for all modes
 	dev->baud = baud;
-	VN200BaseInit(dev, dev->baud);
+	VN200BaseInit(dev, NULL, dev->baud);
 
 	// Initialize log file for raw and parsed data
 	// Since multiple log files will be generated for the run, put them in
 	// the same directory
-	logFileDirNameLength = generateFilename(logFileDirName, 512,
+	time_t dirtime = time(NULL);
+	logFileDirNameLength = generateFilename(logFileDirName, 512, &dirtime,
 			"log/SampleData/VN200", "RUN", "d");
 	LogInit(&(dev->logFile), logFileDirName, "VN200", LOG_FILEEXT_LOG);
+	logDebug("Logging to directory %s\n", logFileDirName);
 
 	// If GPS enabled, init GPS log file
 	if(mode & VN200_INIT_MODE_GPS) {
@@ -522,44 +526,51 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 	}
 
 
-	/**** Initialize VN200 through UART ****/
+	/**** Initialize VN200 through UART commands ****/
+
+	// Ensure Baud rate is 115200
+	UARTSetBaud(dev->fd, 57600);
+	char *baudCommandString = "VNWRG,05,115200";
+	VN200Command(dev, baudCommandString, strlen(baudCommandString), 0);
+	VN200FlushOutput(dev);
+	sleep(1);
+	UARTSetBaud(dev->fd, 115200);
+	VN200FlushInput(dev);
+	sleep(1);
 
 	// Request VN200 serial number
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
+	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
 
 	// Disable asynchronous output
 	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
-	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
-
+	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
 
 	if(mode == VN200_INIT_MODE_GPS) {
-
-		dev->fs = fs;
-		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
-		VN200Command(dev, commandBuf, commandBufLen, 1);
-		usleep(100000);
 
 		// Enable asynchronous GPS data output
 		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,20");
 
 	} else if(mode == VN200_INIT_MODE_IMU) {
 
-		dev->fs = fs;
-		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%d", "VNWRG,07,", dev->fs);
-		VN200Command(dev, commandBuf, commandBufLen, 1);
-		usleep(100000);
-
 		// Enable asynchronous IMU data output
 		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,19");
 
 	} else { // BOTH
 
+		/*
 		// IMU/GPS Sample frequency are not the same, so use default frequencies
 		// already set for both
 		dev->fs = 0;
+		*/
 
 		// Enable both GPS and IMU output
 		commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,248");
@@ -567,8 +578,22 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 
 
 	// Send mode command to UART
+	VN200Command(dev, commandBuf, commandBufLen, 0);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
+
+	// Set sampling frequency
+	dev->fs = fs;
+	commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%02d", "VNWRG,07,", dev->fs);
 	VN200Command(dev, commandBuf, commandBufLen, 1);
-	usleep(100000);
+	VN200FlushOutput(dev);
+	sleep(1);
+	VN200FlushInput(dev);
+	sleep(1);
+
+	logDebug("Done UART configuring\n\n\n\n\n\n\n\n");
 
 	// Clear input buffer to prevent parsing "latent" data (temporary)
 	VN200FlushInput(dev);
@@ -634,7 +659,7 @@ int VN200Parse(VN200_DEV *dev) {
 
 	} // for packets in ring buffer
 
-	return packetEnd + 3;
+	return numParsed;
 
 } // VN200Parse(VN200_DEV *)
 

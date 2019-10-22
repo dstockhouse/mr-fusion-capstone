@@ -25,7 +25,7 @@ int VN200GPSInit(VN200_DEV *dev, int fs);
 
 int VN200GPSPacketParse(char *buf, int len, GPS_DATA *data);
 
-int VN200GPSLogParsed(LOGFILE *log, GPS_DATA *data);
+int VN200GPSLogParsed(LOG_FILE *log, GPS_DATA *data);
 
 #endif
 
