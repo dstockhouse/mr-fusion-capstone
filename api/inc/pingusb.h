@@ -22,17 +22,17 @@
 #ifndef __PINGUSB_H
 #define __PINGUSB_H
 
-#include "uart.h"
-#include "buffer.h"
-#include "logger.h"
-#include "adsb_parser.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
 #include <errno.h>
+
+#include "buffer.h"
+#include "logger.h"
+#include "uart.h"
+#include "adsb_parser.h"
 
 #define PINGUSB_DEVNAME "/dev/ttyUSB0"
 // #define PINGUSB_DEVNAME "/dev/ttyACM0"
