@@ -65,13 +65,15 @@ int main(void) {
 
 	const int buflen = 16384;
 	char buf[buflen];
+	char *command;
 
-	int fd = UARTInit(VN200_DEVNAME, 57600);
+	int fd = UARTInit(VN200_DEVNAME, 115200);
 	if(fd < 0) {
 		printf("Failed to open UART device\n");
 		return 1;
 	}
 
+/*
 	// Change VN200 baud to 115200
 	char *command = "$VNWRG,05,115200*XX\n\r";
 	logDebug(command);
@@ -85,6 +87,7 @@ int main(void) {
 	sleep(1);
 	UARTRead(fd, buf, buflen);
 
+*/
 
 	// Configure
 
