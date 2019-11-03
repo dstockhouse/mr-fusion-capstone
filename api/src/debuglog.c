@@ -79,11 +79,11 @@ int logDebug(const char *fstring, ...) {
 	// Initialize if this is the first time calling
 	if(!logfileInitialized) {
 		logfileInitialized = 1;
-		printf("Initializing log to print ");
-		vprintf(fstring, args);
 		LogInit(&debugLog, "log", "DEBUG", LOG_FILEEXT_LOG);
 
 		printf("Logging to file %s\n", debugLog.filename);
+
+		// Optionally also fork a process to run tail -f on the log file, to print the output but not make that slow down the app
 	}
 
 	// Format string to output
@@ -103,5 +103,5 @@ int logDebug(const char *fstring, ...) {
 	// End variadic arguments
 	va_end(args);
 
-}
+} // logDebug(const char *, ...)
 

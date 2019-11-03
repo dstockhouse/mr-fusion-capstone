@@ -31,20 +31,17 @@
 #include "VN200_GPS.h"
 #include "VN200_IMU.h"
 
-
 int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetOffset);
 
 int VN200PacketRingBufferEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
 
 int VN200PacketRingBufferIsEmpty(VN200_PACKET_RING_BUFFER *ringbuf);
 
-int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf, int startIndex);
-
-int VN200PacketRingBufferRemovePacket(VN200_PACKET_RING_BUFFER *ringbuf);
+int VN200PacketRingBufferAddPacket(VN200_PACKET_RING_BUFFER *ringbuf, int startIndex, int endIndex);
 
 int VN200PacketRingBufferUpdateEndpoints(VN200_PACKET_RING_BUFFER *ringbuf);
 
-int VN200PacketIsIncomplete(VN200_PACKET *packet);
+int VN200PacketIncomplete(VN200_PACKET *packet);
 
 #endif
 
