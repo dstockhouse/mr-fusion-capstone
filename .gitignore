@@ -1,0 +1,10 @@
+*.o
+*.swp
+*.swo
+*~
+a.out
+*test
+*.pkt
+/bld/
+/log/
+/SampleData/
