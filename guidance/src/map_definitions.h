@@ -11,7 +11,7 @@ typedef struct {
 
     int numberOfPoints;
     double distance;
-    GPSPoint gpsPoints[];
+    std::vector<GPSPoint> gpsPoints;
 } MapLine;
 
 typedef struct mapPoint {
@@ -23,8 +23,8 @@ typedef struct mapPoint {
 
     // A map line that connects the point to an adjectent point will share the 
     // same index
-    std::vector<mapPoint*> adjacentMapPointsPointers;
-    MapLine* mapLines[];
+    std::vector<mapPoint*> adjacentMapPoints;
+    std::vector<MapLine*> mapLines;
 
     
 } MapPoint;
