@@ -1,4 +1,4 @@
-/****************************************************************************\
+/****************************************************************************
  *
  * File:
  * 	logger.c
@@ -12,7 +12,9 @@
  * Revision 0.1
  * 	Last edited 2/20/2019
  *
- \***************************************************************************/
+ ***************************************************************************/
+
+#include "debuglog.h"
 
 #include "logger.h"
 
@@ -41,21 +43,30 @@
  * Return value:
  * 	Returns the number of characters written to buf (length of new string)
  */
-int generateFilename(char *buf, int bufSize, time_t *time, 
+int generateFilename(char *buf, int bufSize, time_t *filetime, 
 		const char *dir, const char *pre, const char *ext) {
 
 	// Length of filename generated
 	int charsWritten;
 
+	struct timespec randseed;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &randseed);
+	srand(randseed.tv_sec + randseed.tv_nsec);
+
 	// Time variables
 	struct tm currentTime;
+	time_t ltime;
+	if(filetime == NULL) {
+		ltime = time(NULL);
+		filetime = &ltime;
+	}
 
 	// Get current time in UTC
-	localtime_r(time, &currentTime);
+	localtime_r(filetime, &currentTime);
 
 	// Create filename using date/time and input string
 	charsWritten = snprintf(buf, bufSize, 
-			"%s/%s-%02d.%02d.%04d_%02d-%02d-%02d.%s",
+			"%s/%s-%02d.%02d.%04d_%02d-%02d-%02d_%d.%s",
 			dir, pre,
 			currentTime.tm_mon + 1,
 			currentTime.tm_mday,
@@ -63,6 +74,7 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 			currentTime.tm_hour,
 			currentTime.tm_min,
 			currentTime.tm_sec,
+			rand(),
 			ext);
 
 	// Return length of the new string
@@ -174,6 +186,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 			&(logFile->timestamp), dir, pre, extString);
 	if(logFile->filenameLength == LOG_FILENAME_LENGTH) {
 		printf("Filename too long, using %s\n", logFile->filename);
+		logDebug("Filename too long, using %s\n", logFile->filename);
 	}
 
 	// Create directory if it doesn't exist
@@ -181,6 +194,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 	// rc = mkdir(dir, 0777);
 	if(rc && errno != EEXIST) {
 		perror("Failed to create directory");
+		logDebug("Failed to create directory");
 		printf(dir);
 		return -1;
 	}
@@ -190,9 +204,10 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 	if(logFile->fd < 0) {
 		perror("Failed to create log file");
 		printf("%s\n", logFile->filename);
+		logDebug("Failed to create log file %s\n", logFile->filename);
 		return -2;
 	}
-	printf("Created log file %s\n", logFile->filename);
+	logDebug("Created log file %s\n", logFile->filename);
 
 	// Return 0 on success
 	return 0;
@@ -223,6 +238,7 @@ int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
 	rc = write(logFile->fd, buf, length);
 	if(rc < 0) {
 		perror("Failed to write to log file");
+		logDebug("Failed to write to log file");
 		return -1;
 	}
 
@@ -249,6 +265,7 @@ int LogClose(LOG_FILE *logFile) {
 	rc = close(logFile->fd);
 	if(rc) {
 		perror("Failed to close log file");
+		logDebug("Failed to close log file");
 		return -1;
 	}
 

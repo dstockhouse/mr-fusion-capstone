@@ -46,7 +46,7 @@ int main(void) {
 
 	rc = pingUSBInit(&dev);
 	if(rc) {
-		printf("Couldn't intialize device: %d\n", rc);
+		printf("Couldn't initalize device: %d\n", rc);
 		return rc;
 	}
 

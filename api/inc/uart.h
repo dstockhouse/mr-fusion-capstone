@@ -42,6 +42,10 @@
 
 int UARTInit(char *devName, int baud);
 
+int UARTInitReadOnly(char *devName, int baud);
+
+int UARTSetBaud(int fd, int baud);
+
 int UARTRead(int uart_fd, char *buf, int length);
 
 int UARTWrite(int uart_fd, char *buf, int length);

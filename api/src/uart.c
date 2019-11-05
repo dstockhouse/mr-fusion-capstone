@@ -30,6 +30,8 @@
  *
 \***************************************************************************/
 
+#include "control.h"
+#include "debuglog.h"
 #include "uart.h"
 
 #include <stdio.h>
@@ -59,8 +61,6 @@
  */
 int UARTInit(char *devName, int baud) {
 
-	struct termios uartOptions;
-	struct stat fileStats;
 	int uart_fd, rc;
 
 	// Exit on error if invalid pointer
@@ -83,22 +83,86 @@ int UARTInit(char *devName, int baud) {
 		return uart_fd;
 	}
 
-	rc = tcgetattr(uart_fd, &uartOptions);
+	// Set baud rate
+	UARTSetBaud(uart_fd, baud);
+
+	// Return file descriptor for UART
+	return uart_fd;
+
+} // UARTInit(char *, int)
+
+
+/**** Function UARTInitReadOnly ****
+ *
+ * Opens and initializes a UART device. Based mostly on Derek Molloy's RPi book
+ *
+ * Arguments: 
+ * 	devName - String name of the file the UART device is at
+ * 	baud    - Requested baud rate (for now must be either 115200 or 57600)
+ *
+ * Return value:
+ * 	On success, returns file descriptor corresponding to UART device
+ *	On failure, prints error message and returns a negative number 
+ */
+int UARTInitReadOnly(char *devName, int baud) {
+
+	int uart_fd, rc;
+
+	// Exit on error if invalid pointer
+	if(devName == NULL) {
+		return -1;
+	}
+
+	// Ensure user has permissions to access UART file
+	rc = access(devName, R_OK);
 	if(rc) {
-		perror("UARTInit tcgetattr() failed for UART device");
+		perror("Cannot access UART device (try as sudo?)");
 		return rc;
 	}
 
-	// Previous
-	// uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
-	// uartOptions.c_iflag |= IGNPAR;
+	// Open UART file
+	uart_fd = open(devName, O_RDONLY | O_NOCTTY);
+	if(uart_fd < 0) {
+		perror("UARTInit open() failed for UART device");
+		return uart_fd;
+	}
 
-	// Set other termios control options
-	uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
+	// Set baud rate
+	UARTSetBaud(uart_fd, baud);
+
+	// Return file descriptor for UART
+	return uart_fd;
+
+} // UARTInitReadOnly(char *, int)
+
+
+int UARTSetBaud(int fd, int baud) {
+
+	struct termios uartOptions;
+	int rc;
+
+	// Get existing device attributes
+	rc = tcgetattr(fd, &uartOptions);
+	if(rc) {
+		perror("UARTSetBaud tcgetattr() failed for UART device");
+		return rc;
+	}
+
+	// Set new termios control options
 	uartOptions.c_cflag &= ~(CSIZE | PARENB | CSTOPB | CRTSCTS);
+	uartOptions.c_cflag |= CS8 | CREAD | CLOCAL;
 
 	// Set input options
-	uartOptions.c_iflag |= IGNPAR;
+	uartOptions.c_iflag &= ~(ICRNL);
+	uartOptions.c_iflag |= IGNPAR | IXON | IXOFF;
+
+	// Set output options
+	uartOptions.c_oflag &= ~(OPOST | ONLCR);
+	uartOptions.c_oflag |= OCRNL;
+
+	// Set local options
+	uartOptions.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE);
+	uartOptions.c_lflag |= 0;
 
 	// Set baud rate based on input, bare minimum so far supported
 	switch(baud) {
@@ -114,29 +178,26 @@ int UARTInit(char *devName, int baud) {
 			break;
 		default:
 			printf("Unexpected baud rate: %d\n", baud);
-			close(uart_fd);
+			close(fd);
 			return -3;
 			break;
 	}
 
 	// Push changed options to device (after flushing input and output)
-	rc = tcflush(uart_fd, TCIOFLUSH);
+	rc = tcflush(fd, TCIOFLUSH);
  	if(rc) {
- 		perror("UARTInit tcflush() failed for UART device");
+ 		perror("UARTSetBaud tcflush() failed for UART device");
  		return rc;
  	}
 
-	rc = tcsetattr(uart_fd, TCSANOW, &uartOptions);
+	rc = tcsetattr(fd, TCSANOW, &uartOptions);
 	if(rc) {
-		perror("UARTInit tcsetattr() failed for UART device");
+		perror("UARTSetBaud tcsetattr() failed for UART device");
 		return rc;
 	}
 
-	// Return file descriptor for UART
-	return uart_fd;
-
-} // UARTInit(char *, int)
-
+	return 0;
+}
 
 /**** Function UARTRead ****
  *
