@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
+use std::mem::size_of;
 mod tests;
 
 struct GPSPoint {
@@ -7,7 +8,7 @@ struct GPSPoint {
     longitude: u32,
 }
 
-struct Edge {
+pub struct Edge {
     // For debugging, finding out what line we are looking at on the map
     map_name: String,
     gps_points: Vec<GPSPoint>,
@@ -17,24 +18,25 @@ impl Edge {
     //fn distance() -> f64;
 }
 
-struct Vertex {
+pub struct Vertex {
     // Will be used to display key locations to UI
     name: String,
 
     // Will be used to identify adjacent nodes and edges
     gps_point: GPSPoint,
 
-    // Key pointer to determine the shortest path using Dijkstra's Algorithm
+    // Key data to determine the shortest path using Dijkstra's Algorithm
     parent_vertex: &'static Vertex,
+    tentative_distance: f64,
 
     // Vertex that is connected to an edge will have the same GPS coordinate of
     // the first or last GPS coordinate of 
-    adjacent_vertices: Vec<& 'static Vertex>,
-    adjacent_edges: Vec<&'static Edge>,
+    pub adjacent_vertices: Vec<& 'static Vertex>,
+    pub adjacent_edges: Vec<&'static Edge>,
 }
 
 /// Returns (number_of_edges, number_of_vertices) in the KML file
-fn number_of_edges_and_vertices_from_kml(file_pointer: &File) -> 
+pub fn number_of_edges_and_vertices_from_kml(file_pointer: &File) -> 
 (u32, u32) {
 
     let mut number_of_edges = 0;
@@ -69,11 +71,24 @@ fn number_of_edges_and_vertices_from_kml(file_pointer: &File) ->
     return (number_of_edges, number_of_vertices);                                                
 }
 
-/*
-pub fn initialize_from_kml_file(&File file_pointer) -> 
-(Vec<Vertex>, Vec<Edge>) {
 
-    let (number_of_edges, number_of_vertex) = 
+
+pub fn initialize_from_kml_file(file_pointer: &File) -> 
+(Vec<Edge>, Vec<Vertex>) {
+
+    let (number_of_edges, number_of_vertices) = 
         number_of_edges_and_vertices_from_kml(file_pointer);
+
+
+    let (mut edges,
+         mut vertices) = (
+                            Vec::with_capacity(
+                                size_of::<Edge>() * number_of_edges as usize
+                            ),
+                            Vec::with_capacity(
+                                size_of::<Vertex>() * number_of_vertices as usize
+                            )
+                        );
+
+    return (edges, vertices)
 }
-*/
