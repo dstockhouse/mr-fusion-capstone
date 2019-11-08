@@ -8,3 +8,4 @@ a.out
 /bld/
 /log/
 /SampleData/
+target/*
