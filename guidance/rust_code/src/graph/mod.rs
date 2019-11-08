@@ -31,12 +31,12 @@ pub struct Vertex {
 
     // Vertex that is connected to an edge will have the same GPS coordinate of
     // the first or last GPS coordinate of 
-    pub adjacent_vertices: Vec<& 'static Vertex>,
-    pub adjacent_edges: Vec<&'static Edge>,
+    adjacent_vertices: Vec<& 'static Vertex>,
+    adjacent_edges: Vec<&'static Edge>,
 }
 
 /// Returns (number_of_edges, number_of_vertices) in the KML file
-pub fn number_of_edges_and_vertices_from_kml(file_pointer: &File) -> 
+pub(self) fn number_of_edges_and_vertices_from_kml(file_pointer: &File) -> 
 (u32, u32) {
 
     let mut number_of_edges = 0;
@@ -70,8 +70,6 @@ pub fn number_of_edges_and_vertices_from_kml(file_pointer: &File) ->
 
     return (number_of_edges, number_of_vertices);                                                
 }
-
-
 
 pub fn initialize_from_kml_file(file_pointer: &File) -> 
 (Vec<Edge>, Vec<Vertex>) {
