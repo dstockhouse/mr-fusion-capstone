@@ -1,17 +1,19 @@
 
-#[cfg(test)]
+
 use crate::graph;
 use crate::graph::{Vertex, Edge};
 use std::fs::File;
-use std::io::{prelude::*, BufReader};
+use std::io::{prelude::*, BufReader, SeekFrom};
 use std::mem::size_of;
 
+#[cfg(test)]
 pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) -> 
-(File, Vec<Edge>, Vec<Vertex>) {
+(BufReader<File>, Vec<Edge>, Vec<Vertex>) {
     let mut file = File::open(file_name_with_path).unwrap();
+    let mut reader = BufReader::new(file);
 
     let (number_of_edges, number_of_vertices) = 
-        graph::number_of_edges_and_vertices_from_kml(&mut file);
+        graph::number_of_edges_and_vertices_from_buffer(&mut reader);
 
     let ( edges,
          vertices) = (
@@ -23,72 +25,64 @@ pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) ->
                         )
                     );
     
-    return (file, edges, vertices)
+    reader.seek(SeekFrom::Start(0));
+    
+    return (reader, edges, vertices)
 }
 
+
+
+
 #[test]
-fn test_number_of_edges_and_vertices_from_kml() {
-    let mut file = File::open("src/graph/Test Triangle.kml").unwrap();
+fn number_of_edges_and_vertices_from_buffer() {
+    let (mut reader, _, _) = set_up_empty_graph_with_file_name("src/graph/Test Triangle.kml");
 
     let (number_of_edges, number_of_vertices) = 
-        graph::number_of_edges_and_vertices_from_kml(&mut file);
+        graph::number_of_edges_and_vertices_from_buffer(&mut reader);
 
     assert_eq!(number_of_edges, 3);
     assert_eq!(number_of_vertices, 3);
 }
 
-// TODO: Make an easy file where we can test all the gps points
 #[test]
-fn test_add_gps_points_to_graph() {
-    let mut file = File::open("src/graph/Test Triangle.kml").unwrap();
+fn add_gps_points_to_graph() {
+    let (mut reader, mut empty_edges, mut empty_vertices) = 
+        set_up_empty_graph_with_file_name("src/graph/Test Single Edge.kml");
 
-    let (number_of_edges, number_of_vertices) = 
-        graph::number_of_edges_and_vertices_from_kml(&mut file);
-
-    let (mut edges,
-         mut vertices) = (
-                            Vec::with_capacity(
-                                size_of::<Edge>() * number_of_edges as usize
-                            ),
-                            Vec::with_capacity(
-                                size_of::<Vertex>() * number_of_vertices as usize
-                            )
-                        );
-
-    graph::add_gps_points_to_graph(&mut file, &mut edges, &mut vertices);
+    graph::add_gps_points_to_graph(&mut reader, &mut empty_edges, 
+                                   &mut empty_vertices);
 }
 
 #[test]
-fn test_number_of_gps_points_for_edge() {
-    let (mut file, mut edges, _vertices) = 
+fn number_of_gps_points_for_edge() {
+    // setup
+    let (mut reader, _edges, _vertices) = 
         set_up_empty_graph_with_file_name("src/graph/Test Single Edge.kml");
     
-    let reader = BufReader::new(&file);
-    let mut lines = reader.lines();
+    let mut lines = reader.by_ref().lines();
+    let mut line = lines.next().unwrap().unwrap();
 
-    while let line = lines.next() {
-        let mut line = line.unwrap().unwrap();
-
-        if line.contains("<name>Line") {
-            // then an edge has been detected
-
-            // Fast forwarding to coordinates of the edge
-            for _ in 0..4 {
-                line = lines.next().unwrap().unwrap();
-            }
-
-            graph::number_of_gps_points_for_edge(&mut file);
-            break;
-        }
+    // Explicate setup of the function precondition
+    while !line.contains("<name>Line"){
+        line = lines.next().unwrap().unwrap();
     }
-        //////******************************* */
+    while !line.contains("<coordinates>") {
+        line = lines.next().unwrap().unwrap();
+    }
+
+    let gps_points_for_edge = graph::number_of_gps_points_for_edge(&mut reader);
+    
+    assert_eq!(gps_points_for_edge, 3);
+    assert_eq!(reader.lines().next().unwrap().unwrap(),
+        "          -112.4484608,34.615871,0")
+    
 }
 
 #[test]
-fn test_initialize_from_kml_file() {
-    let mut file = File::open("src/graph/Test Triangle.kml").unwrap();
+fn initialize_from_kml_file() {
 
-    let (edges, vertices) = graph::initialize_from_kml_file(&mut file);
+    let (edges, vertices) = 
+        graph::initialize_from_kml_file("src/graph/Test Triangle.kml");
 
     assert_eq!(edges.len(), 3);
     assert_eq!(vertices.len(), 3);

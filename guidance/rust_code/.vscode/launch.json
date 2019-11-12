@@ -31,14 +31,16 @@
                     "test",
                     "--no-run",
                     "--bin=rust_code",
-                    "--package=rust_code"
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
                 ],
                 "filter": {
                     "name": "rust_code",
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": ["add_gps_points_to_graph"],
             "cwd": "${workspaceFolder}"
         }
     ]
