@@ -3,14 +3,14 @@ use std::io::{prelude::*, BufReader, Seek, SeekFrom};
 use std::mem::size_of;
 mod tests;
 
-struct GPSPoint {
-    latitude: u32,
-    longitude: u32,
+pub(self) struct GPSPoint {
+    latitude: f64,
+    longitude: f64,
 }
 
 pub struct Edge {
     // For debugging, finding out what line we are looking at on the map
-    map_name: String,
+    name: String,
     gps_points: Vec<GPSPoint>,
 }
 
@@ -30,28 +30,25 @@ pub struct Vertex {
     tentative_distance: f64,
 
     // Vertex that is connected to an edge will have the same GPS coordinate of
-    // the first or last GPS coordinate of 
-    adjacent_vertices: Vec<& 'static Vertex>,
+    // the first or last GPS coordinate of
+    adjacent_vertices: Vec<&'static Vertex>,
     adjacent_edges: Vec<&'static Edge>,
 }
 
 /// Returns (number_of_edges, number_of_vertices) in the Buffer of KML contents
-pub(self) fn number_of_edges_and_vertices_from_buffer
-(reader: &mut BufReader<File>) -> (u32, u32) {
+pub(self) fn number_of_edges_and_vertices_from_buffer(reader: &mut BufReader<File>) -> (u32, u32) {
     reader.seek(SeekFrom::Start(0)).unwrap();
 
     let mut number_of_edges = 0;
-    let mut number_of_vertices = 0; 
+    let mut number_of_vertices = 0;
 
     let mut graph_element_found = false;
-    
     for line in reader.lines() {
         let line = line.unwrap();
 
         if line.contains("<Placemark>") {
             graph_element_found = true;
-        }
-        else if line.contains("</Placemark>") {
+        } else if line.contains("</Placemark>") {
             graph_element_found = false;
         }
 
@@ -59,76 +56,108 @@ pub(self) fn number_of_edges_and_vertices_from_buffer
             // Then determine whether its edge or vertex
             if line.contains("<name>Line") {
                 number_of_edges += 1;
-            }
-            else if line.contains("<name>Point") || line.contains("<name>") {
+            } else if line.contains("<name>Point") || line.contains("<name>") {
                 // Covers case of a regular vertex, or a key point in our graph
                 number_of_vertices += 1;
             }
         }
     }
 
-    return (number_of_edges, number_of_vertices);                                                
+    return (number_of_edges, number_of_vertices);
 }
 
-pub(self) fn add_gps_points_to_graph(reader: &mut BufReader<File>, 
-                                     edges: &mut Vec<Edge>, 
-                                     vertices: &mut Vec<Vertex>) {
+pub(self) fn add_gps_points_to_graph(
+    reader: &mut BufReader<File>,
+    edges: &mut Vec<Edge>,
+    vertices: &mut Vec<Vertex>,
+) {
     // Rewind and start from beginning of contents of buffer
-    reader.seek(SeekFrom::Start(0));
-
-    let mut lines = reader.lines();
+    reader.seek(SeekFrom::Start(0)).unwrap();
+    let mut line = String::new();
 
     let mut graph_element_found = false;
     let mut vertex_found = false;
     let mut edge_found = false;
-    
-    while let Some(Ok(line)) = lines.next() {
 
+    let mut edges = edges.iter_mut();
+    let mut vertices = vertices.iter_mut();
+    let mut vertex;
+    let mut edge;
+
+    while let Ok(_) = reader.read_line(&mut line) {
         if line.contains("<Placemark>") {
             graph_element_found = true;
         }
 
         if graph_element_found {
             if line.contains("<name>Line") {
+                edge = edges.next().unwrap();
+
+                // remove garbage from xml headers and store name
+                edge.name = line.replace("<name>", "").replace("</name>", "");
+
                 edge_found = true;
-            }
-            else if line.contains("<name>Point") || line.contains("<name>") {
+            } else if line.contains("<name>Point") || line.contains("<name>") {
+                vertex = vertices.next().unwrap();
+
+                // remove garbage xml headers and store name
+                vertex.name = line.replace("<name>", "").replace("</name>", "");
+
                 vertex_found = true;
             }
         }
 
         if edge_found {
-            number_of_gps_points_for_edge(reader);
+            if let Some(edge) = edges.next() {
+                // Allocating memory for the number of gps points in an edge
+                let number_of_gps_points = number_of_gps_points_for_edge(reader);
+                edge.gps_points =
+                    Vec::with_capacity(
+                        size_of::<GPSPoint>() * number_of_gps_points as usize
+                    );
+
+                // Populating the GPS Points
+                for gps_point in edge.gps_points.iter_mut() {
+                    let mut gps_string = String::new();
+                    reader.read_line(&mut gps_string).unwrap();
+
+                    let (lat, long) = parse_gps_string(gps_string);
+                    gps_point.latitude = lat;
+                    gps_point.longitude = long;
+                }
+                edge_found = false;
+            }
+        }
+
+        if vertex_found {
+            // allocate memory for the vertex
+            
+            
         }
 
         if line.contains("</Placemark>") {
             graph_element_found = false;
-            edge_found = false;
-            vertex_found = false;
         }
-        
     }
 }
 
-/// PreCondition: Curser in the reader must be pointing to the 
+/// PreCondition: Curser in the reader must be pointing to the
 /// <coordinates> section of the KML file
-/// 
-/// PostCondition: The number of points for an edge is returned and the 
+///
+/// PostCondition: The number of points for an edge is returned and the
 /// curser is moved to location after the points have been read.
 pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> u32 {
-    
     let start_read_location = reader.seek(SeekFrom::Current(0)).unwrap();
     let mut lines = reader.by_ref().lines();
     let mut number_of_gps_points = 0;
 
-    // Check the precondition and panic if not met
+    // Move the curser that over the <coordinates> line
     let mut line = lines.next().unwrap().unwrap();
 
     // Rust do-while loop
     while {
         number_of_gps_points += 1;
-        println!("{:?}", line);
-        line = lines.next().unwrap().unwrap(); 
+        line = lines.next().unwrap().unwrap();
         !line.contains("</coordinates>")
     } {}
 
@@ -136,32 +165,36 @@ pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> u32 
     // this function
     reader.seek(SeekFrom::Start(start_read_location)).unwrap();
 
-    return number_of_gps_points;
-
+    number_of_gps_points
 }
 
-pub fn initialize_from_kml_file(name: &str) -> 
-(Vec<Edge>, Vec<Vertex>) {
+pub(self) fn parse_gps_string(gps_string: String) -> (f64, f64) {
+    let gps_data = gps_string
+        .trim() // Remove whitespace
+        .split(",") // Remove commas and store remaining information in Vec
+        .map(|s| s.parse().unwrap()) // Convert vec of strings to integers
+        .collect::<Vec<f64>>();
+
+    let latitude = gps_data[0];
+    let longitude = gps_data[1];
+
+    (latitude, longitude)
+}
+
+pub fn initialize_from_kml_file(name: &str) -> (Vec<Edge>, Vec<Vertex>) {
     let file = File::open(name).unwrap();
-    
     // Open the file and store its contents to a buffer in RAM
     let mut reader = BufReader::new(file);
 
-    let (number_of_edges, number_of_vertices) = 
+    let (number_of_edges, number_of_vertices) =
         number_of_edges_and_vertices_from_buffer(&mut reader);
 
-
-    let (mut edges,
-         mut vertices) = (
-                            Vec::with_capacity(
-                                size_of::<Edge>() * number_of_edges as usize
-                            ),
-                            Vec::with_capacity(
-                                size_of::<Vertex>() * number_of_vertices as usize
-                            )
-                        );
+    let (mut edges, mut vertices) = (
+        Vec::with_capacity(size_of::<Edge>() * number_of_edges as usize),
+        Vec::with_capacity(size_of::<Vertex>() * number_of_vertices as usize),
+    );
 
     add_gps_points_to_graph(&mut reader, &mut edges, &mut vertices);
 
-    return (edges, vertices)
+    (edges, vertices)
 }

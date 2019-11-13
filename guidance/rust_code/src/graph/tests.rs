@@ -15,7 +15,7 @@ pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) ->
     let (number_of_edges, number_of_vertices) = 
         graph::number_of_edges_and_vertices_from_buffer(&mut reader);
 
-    let ( edges,
+    let (edges,
          vertices) = (
                         Vec::with_capacity(
                             size_of::<Edge>() * number_of_edges as usize
@@ -25,9 +25,9 @@ pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) ->
                         )
                     );
     
-    reader.seek(SeekFrom::Start(0));
+    reader.seek(SeekFrom::Start(0)).unwrap();
     
-    return (reader, edges, vertices)
+    (reader, edges, vertices)
 }
 
 
@@ -51,6 +51,17 @@ fn add_gps_points_to_graph() {
 
     graph::add_gps_points_to_graph(&mut reader, &mut empty_edges, 
                                    &mut empty_vertices);
+}
+
+#[test]
+fn parse_gps_string() {
+    let gps_string = 
+        String::from("          -112.4484635,34.6157165,0");
+    
+    let (lat, long) = graph::parse_gps_string(gps_string);
+
+    assert_eq!(lat, -112.4484635);
+    assert_eq!(long, 34.6157165);
 }
 
 #[test]
