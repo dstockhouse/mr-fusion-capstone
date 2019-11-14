@@ -30,9 +30,6 @@ pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) ->
     (reader, edges, vertices)
 }
 
-
-
-
 #[test]
 fn number_of_edges_and_vertices_from_buffer() {
     let (mut reader, _, _) = set_up_empty_graph_with_file_name("src/graph/Test Triangle.kml");
@@ -42,15 +39,6 @@ fn number_of_edges_and_vertices_from_buffer() {
 
     assert_eq!(number_of_edges, 3);
     assert_eq!(number_of_vertices, 3);
-}
-
-#[test]
-fn add_gps_points_to_graph() {
-    let (mut reader, mut empty_edges, mut empty_vertices) = 
-        set_up_empty_graph_with_file_name("src/graph/Test Single Edge.kml");
-
-    graph::add_gps_points_to_graph(&mut reader, &mut empty_edges, 
-                                   &mut empty_vertices);
 }
 
 #[test]
