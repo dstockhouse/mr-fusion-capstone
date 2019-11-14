@@ -29,6 +29,18 @@ pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) ->
     
     (reader, edges, vertices)
 }
+#[test]
+fn add_gps_points_to_edges() {
+    let (mut reader, mut edges, _) = 
+        set_up_empty_graph_with_file_name("src/graph/Test Single Edge.kml");
+
+        graph::add_gps_points_to_edges(&mut reader, &mut edges);
+
+        let edge = &edges[0];
+
+        assert_eq!(edge.gps_points[0].latitude, -112.4484608);
+
+}
 
 #[test]
 fn number_of_edges_and_vertices_from_buffer() {
@@ -46,7 +58,7 @@ fn parse_gps_string() {
     let gps_string = 
         String::from("          -112.4484635,34.6157165,0");
     
-    let (lat, long) = graph::parse_gps_string(gps_string);
+    let (lat, long) = graph::parse_gps_string(&gps_string);
 
     assert_eq!(lat, -112.4484635);
     assert_eq!(long, 34.6157165);
@@ -65,15 +77,12 @@ fn number_of_gps_points_for_edge() {
     while !line.contains("<name>Line"){
         line = lines.next().unwrap().unwrap();
     }
-    while !line.contains("<coordinates>") {
-        line = lines.next().unwrap().unwrap();
-    }
 
     let gps_points_for_edge = graph::number_of_gps_points_for_edge(&mut reader);
-    
+    let next_line = reader.lines().next().unwrap().unwrap();
     assert_eq!(gps_points_for_edge, 3);
-    assert_eq!(reader.lines().next().unwrap().unwrap(),
-        "          -112.4484608,34.615871,0")
+    assert_eq!(next_line, 
+        "      <styleUrl>#line-000000-1200-nodesc</styleUrl>");
     
 }
 

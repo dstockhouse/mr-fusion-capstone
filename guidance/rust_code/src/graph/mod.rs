@@ -77,41 +77,62 @@ pub(self) fn add_gps_points_to_edges(
     let mut line = String::new();
 
     let mut edge_found = false;
-    let mut edges = edges.iter_mut();
-    let mut edge = edges.next().unwrap();
+
+    // Items needed for Edge
+    let mut name = String::new();
 
     while let Ok(_) = reader.read_line(&mut line) {
         if line.contains("<name>Line") {
             edge_found = true;
 
             // remove garbage from xml headers and store name
-            edge.name = line.replace("<name>", "").replace("</name>", "");
+            name = String::from(
+                line.replace("<name>", "")
+                .replace("</name>", "")
+                .trim()
+            );
         }
 
         if edge_found {
 
             // Allocating memory for the number of gps points in an edge
             let number_of_gps_points = number_of_gps_points_for_edge(reader);
-            edge.gps_points =
+            let mut gps_points =
                 Vec::with_capacity(
                     size_of::<GPSPoint>() * number_of_gps_points as usize
                 );
 
             // Populating the GPS Points
-            for gps_point in edge.gps_points.iter_mut() {
-                let mut gps_string = String::new();
-                reader.read_line(&mut gps_string).unwrap();
+            let mut gps_string = String::new();
+            reader.read_line(&mut gps_string).unwrap();
 
-                let (lat, long) = parse_gps_string(gps_string);
-                gps_point.latitude = lat;
-                gps_point.longitude = long;
+            // Fast forward until we have coordinates
+            while !gps_string.contains("<coordinates>") {
+                gps_string.clear();
+                reader.read_line(&mut gps_string).unwrap();
             }
-            edge = match edges.next() {
-                Some(edge) => edge,
-                None => return
-            };
+
+            while {
+                gps_string.clear();
+                reader.read_line(&mut gps_string).unwrap();
+                !gps_string.contains("</coordinates>")
+            } {
+                let (latitude, longitude) = parse_gps_string(&gps_string);
+                let gps_point = GPSPoint {latitude, longitude};
+                gps_points.push(gps_point);
+            }
+;
+            edges.push(
+                Edge {
+                    name: name.clone(), 
+                    gps_points
+                }
+            );
+            
             edge_found = false;
         }
+        
+        line.clear();
     }
 }
 
@@ -150,7 +171,7 @@ pub(self) fn add_gps_points_to_vertices(
                 let mut gps_string = String::new();
                 reader.read_line(&mut gps_string);
 
-                let (lat, long) = parse_gps_string(gps_string);
+                let (lat, long) = parse_gps_string(&gps_string);
 
                 vertex.gps_point.latitude = lat;
                 vertex.gps_point.longitude = long;
@@ -167,11 +188,13 @@ pub(self) fn add_gps_points_to_vertices(
         if line.contains("</Placemark>") {
             graph_element_found = false;
         }
+
+        line.clear();
     }
 }
 
-/// PreCondition: Curser in the reader must be pointing to the
-/// <coordinates> section of the KML file
+/// PreCondition: Must be inside the scope of a <name> before or at 
+/// <coordinates>
 ///
 /// PostCondition: The number of points for an edge is returned and the
 /// curser is moved to location after the points have been read.
@@ -183,12 +206,23 @@ pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> u32 
     // Move the curser that over the <coordinates> line
     let mut line = lines.next().unwrap().unwrap();
 
+    if !line.contains("<coordinates>") {
+        // Fast forward until line does contain <coordinates>
+        while {
+            line.clear();
+            line = lines.next().unwrap().unwrap();
+            !line.contains("<coordinates>")
+        } {}
+    }
+
     // Rust do-while loop
     while {
-        number_of_gps_points += 1;
+        line.clear();
         line = lines.next().unwrap().unwrap();
         !line.contains("</coordinates>")
-    } {}
+    } {
+        number_of_gps_points += 1;
+    }
 
     // Set the buffer curser back to where it was before the invocation of this
     // this function
@@ -197,7 +231,7 @@ pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> u32 
     number_of_gps_points
 }
 
-pub(self) fn parse_gps_string(gps_string: String) -> (f64, f64) {
+pub(self) fn parse_gps_string(gps_string: &String) -> (f64, f64) {
     let gps_data = gps_string
         .trim() // Remove whitespace
         .split(",") // Remove commas and store remaining information in Vec

@@ -7,6 +7,28 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Test add_gps_points_for_edge",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["add_gps_points_to_edges"],
+            "cwd": "${workspaceFolder}"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'rust_code'",
             "cargo": {
                 "args": [
@@ -25,7 +47,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'rust_code'",
+            "name": "Test number_of_gps_points_for_edge",
             "cargo": {
                 "args": [
                     "test",
@@ -40,7 +62,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["add_gps_points_to_graph"],
+            "args": ["number_of_gps_points_for_edge"],
             "cwd": "${workspaceFolder}"
         }
     ]
