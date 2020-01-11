@@ -1,12 +1,10 @@
 
-
 use crate::graph;
 use crate::graph::{Vertex, Edge};
 use std::fs::File;
 use std::io::{prelude::*, BufReader, SeekFrom};
-use std::mem::size_of;
 
-#[cfg(test)]
+
 pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) -> 
 (BufReader<File>, Vec<Edge>, Vec<Vertex>) {
     let mut file = File::open(file_name_with_path).unwrap();
@@ -17,29 +15,63 @@ pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) ->
 
     let (edges,
          vertices) = (
-                        Vec::with_capacity(
-                            size_of::<Edge>() * number_of_edges as usize
-                        ),
-                        Vec::with_capacity(
-                            size_of::<Vertex>() * number_of_vertices as usize
-                        )
+                        Vec::with_capacity(number_of_edges as usize),
+                        Vec::with_capacity(number_of_vertices as usize)
                     );
     
     reader.seek(SeekFrom::Start(0)).unwrap();
     
     (reader, edges, vertices)
 }
+
+pub(self) fn set_up_unconnected_graph_with_file_name(file_name_with_path: &str) ->
+(Vec<Edge>, Vec<Vertex>) {
+
+    let file = File::open(file_name_with_path).unwrap();
+    // Open the file and store its contents to a buffer in RAM
+    let mut reader = BufReader::new(file);
+
+    let (number_of_edges, number_of_vertices) =
+        graph::number_of_edges_and_vertices_from_buffer(&mut reader);
+
+    let (mut edges, mut vertices) = (
+        Vec::with_capacity(number_of_edges as usize),
+        Vec::with_capacity(number_of_vertices as usize),
+    );
+
+    graph::add_gps_points_to_edges(&mut reader, &mut edges);
+    graph::add_gps_points_to_vertices(&mut reader, &mut vertices);
+
+    (edges, vertices)
+}
 #[test]
 fn add_gps_points_to_edges() {
     let (mut reader, mut edges, _) = 
         set_up_empty_graph_with_file_name("src/graph/Test Single Edge.kml");
 
-        graph::add_gps_points_to_edges(&mut reader, &mut edges);
+    graph::add_gps_points_to_edges(&mut reader, &mut edges);
 
-        let edge = &edges[0];
+    let edge = &edges[0];
 
-        assert_eq!(edge.gps_points[0].latitude, -112.4484608);
+    assert_eq!(edges.len(), 1);
+    assert_eq!(edge.gps_points.len(), 3);
+    assert_eq!(edge.gps_points[0].latitude, -112.4484608);
+    assert_eq!(edge.gps_points[0].longitude, 34.615871);
+    assert_eq!(edge.gps_points[1].latitude, -112.4484635);
+    assert_eq!(edge.gps_points[1].longitude, 34.6157165);
+    assert_eq!(edge.gps_points[2].latitude, -112.4484742);
+    assert_eq!(edge.gps_points[2].longitude, 34.6155377);
 
+}
+#[test]
+fn add_gps_points_to_vertices() {
+    let (mut reader, _, mut vertices) = 
+        set_up_empty_graph_with_file_name("src/graph/Test Triangle.kml");
+
+    graph::add_gps_points_to_vertices(&mut reader, &mut vertices);
+
+    assert_eq!(vertices.len(), 3);
+    
 }
 
 #[test]
@@ -87,6 +119,22 @@ fn number_of_gps_points_for_edge() {
 }
 
 #[test]
+fn connect_vertices_with_edges() {
+    let (mut edges, mut vertices) = 
+        set_up_unconnected_graph_with_file_name("src/graph/Test Single Edge.kml");
+
+    graph::connect_vertices_with_edges(&mut edges, &mut vertices);
+
+    let vertex_a = vertices.first().unwrap();
+    let vertex_a_adjacent_vertex = vertex_a.adjacent_vertices[0];
+    let vertex_b = &vertices[1];
+    let vertex_b_adjacent_vertex = vertex_b.adjacent_vertices[0];
+
+    assert_eq!(vertex_a_adjacent_vertex, vertex_b);
+    assert_eq!(vertex_b_adjacent_vertex, vertex_a);   
+}
+
+#[test]
 fn initialize_from_kml_file() {
 
     let (edges, vertices) = 
@@ -95,9 +143,6 @@ fn initialize_from_kml_file() {
     assert_eq!(edges.len(), 3);
     assert_eq!(vertices.len(), 3);
 
-    for vertex in vertices.iter() {
-        assert!(vertex.adjacent_vertices.len() > 1, "There exist an edge of
-                                                     degree less than 2");
-    }
 }
+
 

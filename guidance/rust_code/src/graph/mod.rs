@@ -1,13 +1,13 @@
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Seek, SeekFrom};
-use std::mem::size_of;
-mod tests;
 
+#[derive(PartialEq, PartialOrd, Debug)]
 pub(self) struct GPSPoint {
     latitude: f64,
     longitude: f64,
 }
 
+#[derive(Debug)]
 pub struct Edge {
     // For debugging, finding out what line we are looking at on the map
     name: String,
@@ -18,21 +18,45 @@ impl Edge {
     //fn distance() -> f64;
 }
 
+#[derive(Debug)]
 pub struct Vertex {
     // Will be used to display key locations to UI
     name: String,
 
     // Will be used to identify adjacent nodes and edges
-    gps_point: GPSPoint,
+    pub(self) gps_point: GPSPoint,
 
     // Key data to determine the shortest path using Dijkstra's Algorithm
-    parent_vertex: &'static Vertex,
-    tentative_distance: f64,
+    parent_vertex: Option<&'static Vertex>,
+    tentative_distance: Option<f64>,
 
     // Vertex that is connected to an edge will have the same GPS coordinate of
     // the first or last GPS coordinate of
     adjacent_vertices: Vec<&'static Vertex>,
     adjacent_edges: Vec<&'static Edge>,
+}
+
+impl Vertex {
+    fn new(name: String, gps_point: GPSPoint) -> Vertex {
+        Vertex {
+            name,
+            gps_point,
+            parent_vertex: None,
+            tentative_distance: None,
+            adjacent_vertices: Vec::with_capacity(0),
+            adjacent_edges: Vec::with_capacity(0),
+        }
+    }
+}
+
+impl PartialEq for Vertex {
+    fn eq(&self, other: &Vertex) -> bool {
+        if self.name == other.name && self.gps_point == other.gps_point {
+            return true;
+        }
+
+        false
+    }
 }
 
 /// Returns (number_of_edges, number_of_vertices) in the Buffer of KML contents
@@ -82,6 +106,11 @@ pub(self) fn add_gps_points_to_edges(
     let mut name = String::new();
 
     while let Ok(_) = reader.read_line(&mut line) {
+        if line == "" {
+            // Then we are at the end of the file
+            break;
+        }
+
         if line.contains("<name>Line") {
             edge_found = true;
 
@@ -97,10 +126,8 @@ pub(self) fn add_gps_points_to_edges(
 
             // Allocating memory for the number of gps points in an edge
             let number_of_gps_points = number_of_gps_points_for_edge(reader);
-            let mut gps_points =
-                Vec::with_capacity(
-                    size_of::<GPSPoint>() * number_of_gps_points as usize
-                );
+            let mut gps_points: Vec<GPSPoint> =
+                Vec::with_capacity(number_of_gps_points as usize);
 
             // Populating the GPS Points
             let mut gps_string = String::new();
@@ -146,21 +173,29 @@ pub(self) fn add_gps_points_to_vertices(
 
     let mut graph_element_found = false;
     let mut vertex_found = false;
-
-    let mut vertices = vertices.iter_mut();
-    let mut vertex = vertices.next().unwrap();
-
+    
+    let mut name = String::new();
+    
     while let Ok(_) = reader.read_line(&mut line) {
+
+        if line == "" {
+            // then we have reached the end of the file
+            break;
+        }
+
         if line.contains("<Placemark>") {
             graph_element_found = true;
         }
 
         if graph_element_found {
-            if line.contains("<name>Point") || line.contains("<name>") {
+            if (line.contains("<name>Point") || line.contains("<name>")) 
+            && !line.contains("Line") {
                 vertex_found = true;
 
                 // remove garbage xml headers and store name
-                vertex.name = line.replace("<name>", "").replace("</name>", "");
+                name = String::from(
+                    line.replace("<name>", "").replace("</name>", "").trim()
+                );
             }
         }
 
@@ -168,19 +203,23 @@ pub(self) fn add_gps_points_to_vertices(
             // Populate data for the vertex
            if line.contains("<coordinates>") {
                 // Then the next line in the file contains the lat, long data
+                // for the vertex
                 let mut gps_string = String::new();
-                reader.read_line(&mut gps_string);
+                reader.read_line(&mut gps_string).unwrap();
 
-                let (lat, long) = parse_gps_string(&gps_string);
+                let (latitude, longitude) = parse_gps_string(&gps_string);
 
-                vertex.gps_point.latitude = lat;
-                vertex.gps_point.longitude = long;
-
-                vertex = match vertices.next() {
-                    Some(vertex) => vertex,
-                    None => return
+                let gps_point = GPSPoint {
+                    latitude,
+                    longitude
                 };
 
+                let vertex = Vertex::new(
+                    name.clone(),
+                    gps_point
+                );
+
+                vertices.push(vertex);
                 vertex_found = false;
            }
         }
@@ -244,6 +283,38 @@ pub(self) fn parse_gps_string(gps_string: &String) -> (f64, f64) {
     (latitude, longitude)
 }
 
+pub(self) fn connect_vertices_with_edges(
+    edges: &mut Vec<Edge>, 
+    vertices: &mut Vec<Vertex>
+) {
+    
+    for edge in edges.iter() {
+        for vertex_a_offset in 0..vertices.len() {
+            for vertex_b_offset in 0..vertices.len() {
+                let vertices_ptr = vertices.as_mut_ptr();
+                unsafe {
+                    let vertex_a = vertices_ptr.add(vertex_a_offset);
+                    let vertex_b = vertices_ptr.add(vertex_b_offset);
+                    let vertices_need_connection = {
+
+                        (edge.gps_points.first() == Some(&(*vertex_a).gps_point) &&
+                        edge.gps_points.last() == Some(&(*vertex_b).gps_point))
+                        ||
+                        (edge.gps_points.first() == Some(&(*vertex_b).gps_point) &&
+                        edge.gps_points.last() == Some(&(*vertex_a).gps_point))
+
+                    };
+
+                    if vertices_need_connection {
+                        (*vertex_a).adjacent_edges.push(edge);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 pub fn initialize_from_kml_file(name: &str) -> (Vec<Edge>, Vec<Vertex>) {
     let file = File::open(name).unwrap();
     // Open the file and store its contents to a buffer in RAM
@@ -253,12 +324,17 @@ pub fn initialize_from_kml_file(name: &str) -> (Vec<Edge>, Vec<Vertex>) {
         number_of_edges_and_vertices_from_buffer(&mut reader);
 
     let (mut edges, mut vertices) = (
-        Vec::with_capacity(size_of::<Edge>() * number_of_edges as usize),
-        Vec::with_capacity(size_of::<Vertex>() * number_of_vertices as usize),
+        Vec::with_capacity(number_of_edges as usize),
+        Vec::with_capacity(number_of_vertices as usize),
     );
 
     add_gps_points_to_edges(&mut reader, &mut edges);
     add_gps_points_to_vertices(&mut reader, &mut vertices);
 
+    connect_vertices_with_edges(&mut edges, &mut vertices);
+
     (edges, vertices)
 }
+
+#[cfg(test)]
+mod tests;
