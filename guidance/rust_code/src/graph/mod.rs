@@ -14,10 +14,6 @@ pub struct Edge {
     gps_points: Vec<GPSPoint>,
 }
 
-impl Edge {
-    //fn distance() -> f64;
-}
-
 #[derive(Debug)]
 pub struct Vertex {
     // Will be used to display key locations to UI
@@ -29,11 +25,16 @@ pub struct Vertex {
     // Key data to determine the shortest path using Dijkstra's Algorithm
     parent_vertex: Option<&'static Vertex>,
     tentative_distance: Option<f64>,
+}
 
-    // Vertex that is connected to an edge will have the same GPS coordinate of
-    // the first or last GPS coordinate of
-    adjacent_vertices: Vec<&'static Vertex>,
-    adjacent_edges: Vec<&'static Edge>,
+pub struct Graph {
+    pub vertices: Vec<Vertex>,
+    pub edges: Vec<Edge>,
+    pub connection_matrix: Vec<Vec<Option<usize>>> //Matrix of indices of edges
+}
+
+impl Edge {
+    //fn distance() -> f64;
 }
 
 impl Vertex {
@@ -43,8 +44,6 @@ impl Vertex {
             gps_point,
             parent_vertex: None,
             tentative_distance: None,
-            adjacent_vertices: Vec::with_capacity(0),
-            adjacent_edges: Vec::with_capacity(0),
         }
     }
 }
@@ -284,38 +283,44 @@ pub(self) fn parse_gps_string(gps_string: &String) -> (f64, f64) {
 }
 
 pub(self) fn connect_vertices_with_edges(
-    edges: &mut Vec<Edge>, 
-    vertices: &mut Vec<Vertex>
-) {
+    edges: Vec<Edge>, 
+    vertices: Vec<Vertex>
+) -> Graph {
+    let connection_matrix = vec![vec![None; vertices.len()]; vertices.len()];
+    let mut graph = Graph {
+        edges,
+        vertices,
+        connection_matrix
+    };
     
-    for edge in edges.iter() {
-        for vertex_a_offset in 0..vertices.len() {
-            for vertex_b_offset in 0..vertices.len() {
-                let vertices_ptr = vertices.as_mut_ptr();
-                unsafe {
-                    let vertex_a = vertices_ptr.add(vertex_a_offset);
-                    let vertex_b = vertices_ptr.add(vertex_b_offset);
-                    let vertices_need_connection = {
-
-                        (edge.gps_points.first() == Some(&(*vertex_a).gps_point) &&
-                        edge.gps_points.last() == Some(&(*vertex_b).gps_point))
+    for edge_number in 0..graph.edges.len() {
+        for vertex_number_1 in 0..graph.vertices.len() {
+            for vertex_number_2 in 0..graph.vertices.len() {
+                let edge = &graph.edges[edge_number];
+                let vertex_a = &graph.vertices[vertex_number_1];
+                let vertex_b = &graph.vertices[vertex_number_2];
+                let vertices_need_connection = {
+                    (edge.gps_points.first() == Some(&vertex_a.gps_point) 
+                    &&
+                    edge.gps_points.last() == Some(&vertex_b.gps_point))
                         ||
-                        (edge.gps_points.first() == Some(&(*vertex_b).gps_point) &&
-                        edge.gps_points.last() == Some(&(*vertex_a).gps_point))
-
-                    };
-
-                    if vertices_need_connection {
-                        (*vertex_a).adjacent_edges.push(edge);
-                    }
+                    (edge.gps_points.first() == Some(&vertex_b.gps_point) 
+                    &&
+                    edge.gps_points.last() == Some(&vertex_a.gps_point))
+                };
+                    
+                if vertices_need_connection {
+                    graph.connection_matrix[vertex_number_1][vertex_number_2] = Some(edge_number);
                 }
             }
         }
     }
+
+    return graph
 }
 
 
-pub fn initialize_from_kml_file(name: &str) -> (Vec<Edge>, Vec<Vertex>) {
+pub fn initialize_from_kml_file(name: &str) -> Graph {
     let file = File::open(name).unwrap();
     // Open the file and store its contents to a buffer in RAM
     let mut reader = BufReader::new(file);
@@ -331,9 +336,10 @@ pub fn initialize_from_kml_file(name: &str) -> (Vec<Edge>, Vec<Vertex>) {
     add_gps_points_to_edges(&mut reader, &mut edges);
     add_gps_points_to_vertices(&mut reader, &mut vertices);
 
-    connect_vertices_with_edges(&mut edges, &mut vertices);
+    let graph = connect_vertices_with_edges(edges, vertices);
 
-    (edges, vertices)
+    return graph;
+
 }
 
 #[cfg(test)]

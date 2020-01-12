@@ -123,25 +123,31 @@ fn connect_vertices_with_edges() {
     let (mut edges, mut vertices) = 
         set_up_unconnected_graph_with_file_name("src/graph/Test Single Edge.kml");
 
-    graph::connect_vertices_with_edges(&mut edges, &mut vertices);
+    let graph = graph::connect_vertices_with_edges(edges, vertices);
 
-    let vertex_a = vertices.first().unwrap();
-    let vertex_a_adjacent_vertex = vertex_a.adjacent_vertices[0];
-    let vertex_b = &vertices[1];
-    let vertex_b_adjacent_vertex = vertex_b.adjacent_vertices[0];
+    let row1 = &graph.connection_matrix[0];
+    let row2 = &graph.connection_matrix[1];
 
-    assert_eq!(vertex_a_adjacent_vertex, vertex_b);
-    assert_eq!(vertex_b_adjacent_vertex, vertex_a);   
+    assert_eq!(row1, &vec![None, Some(0)]);
+    assert_eq!(row2, &vec![Some(0), None]);
 }
 
 #[test]
 fn initialize_from_kml_file() {
 
-    let (edges, vertices) = 
-        graph::initialize_from_kml_file("src/graph/Test Triangle.kml");
+    let graph = graph::initialize_from_kml_file("src/graph/Test Triangle.kml");
 
-    assert_eq!(edges.len(), 3);
-    assert_eq!(vertices.len(), 3);
+    for row in 0..graph.connection_matrix.len() {
+        for column in 0..graph.connection_matrix[0].len() {
+            if row == column {
+                assert_eq!(graph.connection_matrix[row][column], None);
+            }
+            else {
+                assert_ne!(graph.connection_matrix[row][column], None);
+            }
+        }
+    }
+
 
 }
 

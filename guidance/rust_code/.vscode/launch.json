@@ -109,5 +109,26 @@
             "args": ["connect_vertices_with_edges"],
             "cwd": "${workspaceFolder}"
         },
+        {
+            "type": "lldb",
+                "request": "launch",
+                "name": "Debug Unit Tests",
+                "cargo": {
+                    "args": [
+                        "test",
+                        "--no-run",
+                        "--bin=rust_code",
+                        "--package=rust_code",
+                        "--",
+                        "--test-threads=1"
+                    ],
+                    "filter": {
+                        "name": "rust_code",
+                        "kind": "bin"
+                    }
+                },
+                "args": [""],
+                "cwd": "${workspaceFolder}"
+            },
     ]
 }
