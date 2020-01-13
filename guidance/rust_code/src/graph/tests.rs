@@ -7,7 +7,7 @@ use std::io::{prelude::*, BufReader, SeekFrom};
 
 pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) -> 
 (BufReader<File>, Vec<Edge>, Vec<Vertex>) {
-    let mut file = File::open(file_name_with_path).unwrap();
+    let file = File::open(file_name_with_path).unwrap();
     let mut reader = BufReader::new(file);
 
     let (number_of_edges, number_of_vertices) = 
@@ -120,7 +120,7 @@ fn number_of_gps_points_for_edge() {
 
 #[test]
 fn connect_vertices_with_edges() {
-    let (mut edges, mut vertices) = 
+    let (edges, vertices) = 
         set_up_unconnected_graph_with_file_name("src/graph/Test Single Edge.kml");
 
     let graph = graph::connect_vertices_with_edges(edges, vertices);

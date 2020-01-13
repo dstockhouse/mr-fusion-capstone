@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Seek, SeekFrom};
 
-#[derive(PartialEq, PartialOrd, Debug)]
+#[derive(PartialEq, Debug)]
 pub(self) struct GPSPoint {
     latitude: f64,
     longitude: f64,
