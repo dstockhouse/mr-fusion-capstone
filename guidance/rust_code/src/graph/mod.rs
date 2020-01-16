@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Seek, SeekFrom};
+use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 
 #[derive(PartialEq, Debug)]
 pub(self) struct GPSPoint {
@@ -340,6 +341,61 @@ pub fn initialize_from_kml_file(name: &str) -> Graph {
 
     return graph;
 
+}
+
+pub fn graph_to_geo_json_string(graph: &Graph) -> String {
+    // Allocating Memory
+    let number_of_vertices_and_edges = graph.edges.len() + graph.vertices.len();
+    let mut features = Vec::with_capacity(number_of_vertices_and_edges);
+
+    for edge in graph.edges.iter() {
+        let edge_points = edge.gps_points.iter()
+            .map(|point| vec![point.latitude, point.longitude])
+            .collect();
+
+        let geometry = Geometry::new(
+            Value::LineString(edge_points)
+        );
+
+        let feature = Feature {
+            bbox: None,
+            geometry: Some(geometry),
+            id: Some(Id::String(edge.name.clone())),
+            properties: None,
+            foreign_members: None
+        };
+        
+        features.push(feature);
+    }
+
+    for vertex in graph.vertices.iter() {
+        let vertex_point = vec![
+            vertex.gps_point.latitude,
+            vertex.gps_point.longitude
+        ];
+
+        let geometry = Geometry::new(
+            Value::Point(vertex_point)
+        );
+
+        let feature = Feature {
+            bbox: None,
+            geometry: Some(geometry),
+            id: Some(Id::String(vertex.name.clone())),
+            properties: None,
+            foreign_members:None
+        };
+
+        features.push(feature);
+    }
+
+    let feature_collection = FeatureCollection {
+        bbox: None,
+        features,
+        foreign_members: None
+    };
+
+    feature_collection.to_string()
 }
 
 #[cfg(test)]

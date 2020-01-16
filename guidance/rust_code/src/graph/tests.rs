@@ -3,6 +3,7 @@ use crate::graph;
 use crate::graph::{Vertex, Edge};
 use std::fs::File;
 use std::io::{prelude::*, BufReader, SeekFrom};
+use geojson::GeoJson;
 
 
 pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) -> 
@@ -147,8 +148,13 @@ fn initialize_from_kml_file() {
             }
         }
     }
-
-
 }
 
-
+#[test]
+fn graph_to_geo_json_string() {
+    let graph = graph::initialize_from_kml_file("src/graph/Test Single Edge.kml");
+    
+    let json_string = graph::graph_to_geo_json_string(&graph);
+    
+    unimplemented!();
+}
