@@ -295,26 +295,26 @@ pub(self) fn connect_vertices_with_edges(
     };
     
     for edge_number in 0..graph.edges.len() {
-        for vertex_number_1 in 0..graph.vertices.len() {
-            for vertex_number_2 in 0..graph.vertices.len() {
-                let edge = &graph.edges[edge_number];
-                let vertex_a = &graph.vertices[vertex_number_1];
-                let vertex_b = &graph.vertices[vertex_number_2];
-                let vertices_need_connection = {
-                    (edge.gps_points.first() == Some(&vertex_a.gps_point) 
-                    &&
-                    edge.gps_points.last() == Some(&vertex_b.gps_point))
-                        ||
-                    (edge.gps_points.first() == Some(&vertex_b.gps_point) 
-                    &&
-                    edge.gps_points.last() == Some(&vertex_a.gps_point))
-                };
-                    
-                if vertices_need_connection {
-                    graph.connection_matrix[vertex_number_1][vertex_number_2] = Some(edge_number);
-                }
+        let start_of_edge = graph.edges[edge_number].gps_points.first();
+        let end_of_edge = graph.edges[edge_number].gps_points.last();
+        let mut start_vertex_index = None;
+        let mut end_vertex_index = None;
+
+        for vertex_number in 0..graph.vertices.len() {
+            let vertex = &graph.vertices[vertex_number];
+            if Some(&vertex.gps_point) == start_of_edge {
+                start_vertex_index = Some(vertex_number as usize);
+            }
+            else if Some(&vertex.gps_point) ==  end_of_edge {
+                end_vertex_index = Some(vertex_number as usize);
             }
         }
+
+        let start_vertex_index = start_vertex_index.unwrap();
+        let end_vertex_index = end_vertex_index.unwrap();
+
+        graph.connection_matrix[start_vertex_index][end_vertex_index] = Some(edge_number);
+        graph.connection_matrix[end_vertex_index][start_vertex_index] = Some(edge_number);
     }
 
     return graph
