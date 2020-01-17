@@ -3,7 +3,6 @@ use crate::graph;
 use crate::graph::{Vertex, Edge};
 use std::fs::File;
 use std::io::{prelude::*, BufReader, SeekFrom};
-use geojson::GeoJson;
 
 
 pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) -> 
@@ -155,6 +154,8 @@ fn graph_to_geo_json_string() {
     let graph = graph::initialize_from_kml_file("src/graph/Test Single Edge.kml");
     
     let json_string = graph::graph_to_geo_json_string(&graph);
-    
-    unimplemented!();
+    let expected_json_string = r#"{"features":[{"geometry":{"coordinates":[[-112.4484608,34.615871],[-112.4484635,34.6157165],[-112.4484742,34.6155377]],"type":"LineString"},"id":"Line 3","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484608,34.615871],"type":"Point"},"id":"Point 1","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484742,34.6155377],"type":"Point"},"id":"Point 2","properties":{},"type":"Feature"}],"type":"FeatureCollection"}"#;
+
+    assert_eq!(json_string, expected_json_string);
+
 }
