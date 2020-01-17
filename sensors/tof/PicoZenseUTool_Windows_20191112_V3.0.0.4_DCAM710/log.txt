@@ -1,0 +1,60 @@
+(2020-01-15 19:57:42 Wed) Debug: File:() Line:(0) "version  3.0.0.4"
+(2020-01-15 19:57:42 Wed) Debug: File:() Line:(0) "Calibration source is  0"
+(2020-01-15 19:57:42 Wed) Debug: File:() Line:(0) "initADI() IN"
+(2020-01-15 19:57:49 Wed) Debug: File:() Line:(0) "MyThread g_adi_camera_status = 0"
+(2020-01-15 19:57:50 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 19:57:50 Wed) Warning: File:() Line:(0) QMetaObject::connectSlotsByName: No matching signal for on_btnReset_clicked()
+(2020-01-15 19:57:50 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 19:57:50 Wed) Warning: File:() Line:(0) libpng warning: iCCP: cHRM chunk does not match sRGB
+(2020-01-15 19:57:50 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 19:57:50 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 19:57:50 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 19:57:53 Wed) Debug: File:() Line:(0) initOK() IN
+(2020-01-15 19:57:55 Wed) Debug: File:() Line:(0) "SetDataMode index:0  status:0"
+(2020-01-15 19:57:55 Wed) Debug: File:() Line:(0) initOK() OUT
+(2020-01-15 19:58:59 Wed) Debug: File:() Line:(0) "DepthPerceptionSystem: closeEvent() "
+(2020-01-15 20:00:24 Wed) Debug: File:() Line:(0) "version  3.0.0.4"
+(2020-01-15 20:00:24 Wed) Debug: File:() Line:(0) "Calibration source is  0"
+(2020-01-15 20:00:24 Wed) Debug: File:() Line:(0) "initADI() IN"
+(2020-01-15 20:00:31 Wed) Debug: File:() Line:(0) "MyThread g_adi_camera_status = 0"
+(2020-01-15 20:00:32 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:00:32 Wed) Warning: File:() Line:(0) QMetaObject::connectSlotsByName: No matching signal for on_btnReset_clicked()
+(2020-01-15 20:00:32 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:00:32 Wed) Warning: File:() Line:(0) libpng warning: iCCP: cHRM chunk does not match sRGB
+(2020-01-15 20:00:32 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:00:32 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:00:32 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:00:35 Wed) Debug: File:() Line:(0) initOK() IN
+(2020-01-15 20:00:37 Wed) Debug: File:() Line:(0) "SetDataMode index:0  status:0"
+(2020-01-15 20:00:37 Wed) Debug: File:() Line:(0) initOK() OUT
+(2020-01-15 20:10:52 Wed) Debug: File:() Line:(0) "DepthPerceptionSystem: closeEvent() "
+(2020-01-15 20:19:28 Wed) Debug: File:() Line:(0) "version  3.0.0.4"
+(2020-01-15 20:19:28 Wed) Debug: File:() Line:(0) "Calibration source is  0"
+(2020-01-15 20:19:28 Wed) Debug: File:() Line:(0) "initADI() IN"
+(2020-01-15 20:19:35 Wed) Debug: File:() Line:(0) "MyThread g_adi_camera_status = 0"
+(2020-01-15 20:19:36 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:19:36 Wed) Warning: File:() Line:(0) QMetaObject::connectSlotsByName: No matching signal for on_btnReset_clicked()
+(2020-01-15 20:19:36 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:19:36 Wed) Warning: File:() Line:(0) libpng warning: iCCP: cHRM chunk does not match sRGB
+(2020-01-15 20:19:36 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:19:36 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:19:36 Wed) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-15 20:19:38 Wed) Debug: File:() Line:(0) initOK() IN
+(2020-01-15 20:19:41 Wed) Debug: File:() Line:(0) "SetDataMode index:0  status:0"
+(2020-01-15 20:19:41 Wed) Debug: File:() Line:(0) initOK() OUT
+(2020-01-15 22:05:34 Wed) Debug: File:() Line:(0) "DepthPerceptionSystem: closeEvent() "
+(2020-01-16 21:31:57 Thu) Debug: File:() Line:(0) "version  3.0.0.4"
+(2020-01-16 21:31:57 Thu) Debug: File:() Line:(0) "Calibration source is  0"
+(2020-01-16 21:31:57 Thu) Debug: File:() Line:(0) "initADI() IN"
+(2020-01-16 21:32:04 Thu) Debug: File:() Line:(0) "MyThread g_adi_camera_status = 0"
+(2020-01-16 21:32:05 Thu) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-16 21:32:06 Thu) Warning: File:() Line:(0) QMetaObject::connectSlotsByName: No matching signal for on_btnReset_clicked()
+(2020-01-16 21:32:06 Thu) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-16 21:32:06 Thu) Warning: File:() Line:(0) libpng warning: iCCP: cHRM chunk does not match sRGB
+(2020-01-16 21:32:06 Thu) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-16 21:32:06 Thu) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-16 21:32:06 Thu) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-16 21:32:09 Thu) Debug: File:() Line:(0) initOK() IN
+(2020-01-16 21:32:11 Thu) Debug: File:() Line:(0) "SetDataMode index:0  status:0"
+(2020-01-16 21:32:11 Thu) Debug: File:() Line:(0) initOK() OUT
+(2020-01-16 21:37:27 Thu) Debug: File:() Line:(0) "DepthPerceptionSystem: closeEvent() "
