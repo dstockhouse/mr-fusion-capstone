@@ -398,5 +398,6 @@ pub fn graph_to_geo_json_string(graph: &Graph) -> String {
     feature_collection.to_string()
 }
 
+pub fn plan_path(graph: &Graph, current_destination: &GPSPoint, )
 #[cfg(test)]
 mod tests;
