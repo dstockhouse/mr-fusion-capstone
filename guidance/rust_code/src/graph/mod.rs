@@ -148,7 +148,7 @@ pub(self) fn add_gps_points_to_edges(
                 let gps_point = GPSPoint {latitude, longitude};
                 gps_points.push(gps_point);
             }
-;
+
             edges.push(
                 Edge {
                     name: name.clone(), 
