@@ -1,7 +1,7 @@
 
 clear;
 close all;
-git 
+
 % Read image files
 depth = imread('sample5_depthmap.ppm');
 rgb = imread('sample1_rgb.bmp');
@@ -17,13 +17,13 @@ n=0;
 [s1, s2] = size(A);
 % points = ones(s1*s2, 3);
 % pointcolor = ones(s1*s2, 3);
-for i = 1:s1
-  for j = 1:s2
-      if(A(i,j) > 0)
+for ii = 1:s1
+  for jj = 1:s2
+      if(A(ii,jj) > 0)
           n = n+1;
-          points(n,1) = i;
-          points(n,2) = s2 - j;
-          points(n,3) = A(i,j);
+          points(n,1) = ii;
+          points(n,2) = s2 - jj;
+          points(n,3) = A(ii,jj);
           
 %           pointcolor(n,1) = 
       end
@@ -33,9 +33,10 @@ end
 figure(1);
 pc = pointCloud(points);
 pcshow(pc);
+view(0,0);
 
 
-tic
+% tic
 % Cut into vertical slices. "Up" is the negative y-axis
 [xmin, xmax] = bounds(rawpoints(:,1));
 [ymin, ymax] = bounds(rawpoints(:,2));
@@ -70,12 +71,18 @@ end
 figure(2);
 clf
 pcshow(rawpc);
+xlim([-300 300]);
+ylim([-220 120])
+zlim([300 1200]);
+xlabel('x (mm)');
+ylabel('y (mm)');
+zlabel('z (mm)');
 
 upperthreshold = 150;
 lowerthreshold = 20;
 hold on;
-for ii = 1:20
-    for jj = 1:20
+for ii = 1:div
+    for jj = 1:div
 
         xlow = (ii-1) * xdiff / div + xmin;
         xhigh = (ii) * xdiff / div + xmin;
@@ -95,8 +102,43 @@ for ii = 1:20
     end
 end
 
-toc
+view(0,-90);
 
-view(0,0);
+% toc
+%%
+view(0,-90);
+
+%% Animate rotation
+
+if true
+    v = VideoWriter('terrain_animation.mp4', 'MPEG-4');
+    open(v);
+    vfig = figure(2);
+    
+    for ii=-90:0
+        view(0,ii);
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+        pause(.1);
+%         zoom on
+    end
+    close(v);
+end
+
+
+%% display depth map 4
+
+image = imread('sample4_depthmap.ppm');
+normimage = mat2gray(image);
+figure(3);
+imshow(normimage);
+
+
+
+rawpoints4 = dlmread('sample4_pointcloud.txt');
+rawpc4 = pointCloud(rawpoints4);
+figure(4);
+clf
+pcshow(rawpc4);
 
 
