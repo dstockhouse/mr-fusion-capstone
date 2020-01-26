@@ -8,7 +8,9 @@
 *.pkt
 *.avi
 *.mp4
+school_map.geojson
 a.out
 bld/
+target/
 log/
 SampleData/

@@ -1,0 +1,134 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test add_gps_points_to_vertices",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["add_gps_points_to_vertices"],
+            "cwd": "${workspaceFolder}"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test add_gps_points_for_edge",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["add_gps_points_to_edges"],
+            "cwd": "${workspaceFolder}"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'rust_code'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rust_code",
+                    "--package=rust_code"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test number_of_gps_points_for_edge",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["number_of_gps_points_for_edge"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+        "type": "lldb",
+            "request": "launch",
+            "name": "Test connect_vertices_with_edges",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["connect_vertices_with_edges"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+                "request": "launch",
+                "name": "Debug Unit Tests",
+                "cargo": {
+                    "args": [
+                        "test",
+                        "--no-run",
+                        "--bin=rust_code",
+                        "--package=rust_code",
+                        "--",
+                        "--test-threads=1"
+                    ],
+                    "filter": {
+                        "name": "rust_code",
+                        "kind": "bin"
+                    }
+                },
+                "args": [""],
+                "cwd": "${workspaceFolder}"
+            },
+    ]
+}
