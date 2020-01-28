@@ -13,7 +13,6 @@ Ensure(Strlen, returns_five_for_hello) {
 
 int main(int argc, char** argv) {
 
-
 	return 0;
 }
 
