@@ -3,6 +3,7 @@
 #ifndef MR_FUSION_SYSTEM_CONFIG
 #define MR_FUSION_SYSTEM_CONFIG
 
+// Placeholders. Fill in with real data during test and integration
 #define GUIDANCE_IP_ADDR 	"XXX.XXX.XXX.XXX"
 #define NAVIGATION_IP_ADDR 	"XXX.XXX.XXX.XXX"
 #define CONTROL_IP_ADDR 	"XXX.XXX.XXX.XXX"
