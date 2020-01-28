@@ -1,10 +1,16 @@
 *.o
+*.so
+*.elf
 *.swp
 *.swo
 *~
-a.out
 *test
 *.pkt
+*.avi
+*.mp4
+school_map.geojson
+a.out
 bld/
+target/
 log/
 SampleData/
