@@ -3,12 +3,15 @@
 # Get current base directory
 MAKEDIR = $(realpath $(firstword $(MAKEFILE_LIST)))
 DIRNAME = $(dir $(MAKEDIR:%/=%))
-BASENAME = $(shell basename $(DIRNAME))
+
+# Get the name of the directory we are in (i.e. guidance, navigation, or control)
+# Does not work if the current directory has spaces in the name
+BASENAME = $(shell basename $(lastword $(DIRNAME)))
 
 # Directories
 MAINDIR = main
 SRCDIR = src
-INCDIR = inc
+INCDIR = inc ../system
 BLDDIR = bld
 
 OBJDIR = $(BLDDIR)/obj
@@ -41,8 +44,7 @@ TESTBIN = $(addprefix $(BINDIR)/, $(addsuffix .elf, $(TESTBASE)))
 
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall $(foreach inc,$(INCDIR) $(MAININCDIR),-iquote $(inc))
-#CFLAGS = -g $(foreach inc,$(INCDIR) $(MAININCDIR),-iquote $(inc))
+CFLAGS = -g -Wall $(foreach inc,$(INCDIR),-iquote $(inc))
 LIBS = 
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 
@@ -53,7 +55,8 @@ vpath %.c $(SRCPATH)
 
 vpath %.o $(OBJDIR)
 
-$(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} MAINOBJ ${MAINOBJ} TESTOBJ ${TESTOBJ})
+# Useful debug print for make variables
+# $(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} MAINOBJ ${MAINOBJ} TESTOBJ ${TESTOBJ})
 
 
 
@@ -85,15 +88,7 @@ $(MAINBIN) $(TESTBIN): | $(BINDIR)
 $(BINDIR)/%.elf: $(OBJDIR)/%.o $(OBJS)
 	$(CC) $(CFLAGS) $(LIBFLAGS) $^ -o $@
 
-#$(MAINALL): %: $(BINDIR)/%
-#	@echo cp $^ $@
-#
-#$(MAINBINALL): $(OBJS)
-#	@echo $(CC) $(CFLAGS) $(LIBFLAGS) $^ -o $@
-
 $(OBJS) $(MAINOBJ) $(TESTOBJ): | $(OBJDIR)
-# $(OBJS) $(MAINOBJALL): | $(OBJDIR)
-# $(OBJS) $(MAINOBJALL): $(OBJDIR)/%.o: %.c
 $(OBJDIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(LIBFLAGS) -c $< -o $@
 
@@ -103,3 +98,14 @@ $(OBJDIR) $(DEPDIR) $(BINDIR):
 clean:
 	rm -rf $(BLDDIR) $(notdir $(MAINBIN)) $(notdir $(TESTBIN))
 
+
+### Below this line are sandbox commands for possible extensions
+#    * Auto detecting main source files (now only supports *_main and *_test)
+
+
+# 
+#$(MAINALL): %: $(BINDIR)/%
+#	@echo cp $^ $@
+#
+#$(MAINBINALL): $(OBJS)
+#	@echo $(CC) $(CFLAGS) $(LIBFLAGS) $^ -o $@

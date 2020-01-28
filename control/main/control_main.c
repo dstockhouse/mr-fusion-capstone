@@ -1,4 +1,7 @@
 
+#include "config.h"
+#include "control_run.h"
+
 int main(int argc, char** argv) {
 
 	int run_rc;
