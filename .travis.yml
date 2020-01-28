@@ -12,3 +12,6 @@ matrix:
   - language: c
     install: make
     compiler: gcc
+    script: 
+      - cd ./control
+      - make
