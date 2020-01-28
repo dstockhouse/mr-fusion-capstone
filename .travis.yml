@@ -3,5 +3,5 @@ rust:
   - 1.36.0
 script:
   - cd ./guidance/rust_code
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cargo build
+  - cargo test
