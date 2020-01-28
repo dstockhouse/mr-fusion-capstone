@@ -1,8 +1,0 @@
-matrix:
-  include:
-    language: rust
-    rust: 
-      - 1.36.0
-    script:
-      - cargo build
-      - cargo test
