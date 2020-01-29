@@ -30,15 +30,16 @@ DEPS = $(foreach src,$(notdir $(SRCS)),$(DEPDIR)/$(src:.c=.d))
 MAINSRC = $(BASENAME)_main.c
 MAINBASE = $(basename $(MAINSRC))
 MAINOBJ = $(MAINBASE:%=$(OBJDIR)/%.o)
-MAINBIN = $(MAINBASE:%=$(BINDIR)/%.elf)
 MAINDEP = $(MAINBASE:%=$(DEPDIR)/%.d)
+MAINBIN = $(MAINBASE:%=$(BINDIR)/%.elf)
 
 # Test sources and binaries for cgreen
 TESTSRC = $(BASENAME)_test.c
 TESTBASE = $(basename $(TESTSRC))
 TESTOBJ = $(TESTBASE:%=$(OBJDIR)/%.o)
-TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
 TESTDEP = $(TESTBASE:%=$(DEPDIR)/%.d)
+TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
+# cgreen wants a shared object file .so
 
 # Compiler flags
 CC = gcc
@@ -75,16 +76,16 @@ test: LIBS += cgreen
 test: CFLAGS += -shared -fPIC
 # Copy and execute test script
 test: $(TESTBIN)
-	cp $(TESBIN) .
-	./$(notdir TESTBIN)
+	cp $(TESTBIN) .
+	cgreen-runner $(notdir $(TESTBIN))
 
 
 # Rule for all executable binaries (and directory)
 $(BINDIR)/%.elf: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
-	$(CC) $(CFLAGS) $(INCFLAGS) $(LIBFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 $(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
-	$(CC) $(CFLAGS) $(INCFLAGS) $(LIBFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
 # Rule for all object files (and directory)
@@ -92,7 +93,7 @@ $(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 %.o: %.c
 $(OBJDIR)/%.o: $(DEPDIR)/%.d
 $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
-	$(CC) $(CFLAGS) $(DEPFLAGS) $(INCFLAGS) $(LIBFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEPFLAGS) $(INCFLAGS) -c $< -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
 # Rule for all directories when they are needed
