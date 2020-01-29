@@ -1,6 +1,6 @@
 
 #include "config.h"
-#include "control_run.h"
+#include "navigation_run.h"
 
 int main(int argc, char** argv) {
 
@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
 
 	// Dispatch necessary threads and processes
 
-	run_rc = control_run(0);
+	run_rc = navigation_run(0);
 
 	// Safely shutdown the application
 
