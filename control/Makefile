@@ -83,6 +83,9 @@ test: $(TESTBIN)
 $(BINDIR)/%.elf: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 	$(CC) $(CFLAGS) $(INCFLAGS) $(LIBFLAGS) $^ -o $@
 	@$(POSTCOMPILE)
+$(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
+	$(CC) $(CFLAGS) $(INCFLAGS) $(LIBFLAGS) $^ -o $@
+	@$(POSTCOMPILE)
 
 # Rule for all object files (and directory)
 .SECONDARY: $(OBJS) $(MAINOBJ) $(TESTOBJ)
