@@ -72,6 +72,7 @@ main: $(MAINBIN)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
 test: LIBS += cgreen
+test: CFLAGS += -fPIC -shared
 # Copy and execute test script
 test: $(TESTBIN)
 	cp $(TESBIN) .
