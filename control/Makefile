@@ -76,6 +76,7 @@ test: LIBS += cgreen
 test: CFLAGS += -shared -fPIC
 # Copy and execute test script
 test: $(TESTBIN)
+	@make clean
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
 
