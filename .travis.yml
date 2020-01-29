@@ -15,3 +15,5 @@ jobs:
     script: 
       - cd ./control
       - make test
+      - cd ../navigation
+      - make test
