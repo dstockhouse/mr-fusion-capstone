@@ -10,7 +10,8 @@ jobs:
       - cargo test
 
   - language: c
+    install: ./install_dev_dependencies.sh
     compiler: gcc
     script: 
       - cd ./control
-      - make 
+      - make test
