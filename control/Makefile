@@ -33,11 +33,11 @@ MAINOBJ = $(MAINBASE:%=$(OBJDIR)/%.o)
 MAINBIN = $(MAINBASE:%=$(BINDIR)/%.elf)
 MAINDEP = $(MAINBASE:%=$(DEPDIR)/%.d)
 
-# Test code sources and binaries
+# Test sources and binaries for cgreen
 TESTSRC = $(BASENAME)_test.c
 TESTBASE = $(basename $(TESTSRC))
 TESTOBJ = $(TESTBASE:%=$(OBJDIR)/%.o)
-TESTBIN = $(TESTBASE:%=$(BINDIR)/%.elf)
+TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
 TESTDEP = $(TESTBASE:%=$(DEPDIR)/%.d)
 
 # Compiler flags
