@@ -1,9 +1,9 @@
-matrix:
+os: linux
+jobs:
   include:
   
   - language: rust
-    rust: 
-      - 1.36.0
+    rust: 1.36.0
     script:
       - cd ./guidance/rust_code
       - cargo build
