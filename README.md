@@ -43,6 +43,11 @@ Subteam members:
 * Joy Fucella
 * Duncan Patel
 
+## Automated Tests
+To see the automated test results, see the following link.
+
+https://travis-ci.com/dstockhouse/mr-fusion-capstone
+
 ## Contact
 
 Project Lead - Joseph Kroeker  
