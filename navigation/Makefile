@@ -75,10 +75,9 @@ main: $(MAINBIN)
 test: LIBS += cgreen
 test: CFLAGS += -shared -fPIC
 # Copy and execute test script
-test: $(TESTBIN) | clean
+test: $(TESTBIN)
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
-
 
 # Rule for all executable binaries (and directory)
 $(BINDIR)/%.elf: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
