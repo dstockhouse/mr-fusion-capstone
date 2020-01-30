@@ -75,8 +75,7 @@ main: $(MAINBIN)
 test: LIBS += cgreen
 test: CFLAGS += -shared -fPIC
 # Copy and execute test script
-test: $(TESTBIN)
-	@make clean
+test: $(TESTBIN) | clean
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
 
@@ -90,7 +89,7 @@ $(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 	@$(POSTCOMPILE)
 
 # Rule for all object files (and directory)
-.SECONDARY: $(OBJS) $(MAINOBJ) $(TESTOBJ)
+.SECONDARY: $(OBJS) $(MAINOBJ) $(TESTOBJ) $(MAINBIN) $(TESTBIN)
 %.o: %.c
 $(OBJDIR)/%.o: $(DEPDIR)/%.d
 $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
