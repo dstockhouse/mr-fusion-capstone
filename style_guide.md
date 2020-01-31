@@ -92,9 +92,8 @@ int mySecondFunctionReturnValue = veryLongFunctionName(
     secondArgumentThatHasALongName);
 ```
 
-Additional lines within code sections or block entry/termination are
-acceptable if they improve readability. Each line should only extend to 80
-characters, but must extend less than 120. When a single statement needs to be
-broken into multiple lines, do so in ways that are convenient and improve
-readability.
+Additional lines within code sections or block entry/termination are acceptable
+if they improve readability. Each line should only extend to 80 characters, but
+there is a hard limit at 120. When a single statement needs to be broken into
+multiple lines, do so in ways that are convenient and improve readability.
 
