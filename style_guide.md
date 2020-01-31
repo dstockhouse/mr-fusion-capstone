@@ -92,8 +92,10 @@ int mySecondFunctionReturnValue = veryLongFunctionName(
     secondArgumentThatHasALongName);
 ```
 
-Additional lines within code sections or block entry/termination are acceptable
-if they improve readability. Each line should only extend to 80 characters, but
-there is a hard limit at 120. When a single statement needs to be broken into
-multiple lines, do so in ways that are convenient and improve readability.
+Blank lines within code sections or block entry/termination are acceptable if
+they improve readability.
+
+Each line should only extend to 80 characters in width and must not exceed 120.
+When a single statement needs to be broken into multiple lines, do so in a way
+that is convenient and improves readability.
 
