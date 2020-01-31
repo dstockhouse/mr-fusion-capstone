@@ -47,12 +47,29 @@ Subteam members:
 
 ## Building
 
-To build the executable for each of the subsystems, enter each subsystem
-directory and execute `make`. To execute the test suite, first `make clean` and
-then run `make test`. Cgreen must be installed to build and run the test suite.
+To build the executable for each of the subsystems, enter each subsystem directory and execute `make`. To execute the
+test suite, first `make clean` and then run `make test`. Cgreen must be installed to build and run the test suite.
 
-Since the guidance subsystem is written in Rust, its makefile is only a wrapper
-for the rust build system.
+To build the guidance system written in rust, navigate to the `guidance/rust_code` directory and execute the following
+command
+
+```
+cargo build
+```
+
+To run the guidance executable, enter
+
+```
+cargo run
+```
+
+To build and run the guidance executable with unit tests, enter
+
+```
+cargo test
+```
+
+
 
 ### Automated Tests
 
