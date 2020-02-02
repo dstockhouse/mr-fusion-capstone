@@ -10,3 +10,5 @@ a.out
 /SampleData/
 target/
 school_map.geojson
+navigation/bld/
+*.so
