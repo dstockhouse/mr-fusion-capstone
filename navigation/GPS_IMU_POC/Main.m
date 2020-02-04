@@ -15,7 +15,7 @@ addpath("./plotting")   % Plotting code
 
 %% Initialization
 IMU.Fs = 250;           % IMU sampliing frequency
-t_len = 300;             % Duration of run
+t_len = 120;             % Duration of run
 
 % Zero error run
 %gyro = gyro_error(0, 0, 0, 0, 0, 0);            % Gyro errors
