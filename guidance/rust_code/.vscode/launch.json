@@ -121,6 +121,7 @@
                         "--package=rust_code",
                         "--",
                         "--test-threads=1"
+                        "--nocapture"
                     ],
                     "filter": {
                         "name": "rust_code",

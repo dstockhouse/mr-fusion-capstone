@@ -1,0 +1,1 @@
+pub const ROBOT_RADIOUS: f64 = 1.5; //Meters?

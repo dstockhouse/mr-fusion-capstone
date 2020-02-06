@@ -3,29 +3,29 @@ use std::io::{prelude::*, BufReader, Seek, SeekFrom};
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 
 #[derive(PartialEq, Debug)]
-pub(self) struct GPSPoint {
-    latitude: f64,
-    longitude: f64,
+pub struct GPSPoint {
+    pub latitude: f64,
+    pub longitude: f64,
 }
 
 #[derive(Debug)]
 pub struct Edge {
     // For debugging, finding out what line we are looking at on the map
-    name: String,
-    gps_points: Vec<GPSPoint>,
+    pub name: String,
+    pub gps_points: Vec<GPSPoint>,
 }
 
 #[derive(Debug)]
 pub struct Vertex {
     // Will be used to display key locations to UI
-    name: String,
+    pub name: String,
 
     // Will be used to identify adjacent nodes and edges
     pub(self) gps_point: GPSPoint,
 
     // Key data to determine the shortest path using Dijkstra's Algorithm
-    parent_vertex: Option<&'static Vertex>,
-    tentative_distance: Option<f64>,
+    pub parent_vertex: Option<&'static Vertex>,
+    pub tentative_distance: Option<f64>,
 }
 
 pub struct Graph {
@@ -398,6 +398,5 @@ pub fn graph_to_geo_json_string(graph: &Graph) -> String {
     feature_collection.to_string()
 }
 
-pub fn plan_path(graph: &Graph, current_destination: &GPSPoint, )
 #[cfg(test)]
 mod tests;
