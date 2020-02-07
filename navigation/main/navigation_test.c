@@ -4,30 +4,22 @@
 #include <string.h>
 #include "navigation_run.h"
 
-/*
-Describe(Strlen);
-BeforeEach(Strlen) {}
-AfterEach(Strlen) {}
 
-Ensure(Strlen, returns_five_for_hello) {
-	assert_that(strlen("hello"), is_equal_to(5));
-}
-*/
+// Exercise 1
+// Given a function, bit_shift_right, that takes an integer and returns an integer with its bits
+// shifted to the right by one,
+// write a unit tests that checks is the function is working properly when the integer 5 is passed to the function.
 
-/* Exercise 1
- * Given a function that takes an integer and shifts it's bit's to the right,
- * write a unit tests that checks is the function is working properly.
- * 
 Describe(BitShiftRight);
 BeforeEach(BitShiftRight) {}
 AfterEach(BitShiftRight) {}
 
 Ensure(BitShiftRight, shiftsBitRight) {
 	int number = 5;
-	int result = bit_shift_right(number);
-	assert_that(result, is_equal_to(2));
+	
+	// Your code goes here.
 }
-*/
+
 
 /* Exercise 2
  * Write a unit tests a function that takes an integer and returns the integer
