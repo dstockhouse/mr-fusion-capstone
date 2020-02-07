@@ -26,6 +26,14 @@ rgb2 = imread('samples\rotate30deg_rgb.bmp');
 rawpoints2 = dlmread('samples\rotate30deg_pointcloud.txt');
 rawpc2 = pointCloud(rawpoints2);
 
+%% Gaussian pyramid
+low_res = imresize(rgb, [64,64]);
+low_res1 = imresize(rgb1, [64,64]);
+
+move1 = abs(low_res - low_res1);
+
+
+%% Plotting difference in Black and White
 pos1 = rgb2hsv(rgb);
 pos2 = rgb2hsv(rgb1);
 
