@@ -1,6 +1,8 @@
 use std::fs::File;
 use std::io::{prelude::*, BufReader, Seek, SeekFrom};
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
+use std::f64;
+use std::f64::consts::PI;
 
 #[derive(PartialEq, Debug)]
 pub struct GPSPoint {
@@ -34,8 +36,21 @@ pub struct Graph {
     pub connection_matrix: Vec<Vec<Option<usize>>> //Matrix of indices of edges
 }
 
-impl Edge {
-    //fn distance() -> f64;
+impl GPSPoint {
+    /// Takes two GPS points and determines the distance between them.
+    /// Source of algorithm https://www.movable-type.co.uk/scripts/latlong.html
+    fn distance(&self, other: &Self) -> f64 {
+        let r = 6371e3; // Radious of Earth m
+        let lat1 = self.latitude * PI/180.0; // rad
+        let long1 = self.longitude * PI/180.0; //rad
+        let lat2 = other.longitude * PI/180.0; //rad
+        let long2 = other.longitude * PI/180.0; //rad
+
+        let a = ((lat2 - lat1)/2.0).sin().powi(2) + lat1.cos()*lat2.cos() * ((long2 - long1)/2.0).sin().powi(2);
+        let c = 2.0 * (a.sqrt().atan2((1.0-a).sqrt()));
+
+        return r * c;
+    }
 }
 
 impl Vertex {
@@ -277,8 +292,8 @@ pub(self) fn parse_gps_string(gps_string: &String) -> (f64, f64) {
         .map(|s| s.parse().unwrap()) // Convert vec of strings to integers
         .collect::<Vec<f64>>();
 
-    let latitude = gps_data[0];
-    let longitude = gps_data[1];
+    let latitude = gps_data[1];
+    let longitude = gps_data[0];
 
     (latitude, longitude)
 }
@@ -350,7 +365,7 @@ pub fn graph_to_geo_json_string(graph: &Graph) -> String {
 
     for edge in graph.edges.iter() {
         let edge_points = edge.gps_points.iter()
-            .map(|point| vec![point.latitude, point.longitude])
+            .map(|point| vec![point.longitude, point.latitude])
             .collect();
 
         let geometry = Geometry::new(
@@ -370,8 +385,8 @@ pub fn graph_to_geo_json_string(graph: &Graph) -> String {
 
     for vertex in graph.vertices.iter() {
         let vertex_point = vec![
-            vertex.gps_point.latitude,
-            vertex.gps_point.longitude
+            vertex.gps_point.longitude,
+            vertex.gps_point.latitude
         ];
 
         let geometry = Geometry::new(

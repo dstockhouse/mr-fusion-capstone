@@ -55,12 +55,12 @@ fn add_gps_points_to_edges() {
 
     assert_eq!(edges.len(), 1);
     assert_eq!(edge.gps_points.len(), 3);
-    assert_eq!(edge.gps_points[0].latitude, -112.4484608);
-    assert_eq!(edge.gps_points[0].longitude, 34.615871);
-    assert_eq!(edge.gps_points[1].latitude, -112.4484635);
-    assert_eq!(edge.gps_points[1].longitude, 34.6157165);
-    assert_eq!(edge.gps_points[2].latitude, -112.4484742);
-    assert_eq!(edge.gps_points[2].longitude, 34.6155377);
+    assert_eq!(edge.gps_points[0].longitude, -112.4484608);
+    assert_eq!(edge.gps_points[0].latitude, 34.615871);
+    assert_eq!(edge.gps_points[1].longitude, -112.4484635);
+    assert_eq!(edge.gps_points[1].latitude, 34.6157165);
+    assert_eq!(edge.gps_points[2].longitude, -112.4484742);
+    assert_eq!(edge.gps_points[2].latitude, 34.6155377);
 
 }
 #[test]
@@ -92,8 +92,8 @@ fn parse_gps_string() {
     
     let (lat, long) = graph::parse_gps_string(&gps_string);
 
-    assert_eq!(lat, -112.4484635);
-    assert_eq!(long, 34.6157165);
+    assert_eq!(long, -112.4484635);
+    assert_eq!(lat, 34.6157165);
 }
 
 #[test]
@@ -158,4 +158,20 @@ fn graph_to_geo_json_string() {
 
     assert_eq!(json_string, expected_json_string);
 
+}
+
+#[test]
+fn gps_distance() {
+    let point_1 = graph::GPSPoint {
+        latitude: 50.0359,
+        longitude: -5.4253
+    };
+    let point_2 = graph::GPSPoint {
+        latitude: 58.3838,
+        longitude: 3.0412
+    };
+
+    let distance = point_1.distance(&point_2);
+
+    assert_eq!(distance, 968.9e3);
 }
