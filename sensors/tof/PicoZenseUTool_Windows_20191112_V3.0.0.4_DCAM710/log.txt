@@ -58,3 +58,26 @@
 (2020-01-16 21:32:11 Thu) Debug: File:() Line:(0) "SetDataMode index:0  status:0"
 (2020-01-16 21:32:11 Thu) Debug: File:() Line:(0) initOK() OUT
 (2020-01-16 21:37:27 Thu) Debug: File:() Line:(0) "DepthPerceptionSystem: closeEvent() "
+(2020-01-31 12:06:25 Fri) Debug: File:() Line:(0) "version  3.0.0.4"
+(2020-01-31 12:06:25 Fri) Debug: File:() Line:(0) "Calibration source is  0"
+(2020-01-31 12:06:25 Fri) Debug: File:() Line:(0) "initADI() IN"
+(2020-01-31 12:06:25 Fri) Debug: File:() Line:(0) "Not find Camera!"
+(2020-01-31 12:06:49 Fri) Debug: File:() Line:(0) "version  3.0.0.4"
+(2020-01-31 12:06:49 Fri) Debug: File:() Line:(0) "Calibration source is  0"
+(2020-01-31 12:06:49 Fri) Debug: File:() Line:(0) "initADI() IN"
+(2020-01-31 12:06:49 Fri) Debug: File:() Line:(0) "Not find Camera!"
+(2020-01-31 12:06:55 Fri) Debug: File:() Line:(0) "version  3.0.0.4"
+(2020-01-31 12:06:55 Fri) Debug: File:() Line:(0) "Calibration source is  0"
+(2020-01-31 12:06:55 Fri) Debug: File:() Line:(0) "initADI() IN"
+(2020-01-31 12:07:03 Fri) Debug: File:() Line:(0) "MyThread g_adi_camera_status = 0"
+(2020-01-31 12:07:04 Fri) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-31 12:07:04 Fri) Warning: File:() Line:(0) QMetaObject::connectSlotsByName: No matching signal for on_btnReset_clicked()
+(2020-01-31 12:07:04 Fri) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-31 12:07:04 Fri) Warning: File:() Line:(0) libpng warning: iCCP: cHRM chunk does not match sRGB
+(2020-01-31 12:07:04 Fri) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-31 12:07:04 Fri) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-31 12:07:04 Fri) Warning: File:() Line:(0) libpng warning: iCCP: known incorrect sRGB profile
+(2020-01-31 12:07:07 Fri) Debug: File:() Line:(0) initOK() IN
+(2020-01-31 12:07:09 Fri) Debug: File:() Line:(0) "SetDataMode index:0  status:0"
+(2020-01-31 12:07:09 Fri) Debug: File:() Line:(0) initOK() OUT
+(2020-01-31 12:34:28 Fri) Debug: File:() Line:(0) "DepthPerceptionSystem: closeEvent() "

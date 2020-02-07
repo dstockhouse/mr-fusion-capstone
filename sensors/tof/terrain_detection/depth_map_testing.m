@@ -3,9 +3,11 @@ clear;
 close all;
 
 % Read image files
-depth = imread('sample5_depthmap.ppm');
+% depth = imread('sample5_depthmap.ppm');
 rgb = imread('sample1_rgb.bmp');
-rawpoints = dlmread('sample5_pointcloud.txt');
+% rawpoints = dlmread('sample5_pointcloud.txt');
+depth = imread('..\optical_flow\samples\startpoint_depthmap.ppm');
+rawpoints = dlmread('..\optical_flow\samples\startpoint_pointcloud.txt');
 rawpc = pointCloud(rawpoints);
 
 
