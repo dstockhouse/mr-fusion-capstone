@@ -56,7 +56,44 @@ Ensure(FunctionUnderTest, expected_behavior_description) {
 ```
 
 # What to Avoid During Unit Tests
-Function that require network connections or Sensor output. We can get around this by something called mocking. Come fine me if you think you need to do this.
+Function that require network connections, sensor output, or waits on a user. We can get around this by something called mocking. 
+
+# Mocking
+Mocking replaces a function call with a fake one, they may exhibit any behavior you may want. This is great for making our tests more reproducible, and independent of hardware, network streams, or blocking I/O.
+
+Ex.
+
+```c
+#include <cgreen/cgreen.h>
+#include <cgreen/mocks.h>
+
+Describe(MockScanF);
+BeforeEach(MockScanF) {}
+AfterEach(MockScanF) {}
+
+// This line replaces the scanf that we are used to using to a new one that we can define anyway we want.
+#define scanf(format, buffer) mock_scanf(format)
+
+// The definition of our mock scanf functions
+int mock_scanf(char* string) {
+	return (int)mock(scanf);
+}
+
+Ensure(MockScanF, mocks_scanf) {
+	char character = 'H';
+
+	// Here we tell our mock what we will return.
+	expect(mock_scanf, will_return(0));
+
+	// Here we check that the mock returned what we told it to.
+	assert_that(scanf(" %c", &character), is_equal_to(0));
+
+	// Notice that when we run this, we don't block waiting for user input. Scanf was never actually called, only our
+	// mock which only returns 0 and does nothing else.
+}
+```
+
+More documentation on mocking can be found [here](https://cgreen-devs.github.io/chap2.html#_mocking_functions_with_cgreen)
 
 # Exercises
 See `navigation_test.c`

@@ -1,5 +1,6 @@
 
 #include <cgreen/cgreen.h>
+#include <cgreen/mocks.h>
 #include <stdio.h>
 #include <string.h>
 #include "navigation_run.h"
@@ -9,7 +10,7 @@
 // Given a function, bit_shift_right, that takes an integer and returns an integer with its bits
 // shifted to the right by one,
 // write a unit tests that checks is the function is working properly when the integer 5 is passed to the function.
-
+/*
 Describe(BitShiftRight);
 BeforeEach(BitShiftRight) {}
 AfterEach(BitShiftRight) {}
@@ -19,7 +20,7 @@ Ensure(BitShiftRight, shiftsBitRight) {
 	
 	// Your code goes here.
 }
-
+*/
 
 /* Exercise 2
  * Write a unit tests a function that takes an integer and returns the integer
