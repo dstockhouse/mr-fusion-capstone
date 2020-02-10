@@ -4,12 +4,10 @@
 % Last Mod: 6 Feb 2020
 clear; clc;
 % webcamlist
-cam = webcam('PicoZense RGBD Camera'); % change to necessary cam
+% cam = webcam('PicoZense RGBD Camera'); % change to necessary cam
+% 
+% preview(cam);
 
-preview(cam);
-
-%%
-clc;
 % Read image files
 depth = imread('samples\startpoint_depthmap.ppm');
 rgb = imread('samples\startpoint_rgb.bmp');
@@ -27,11 +25,20 @@ rawpoints2 = dlmread('samples\rotate30deg_pointcloud.txt');
 rawpc2 = pointCloud(rawpoints2);
 
 %% Gaussian pyramid
-low_res = imresize(rgb, [64,64]);
-low_res1 = imresize(rgb1, [64,64]);
+clc;
+low_res = double(imresize(depth, [30,40]));
+normimage = mat2gray(low_res);
+figure(1);
+imshow(normimage);
+low_res1 = double(imresize(depth1, [30,40]));
+normimage1 = mat2gray(low_res1);
+figure(2);
+imshow(normimage1);
 
 move1 = abs(low_res - low_res1);
-
+flow1 = opticalFlow(low_res,low_res1);
+figure(3);
+plot(flow1);
 
 %% Plotting difference in Black and White
 pos1 = rgb2hsv(rgb);
