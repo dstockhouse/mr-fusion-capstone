@@ -106,7 +106,7 @@ fn number_of_gps_points_for_edge() {
     let mut line = lines.next().unwrap().unwrap();
 
     // Explicate setup of the function precondition
-    while !line.contains("<name>Line"){
+    while !line.contains("<name><![CDATA[Line"){
         line = lines.next().unwrap().unwrap();
     }
 
@@ -114,7 +114,7 @@ fn number_of_gps_points_for_edge() {
     let next_line = reader.lines().next().unwrap().unwrap();
     assert_eq!(gps_points_for_edge, 3);
     assert_eq!(next_line, 
-        "      <styleUrl>#line-000000-1200-nodesc</styleUrl>");
+        "        <Snippet></Snippet>");
     
 }
 

@@ -93,7 +93,7 @@ pub(self) fn number_of_edges_and_vertices_from_buffer(reader: &mut BufReader<Fil
 
         if graph_element_found {
             // Then determine whether its edge or vertex
-            if line.contains("<name>Line") {
+            if line.contains("<name><![CDATA[Line") {
                 number_of_edges += 1;
             } else if line.contains("<name>Point") || line.contains("<name>") {
                 // Covers case of a regular vertex, or a key point in our graph
@@ -126,13 +126,13 @@ pub(self) fn add_gps_points_to_edges(
             break;
         }
 
-        if line.contains("<name>Line") {
+        if line.contains("<![CDATA[Line") {
             edge_found = true;
 
             // remove garbage from xml headers and store name
             name = String::from(
-                line.replace("<name>", "")
-                .replace("</name>", "")
+                line.replace("<name><![CDATA[", "")
+                .replace("]]></name>", "")
                 .trim()
             );
         }
@@ -252,10 +252,9 @@ pub(self) fn add_gps_points_to_vertices(
 ///
 /// PostCondition: The number of points for an edge is returned and the
 /// curser is moved to location after the points have been read.
-pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> u32 {
+pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> usize {
     let start_read_location = reader.seek(SeekFrom::Current(0)).unwrap();
     let mut lines = reader.by_ref().lines();
-    let mut number_of_gps_points = 0;
 
     // Move the curser that over the <coordinates> line
     let mut line = lines.next().unwrap().unwrap();
@@ -269,14 +268,12 @@ pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> u32 
         } {}
     }
 
-    // Rust do-while loop
-    while {
-        line.clear();
-        line = lines.next().unwrap().unwrap();
-        !line.contains("</coordinates>")
-    } {
-        number_of_gps_points += 1;
-    }
+    let number_of_gps_points = line
+        .replace("<coordinates>", "")
+        .replace("</coordinates>", "")
+        .trim() // Remove Whitespace
+        .split(" ") // Create Vector of strings of GPS Points the represent edge
+        .count();
 
     // Set the buffer curser back to where it was before the invocation of this
     // this function
@@ -289,7 +286,7 @@ pub(self) fn parse_gps_string(gps_string: &String) -> (f64, f64) {
     let gps_data = gps_string
         .trim() // Remove whitespace
         .split(",") // Remove commas and store remaining information in Vec
-        .map(|s| s.parse().unwrap()) // Convert vec of strings to integers
+        .map(|s| s.parse().unwrap()) // Convert vec of strings to floating points
         .collect::<Vec<f64>>();
 
     let latitude = gps_data[1];
