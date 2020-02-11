@@ -1,149 +1,144 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>Test Triangle</name>
-    <Style id="icon-1899-0288D1-nodesc-normal">
-      <IconStyle>
-        <color>ffd18802</color>
-        <scale>1</scale>
-        <Icon>
-          <href>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
-        </Icon>
-        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
-      </IconStyle>
-      <LabelStyle>
-        <scale>0</scale>
-      </LabelStyle>
-      <BalloonStyle>
-        <text><![CDATA[<h3>$[name]</h3>]]></text>
-      </BalloonStyle>
-    </Style>
-    <Style id="icon-1899-0288D1-nodesc-highlight">
-      <IconStyle>
-        <color>ffd18802</color>
-        <scale>1</scale>
-        <Icon>
-          <href>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
-        </Icon>
-        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
-      </IconStyle>
-      <LabelStyle>
-        <scale>1</scale>
-      </LabelStyle>
-      <BalloonStyle>
-        <text><![CDATA[<h3>$[name]</h3>]]></text>
-      </BalloonStyle>
-    </Style>
-    <StyleMap id="icon-1899-0288D1-nodesc">
-      <Pair>
-        <key>normal</key>
-        <styleUrl>#icon-1899-0288D1-nodesc-normal</styleUrl>
-      </Pair>
-      <Pair>
-        <key>highlight</key>
-        <styleUrl>#icon-1899-0288D1-nodesc-highlight</styleUrl>
-      </Pair>
-    </StyleMap>
-    <Style id="line-000000-1200-nodesc-normal">
-      <LineStyle>
-        <color>ff000000</color>
-        <width>1.2</width>
-      </LineStyle>
-      <BalloonStyle>
-        <text><![CDATA[<h3>$[name]</h3>]]></text>
-      </BalloonStyle>
-    </Style>
-    <Style id="line-000000-1200-nodesc-highlight">
-      <LineStyle>
-        <color>ff000000</color>
-        <width>1.8</width>
-      </LineStyle>
-      <BalloonStyle>
-        <text><![CDATA[<h3>$[name]</h3>]]></text>
-      </BalloonStyle>
-    </Style>
-    <StyleMap id="line-000000-1200-nodesc">
-      <Pair>
-        <key>normal</key>
-        <styleUrl>#line-000000-1200-nodesc-normal</styleUrl>
-      </Pair>
-      <Pair>
-        <key>highlight</key>
-        <styleUrl>#line-000000-1200-nodesc-highlight</styleUrl>
-      </Pair>
-    </StyleMap>
-    <Placemark>
-      <name>Point 1</name>
-      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
-      <Point>
-        <coordinates>
-          -112.4494117,34.6162565,0
-        </coordinates>
-      </Point>
-    </Placemark>
-    <Placemark>
-      <name>Point 2</name>
-      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
-      <Point>
-        <coordinates>
-          -112.4494425,34.6158271,0
-        </coordinates>
-      </Point>
-    </Placemark>
-    <Placemark>
-      <name>Point 3</name>
-      <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
-      <Point>
-        <coordinates>
-          -112.4491032,34.616007,0
-        </coordinates>
-      </Point>
-    </Placemark>
-    <Placemark>
-      <name>Line 4</name>
-      <styleUrl>#line-000000-1200-nodesc</styleUrl>
-      <LineString>
-        <tessellate>1</tessellate>
-        <coordinates>
-          -112.4494117,34.6162565,0
-          -112.449401,34.6161858,0
-          -112.4493996,34.6161582,0
-          -112.4493996,34.6161207,0
-          -112.4493996,34.6160777,0
-          -112.449401,34.6159839,0
-          -112.4494425,34.6158271,0
-        </coordinates>
-      </LineString>
-    </Placemark>
-    <Placemark>
-      <name>Line 5</name>
-      <styleUrl>#line-000000-1200-nodesc</styleUrl>
-      <LineString>
-        <tessellate>1</tessellate>
-        <coordinates>
-          -112.4494425,34.6158271,0
-          -112.4493379,34.6158658,0
-          -112.4492856,34.6158912,0
-          -112.4492239,34.6159375,0
-          -112.4491703,34.6159717,0
-          -112.4491032,34.616007,0
-        </coordinates>
-      </LineString>
-    </Placemark>
-    <Placemark>
-      <name>Line 6</name>
-      <styleUrl>#line-000000-1200-nodesc</styleUrl>
-      <LineString>
-        <tessellate>1</tessellate>
-        <coordinates>
-          -112.4494117,34.6162565,0
-          -112.4493406,34.6162112,0
-          -112.449299,34.6161715,0
-          -112.4492441,34.6161174,0
-          -112.4491797,34.6160633,0
-          -112.4491032,34.616007,0
-        </coordinates>
-      </LineString>
-    </Placemark>
+    <name><![CDATA[Test Triangle]]></name>
+    <visibility>1</visibility>
+    <open>1</open>
+    <Snippet><![CDATA[created using <a href="https://www.gpsvisualizer.com/?ref=ge&time=20200210200441">GPS Visualizer</a>]]></Snippet>
+    <Folder id="Waypoints">
+      <name>Waypoints</name>
+      <visibility>1</visibility>
+      <Placemark>
+        <name>Point 1</name>
+        <Snippet></Snippet>
+        <description><![CDATA[&nbsp;]]></description>
+        <Style>
+          <IconStyle>
+            <color>ffd18802</color>
+            <scale>1</scale>
+            <Icon>
+              <href>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+            </Icon>
+            <hotSpot x="0.5" xunits="fraction" y="0" yunits="fraction" />
+          </IconStyle>
+          <LabelStyle>
+            <color>ffd18802</color>
+            <scale>1</scale>
+          </LabelStyle>
+          <BalloonStyle>
+            <text><![CDATA[<div style="font-family:Arial,sans-serif; min-width:200px;"><h3>$[name]</h3> <div style="margin-top:8px;">$[description]</div></div>]]></text>
+          </BalloonStyle>
+        </Style>
+        <Point>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>-112.4494117,34.6162565,1573.841</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Point 2</name>
+        <Snippet></Snippet>
+        <description><![CDATA[&nbsp;]]></description>
+        <Style>
+          <IconStyle>
+            <color>ffd18802</color>
+            <scale>1</scale>
+            <Icon>
+              <href>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+            </Icon>
+            <hotSpot x="0.5" xunits="fraction" y="0" yunits="fraction" />
+          </IconStyle>
+          <LabelStyle>
+            <color>ffd18802</color>
+            <scale>1</scale>
+          </LabelStyle>
+          <BalloonStyle>
+            <text><![CDATA[<div style="font-family:Arial,sans-serif; min-width:200px;"><h3>$[name]</h3> <div style="margin-top:8px;">$[description]</div></div>]]></text>
+          </BalloonStyle>
+        </Style>
+        <Point>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>-112.4494425,34.6158271,1576.12</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Point 3</name>
+        <Snippet></Snippet>
+        <description><![CDATA[&nbsp;]]></description>
+        <Style>
+          <IconStyle>
+            <color>ffd18802</color>
+            <scale>1</scale>
+            <Icon>
+              <href>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+            </Icon>
+            <hotSpot x="0.5" xunits="fraction" y="0" yunits="fraction" />
+          </IconStyle>
+          <LabelStyle>
+            <color>ffd18802</color>
+            <scale>1</scale>
+          </LabelStyle>
+          <BalloonStyle>
+            <text><![CDATA[<div style="font-family:Arial,sans-serif; min-width:200px;"><h3>$[name]</h3> <div style="margin-top:8px;">$[description]</div></div>]]></text>
+          </BalloonStyle>
+        </Style>
+        <Point>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>-112.4491032,34.616007,1575.369</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder id="Tracks">
+      <name>Tracks</name>
+      <visibility>1</visibility>
+      <open>0</open>
+      <Placemark>
+        <name><![CDATA[Line 4]]></name>
+        <Snippet></Snippet>
+        <description><![CDATA[&nbsp;]]></description>
+        <Style>
+          <LineStyle>
+            <color>ff000000</color>
+            <width>1.2</width>
+          </LineStyle>
+        </Style>
+        <LineString>
+          <tessellate>1</tessellate>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>-112.4494117,34.6162565,1573.841 -112.449401,34.6161858,1574.156 -112.4493996,34.6161582,1574.284 -112.4493996,34.6161207,1574.455 -112.4493996,34.6160777,1574.651 -112.449401,34.6159839,1575.078 -112.4494425,34.6158271,1576.12 </coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[Line 5]]></name>
+        <Snippet></Snippet>
+        <description><![CDATA[&nbsp;]]></description>
+        <Style>
+          <LineStyle>
+            <color>ff000000</color>
+            <width>1.2</width>
+          </LineStyle>
+        </Style>
+        <LineString>
+          <tessellate>1</tessellate>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>-112.4494425,34.6158271,1576.12 -112.4493379,34.6158658,1575.909 -112.4492856,34.6158912,1575.779 -112.4492239,34.6159375,1575.548 -112.4491703,34.6159717,1575.398 -112.4491032,34.616007,1575.369 </coordinates>
+        </LineString>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[Line 6]]></name>
+        <Snippet></Snippet>
+        <description><![CDATA[&nbsp;]]></description>
+        <Style>
+          <LineStyle>
+            <color>ff000000</color>
+            <width>1.2</width>
+          </LineStyle>
+        </Style>
+        <LineString>
+          <tessellate>1</tessellate>
+          <altitudeMode>clampToGround</altitudeMode>
+          <coordinates>-112.4494117,34.6162565,1573.841 -112.4493406,34.6162112,1574.121 -112.449299,34.6161715,1574.354 -112.4492441,34.6161174,1574.696 -112.4491797,34.6160633,1575.032 -112.4491032,34.616007,1575.369 </coordinates>
+        </LineString>
+      </Placemark>
+    </Folder>
   </Document>
 </kml>
