@@ -1,8 +1,9 @@
 use std::fs::File;
-use std::io::{prelude::*, BufReader, Seek, SeekFrom};
+use std::io::{prelude::*, BufReader};
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 use std::f64;
 use std::f64::consts::PI;
+use gpx;
 
 #[derive(PartialEq, Debug)]
 pub struct GPSPoint {
@@ -128,42 +129,44 @@ pub(self) fn connect_vertices_with_edges(
 
 
 pub fn initialize_from_kml_file(name: &str) -> Graph {
+    // Open file and read contents to memory
     let file = File::open(name).unwrap();
-
-    // Open the file and store its contents to a buffer in RAM
     let reader = BufReader::new(file);
 
-    let mut edges_data = reader.lines()
-        .map(|line_result| line_result.unwrap())
-        .filter(|line| 
-            line.contains("<coordinates>") 
-            &&
-            // If there is more than one gps coordinate in the string, then 
-            // the coordinates represent an edge and not a vertex.
-            line.trim().split(" ").count() > 1 
-        )
-        .map(|line| {
-            let mut line = line.replace("<coordinates>", "");
-            line = line.replace("</coordinates>", "");
-            let line = line.trim(); // Remove trailing and leading whitespace
-            line.split(" ") // Split line string into a Vec of gps point strings
-                .map(|point_str| {
-                    let long_lat_height = point_str
-                        .split(",") // Splitting gps string into long, lat, height strings
-                        .map(|data| data.parse::<f64>().unwrap()) // Covert the string into f64
-                        .collect::<Vec<f64>>();
+    let gpx_data = gpx::read(reader).unwrap();
 
-                        let mut long_lat_height = long_lat_height.into_iter();
-                        let longitude = long_lat_height.next().unwrap();
-                        let latitude = long_lat_height.next().unwrap();
-                        let height = long_lat_height.next().unwrap();
+    let vertices = gpx_data.waypoints.into_iter()
+        .map(|vertex_data| {
+            // long, lat order is intentional. They are stored in this order in the file.
+            let (longitude, latitude) = vertex_data.point().x_y();
 
-                        GPSPoint{longitude, latitude, height}
-                })
-                .collect::<Vec<GPSPoint>>()
+            let height = vertex_data.elevation.unwrap();
+            let name = vertex_data.name.unwrap();
+            
+            
+            Vertex::new(name, GPSPoint{longitude, latitude, height})
         })
-        .collect::<Vec<Vec<GPSPoint>>>();
+        .collect::<Vec<Vertex>>();
+
+    let edges = gpx_data.tracks.into_iter() 
+        .map(move |track| {
+            // Indexing at 0 since for every track we are guaranteed to only have move segment.
+            let gps_points = track.segments[0].points.into_iter()
+                .map(|waypoint| {
+                    let height = waypoint.elevation.unwrap();
+                    let (longitude, latitude) = waypoint.point().x_y();
+
+                    GPSPoint{longitude, latitude, height}
+                })
+                .collect::<Vec<GPSPoint>>();
+
+            let name = track.name.unwrap();
+
+            Edge{name, gps_points}
+        })
+        .collect::<Vec<Edge>>();
     
+
     unimplemented!();
     //let graph = connect_vertices_with_edges(edges, vertices);
 

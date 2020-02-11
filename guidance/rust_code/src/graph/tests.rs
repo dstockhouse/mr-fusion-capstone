@@ -35,7 +35,7 @@ fn connect_vertices_with_edges() {
 #[test]
 fn initialize_from_kml_file_test_triangle() {
 
-    let graph = graph::initialize_from_kml_file("src/graph/Test Triangle.kml");
+    let graph = graph::initialize_from_kml_file("src/graph/Test Triangle.gpx");
 
     for row in 0..graph.connection_matrix.len() {
         for column in 0..graph.connection_matrix[0].len() {
@@ -51,7 +51,7 @@ fn initialize_from_kml_file_test_triangle() {
 
 #[test]
 fn initialize_from_kml_file_single_edge() {
-    let graph = graph::initialize_from_kml_file("src/graph/Test Single Edge.kml");
+    let graph = graph::initialize_from_kml_file("src/graph/Test Single Edge.gpx");
 
     let edges = &graph.edges;
     let edge = &edges[0];
