@@ -335,16 +335,28 @@ pub(self) fn connect_vertices_with_edges(
 
 pub fn initialize_from_kml_file(name: &str) -> Graph {
     let file = File::open(name).unwrap();
+
     // Open the file and store its contents to a buffer in RAM
     let mut reader = BufReader::new(file);
 
-    let (number_of_edges, number_of_vertices) =
-        number_of_edges_and_vertices_from_buffer(&mut reader);
-
-    let (mut edges, mut vertices) = (
-        Vec::with_capacity(number_of_edges as usize),
-        Vec::with_capacity(number_of_vertices as usize),
-    );
+    let mut edges = reader.lines()
+        .filter(|Ok(line)| 
+            line.contains("<coordinates>") 
+            &&
+            // If there is more than one gps coordinate in the string, then 
+            // the coordinate represent an edge and not a vertex.
+            line.split(" ").count() > 1 
+        )
+        .map(|line| {
+            let mut line = line.unwrap();
+            line = line.replace("<coordinates>", "");
+            line = line.replace("</coordinates>", "");
+            let mut line = line.trim(); // Remove whitespace
+            line.split(" ")
+        })
+        .map(|point| {
+            let (long, lat, height) = point.split(",");
+        });
 
     add_gps_points_to_edges(&mut reader, &mut edges);
     add_gps_points_to_vertices(&mut reader, &mut vertices);
