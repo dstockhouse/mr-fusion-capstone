@@ -59,8 +59,7 @@ gaussian_levels = 4;
 	gaussian_levels,...
 	constants);
 
-%% Plotting difference in Black and White
-
+% Plot the pyramid
 normimage = mat2gray(start_depth);
 figure(1);
 imshow(normimage);
@@ -68,7 +67,7 @@ imshow(normimage);
 cols = 640;
 rows = 360;
 
-for ii = 1:4
+for ii = 1:gaussian_levels
 
     clear normimage;
 	normimage(1:rows,1:cols) = mat2gray(p_depth(ii, 1:rows, 1:cols));
@@ -77,6 +76,28 @@ for ii = 1:4
     
     cols = cols/2;
     rows = rows/2;
+
+end
+
+% Iterate through the gaussian pyramid
+for image_level = gaussian_levels:-1:1
+
+	%% Warp Image
+
+	% Don't warp if top of pyramid
+	if image_level == gaussian_levels
+		% Copy top leve
+	end
+
+	%% Generate point cloud
+
+	%% Compute depth derivatives
+
+	%% Compute uncertainties & weighting
+
+	%% Solve weighted least squares
+
+	%% Filter velocity
 
 end
 
