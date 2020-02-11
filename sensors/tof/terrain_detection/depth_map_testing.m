@@ -2,6 +2,8 @@
 clear;
 close all;
 
+save_animation = 0;
+
 % Read image files
 % depth = imread('sample5_depthmap.ppm');
 rgb = imread('sample1_rgb.bmp');
@@ -112,7 +114,7 @@ view(0,-90);
 
 %% Animate rotation
 
-if true
+if save_animation
     v = VideoWriter('terrain_animation.mp4', 'MPEG-4');
     open(v);
     vfig = figure(2);
