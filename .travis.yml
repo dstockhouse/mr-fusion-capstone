@@ -1,0 +1,19 @@
+os: linux
+jobs:
+  include:
+  
+  - language: rust
+    rust: 1.36.0
+    script:
+      - cd ./guidance/rust_code
+      - cargo build
+      - cargo test
+
+  - language: c
+    install: ./install_dev_dependencies.sh
+    compiler: gcc
+    script: 
+      - cd ./control
+      - make test
+      - cd ../navigation
+      - make test
