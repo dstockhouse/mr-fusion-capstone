@@ -26,11 +26,11 @@ rawpc2 = pointCloud(rawpoints2);
 
 %% Gaussian pyramid
 clc;
-low_res = double(imresize(depth, [30,40]));
+low_res = double(imresize(depth, [45,80]));
 normimage = mat2gray(low_res);
 figure(1);
 imshow(normimage);
-low_res1 = double(imresize(depth1, [30,40]));
+low_res1 = double(imresize(depth1, [45,80]));
 normimage1 = mat2gray(low_res1);
 figure(2);
 imshow(normimage1);
