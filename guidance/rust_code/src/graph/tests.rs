@@ -1,8 +1,5 @@
 
 use crate::graph;
-use crate::graph::{Vertex, Edge};
-use std::fs::File;
-use std::io::{prelude::*, BufReader, SeekFrom};
 
 #[test]
 fn parse_gps_string() {
@@ -15,22 +12,6 @@ fn parse_gps_string() {
     assert_eq!(lat, 34.6157165);
     assert_eq!(height, 0.0);
 }
-
-/*
-#[test]
-fn connect_vertices_with_edges() {
-    let (edges, vertices) = 
-        set_up_unconnected_graph_with_file_name("src/graph/Test Single Edge.kml");
-
-    let graph = graph::connect_vertices_with_edges(edges, vertices);
-
-    let row1 = &graph.connection_matrix[0];
-    let row2 = &graph.connection_matrix[1];
-
-    assert_eq!(row1, &vec![None, Some(0)]);
-    assert_eq!(row2, &vec![Some(0), None]);
-}
-*/
 
 #[test]
 fn initialize_from_kml_file_test_triangle() {

@@ -5,11 +5,36 @@ use std::f64;
 use std::f64::consts::PI;
 use gpx;
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug)]
 pub struct GPSPoint {
     pub longitude: f64,
     pub latitude: f64,
     pub height: f64
+}
+
+impl PartialEq for GPSPoint {
+    fn eq(&self, other: &Self) -> bool{
+        self.latitude == other.latitude 
+            &&
+        self.longitude == other.longitude
+    }
+}
+
+impl GPSPoint {
+    /// Takes two GPS points and determines the distance between them.
+    /// Source of algorithm https://www.movable-type.co.uk/scripts/latlong.html
+    fn distance(&self, other: &Self) -> f64 {
+        let r = 6371e3; // Radious of Earth m
+        let lat1 = self.latitude * PI/180.0; // rad
+        let long1 = self.longitude * PI/180.0; //rad
+        let lat2 = other.longitude * PI/180.0; //rad
+        let long2 = other.longitude * PI/180.0; //rad
+
+        let a = ((lat2 - lat1)/2.0).sin().powi(2) + lat1.cos()*lat2.cos() * ((long2 - long1)/2.0).sin().powi(2);
+        let c = 2.0 * (a.sqrt().atan2((1.0-a).sqrt()));
+
+        return r * c;
+    }
 }
 
 #[derive(Debug)]
@@ -36,23 +61,6 @@ pub struct Graph {
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
     pub connection_matrix: Vec<Vec<Option<usize>>> //Matrix of indices of edges
-}
-
-impl GPSPoint {
-    /// Takes two GPS points and determines the distance between them.
-    /// Source of algorithm https://www.movable-type.co.uk/scripts/latlong.html
-    fn distance(&self, other: &Self) -> f64 {
-        let r = 6371e3; // Radious of Earth m
-        let lat1 = self.latitude * PI/180.0; // rad
-        let long1 = self.longitude * PI/180.0; //rad
-        let lat2 = other.longitude * PI/180.0; //rad
-        let long2 = other.longitude * PI/180.0; //rad
-
-        let a = ((lat2 - lat1)/2.0).sin().powi(2) + lat1.cos()*lat2.cos() * ((long2 - long1)/2.0).sin().powi(2);
-        let c = 2.0 * (a.sqrt().atan2((1.0-a).sqrt()));
-
-        return r * c;
-    }
 }
 
 impl Vertex {
@@ -94,6 +102,7 @@ pub(self) fn connect_vertices_with_edges(
     edges: Vec<Edge>, 
     vertices: Vec<Vertex>
 ) -> Graph {
+
     let connection_matrix = vec![vec![None; vertices.len()]; vertices.len()];
     let mut graph = Graph {
         edges,
@@ -149,9 +158,9 @@ pub fn initialize_from_kml_file(name: &str) -> Graph {
         .collect::<Vec<Vertex>>();
 
     let edges = gpx_data.tracks.into_iter() 
-        .map(move |track| {
+        .map(|track| {
             // Indexing at 0 since for every track we are guaranteed to only have move segment.
-            let gps_points = track.segments[0].points.into_iter()
+            let gps_points = track.segments[0].points.iter()
                 .map(|waypoint| {
                     let height = waypoint.elevation.unwrap();
                     let (longitude, latitude) = waypoint.point().x_y();
@@ -166,11 +175,9 @@ pub fn initialize_from_kml_file(name: &str) -> Graph {
         })
         .collect::<Vec<Edge>>();
     
+    let graph = connect_vertices_with_edges(edges, vertices);
 
-    unimplemented!();
-    //let graph = connect_vertices_with_edges(edges, vertices);
-
-    //return graph;
+    return graph
 
 }
 

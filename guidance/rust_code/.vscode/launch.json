@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
         {
             "type": "lldb",
             "request": "launch",
@@ -27,6 +28,28 @@
             "cwd": "${workspaceFolder}"
         },
         
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test intialize_from_gpx_file_single_edge",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["initialize_from_kml_file_single_edge"],
+            "cwd": "${workspaceFolder}"
+        },
+
         {
             "type": "lldb",
             "request": "launch",

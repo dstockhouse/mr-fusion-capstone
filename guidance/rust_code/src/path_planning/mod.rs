@@ -23,9 +23,9 @@ pub(self) fn robot_on_edge(graph: &Graph, robot_loc: &GPSPoint) -> Result<(), Er
         let mut gps_point_n_plus_1  = edge.gps_points.iter();
         gps_point_n_plus_1.next();
 
-        let gps_points_n_n_plus_1 = gps_point_n.zip(gps_point_n_plus_1);
+        let points_n_n_plus_1 = gps_point_n.zip(gps_point_n_plus_1);
 
-        for (gps_point_n, gps_point_n_plus_1) in gps_points_n_n_plus_1 {
+        for (gps_point_n, gps_point_n_plus_1) in points_n_n_plus_1 {
             // segmenting points on the line into more points
             let steps = 80.0;
             let start_x = gps_point_n.latitude;
