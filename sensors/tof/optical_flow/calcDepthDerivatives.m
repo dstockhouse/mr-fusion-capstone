@@ -37,5 +37,34 @@ for u = 1:cols-1
    end
 end
 % Spatial derivatives
-
+for v = 1:rows-1
+    for u = 2:cols-2
+        if null(v,u) == false
+            du(v,u) = (rx_ninv(v,u-1)*(pointCloudAvg(v,u+1,3)+pointCloudAvg(v,u,3))...
+                + rx_ninv(v,u)*(pointCloudAvg(v,u,3)+pointCloudAvg(v,u-1,3)))...
+                /(rx_ninv(v,u)+rx_ninv(v,u-1));
+        end
+        du(v,1) = du(v,2);
+        du(v, cols-1) = du(v,cols-2);
+    end
+end
+for u = 1:cols-1
+    for v = 2:rows-2
+        if null(v,u) == false
+            dv(v,u) = (ry_ninv(v,u-1)*(pointCloudAvg(v+1,u,3)+pointCloudAvg(v,u,3))...
+                + ry_ninv(v,u)*(pointCloudAvg(v,u,3)+pointCloudAvg(v-1,u,3)))...
+                /(ry_ninv(v,u)+ry_ninv(v-1,u));
+        end
+        dv(1,u) = dv(2,u);
+        dv(rows-1,u) = dv(rows-2,u);
+    end
+end
+% Temporal derivative
+for u = 1:cols-1
+    for v = 1:rows-1
+        if null(v,u) == false
+            dt(v,u) = constants.fps * (pointCloudAvg(v,u)-pointCloudOld(v,u));
+        end
+    end
+end
 end
