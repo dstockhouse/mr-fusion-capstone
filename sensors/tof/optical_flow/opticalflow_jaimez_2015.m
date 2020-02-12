@@ -100,12 +100,12 @@ for image_level = gaussian_levels:-1:1
 	end
 
 	%% Take the average of the old PC and new warped PC
-    average_point_clouds(old_points, points_warped, constants);
+    [points_average, num_points] = average_point_clouds(points_old, points_warped, constants);
 
 	%% Compute depth derivatives
-    
 
 	%% Compute uncertainties & weighting
+%     weights = compute_weighting()
 
 	%% Solve weighted least squares
 
@@ -118,3 +118,5 @@ for image_level = gaussian_levels:-1:1
 
 end
 
+% If more than 2 images in sequence
+points_old = p_points;
