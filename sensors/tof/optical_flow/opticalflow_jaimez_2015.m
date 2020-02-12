@@ -96,7 +96,7 @@ for image_level = gaussian_levels:-1:1
 		% Copy top level
         points_warped = p_points(1, 1:rows, 1:cols, :);
     else
-        points_warped = warp_image(p_points(image_level, 1:rows, 1:cols, :), transformation, constants);
+        points_warped = warp_image(p_points(image_level, 1:rows, 1:cols, :), cumulativeTransformation, constants);
 	end
 
 	%% Take the average of the old PC and new warped PC
@@ -105,7 +105,7 @@ for image_level = gaussian_levels:-1:1
 	%% Compute depth derivatives
 
 	%% Compute uncertainties & weighting
-%     weights = compute_weighting()
+    weights = compute_weighting( cumulativeTransformation);
 
 	%% Solve weighted least squares
 
