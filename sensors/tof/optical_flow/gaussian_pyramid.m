@@ -24,12 +24,12 @@ edge_depth_thresh = 10;
 
 % Get dimensions of original image
 depth_dim = size(depth);
-cols = depth_dim(1);
-rows = depth_dim(2);
+rows = depth_dim(1);
+cols = depth_dim(2);
 
 % Setup empty pyramids
-p_depth = zeros(levels, cols, rows);
-p_points = zeros(levels, cols, rows, 3); % xyz point at each pixel
+p_depth = zeros(levels, rows, cols);
+p_points = zeros(levels, rows, cols, 3); % xyz point at each pixel
 
 % Copy first image to pyramid
 p_depth(1, :, :) = depth(:, :);
@@ -42,7 +42,7 @@ gauss_kernel = [ 1 2 1;
 % Manual convolution and de-resolution
 for level = 1:levels
 
-    scale_factor = 2^level;
+    scale_factor = 2^(level-1);
 
     cols_l = cols / scale_factor;
     rows_l = rows / scale_factor;
@@ -54,7 +54,7 @@ for level = 1:levels
             for jj = 1:rows_l
 
                 % Center of this pixel on previous image
-                center_prev_depth = p_depth(level - 1, ii*2, jj*2);
+                center_prev_depth = p_depth(level - 1, jj*2, ii*2);
 
                 % For inner pixels
                 if ii > 1 && jj > 1 && ii < cols_l && jj < rows_l
@@ -65,11 +65,12 @@ for level = 1:levels
                         sum = 0;
                         weight = 0;
 
+                        % Manual kernel convolution
                         for kernel_i = -1:1
                             for kernel_j = -1:1
 
                                 % Depth for this kernel position
-                                kernel_prev_depth = p_depth(level - 1, ii*2, jj*2);
+                                kernel_prev_depth = p_depth(level - 1, jj*2, ii*2);
 
                                 % Ensure depth is close enough to be the same object
                                 depth_diff = abs(center_prev_depth - kernel_prev_depth);
@@ -90,14 +91,14 @@ for level = 1:levels
                         end % for kernel_i
 
                         % Save depth to downsampled pixel
-                        p_depth(level, ii, jj) = sum / weight;
+                        p_depth(level, jj, ii) = sum / weight;
 
                     end % if prev_depth > 0
 
                 else % for boundary pixels
 
                     % Ignore for now
-                    p_depth(level, ii, jj) = 0;
+                    p_depth(level, jj, ii) = 0;
 
                 end % inner/boundary pixels
 
@@ -114,14 +115,14 @@ for level = 1:levels
     for ii = 1:cols_l
         for jj = 1:rows_l
 
-            z = p_depth(level, ii, jj);
+            z = p_depth(level, jj, ii);
 
             % X, Y, and Z points
-            p_points(level, ii, jj, 1) = (ii - u_center_l) * z / level_f_length;
-            p_points(level, ii, jj, 2) = (jj - v_center_l) * z / level_f_length;
+            p_points(level, jj, ii, 1) = (ii - u_center_l) * z / level_f_length;
+            p_points(level, jj, ii, 2) = (jj - v_center_l) * z / level_f_length;
 
             % Can just be done as a vector above
-            p_points(level, ii, jj, 3) = z;
+            p_points(level, jj, ii, 3) = z;
 
         end % for jj
     end % for ii

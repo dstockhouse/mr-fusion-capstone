@@ -52,6 +52,9 @@ rotate_rawpoints = dlmread('samples\rotate30deg_pointcloud.txt');
 constants.fov_horizontal = 69 *pi/180;
 constants.fov_vertical   = 51 *pi/180;
 
+constants.max_cols = 640;
+constants.max_rows = 360;
+
 %% Gaussian pyramid
 
 gaussian_levels = 4;
@@ -64,8 +67,8 @@ normimage = mat2gray(start_depth);
 figure(1);
 imshow(normimage);
 
-cols = 640;
-rows = 360;
+cols = constants.max_cols;
+rows = constants.max_rows;
 
 for ii = 1:gaussian_levels
 
@@ -79,25 +82,39 @@ for ii = 1:gaussian_levels
 
 end
 
+% Allocate space for images
+
+cols = constants.max_cols;
+rows = constants.max_rows;
 % Iterate through the gaussian pyramid
 for image_level = gaussian_levels:-1:1
-
+    
 	%% Warp Image
 
 	% Don't warp if top of pyramid
 	if image_level == gaussian_levels
-		% Copy top leve
+		% Copy top level
+        points_warped = p_points(1, 1:rows, 1:cols, :);
+    else
+        points_warped = warp_image(p_points(image_level, 1:rows, 1:cols, :), transformation, constants);
 	end
 
-	%% Generate point cloud
+	%% Take the average of the old PC and new warped PC
+    average_point_clouds(old_points, points_warped, constants);
 
 	%% Compute depth derivatives
+    
 
 	%% Compute uncertainties & weighting
 
 	%% Solve weighted least squares
 
 	%% Filter velocity
+    
+    
+    %% Update state for next loop
+    cols = cols / 2;
+    rows = rows / 2;
 
 end
 

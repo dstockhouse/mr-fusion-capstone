@@ -8,6 +8,7 @@
 *.pkt
 *.avi
 *.mp4
+*.asv
 school_map.geojson
 a.out
 bld/
