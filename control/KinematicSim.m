@@ -1,9 +1,11 @@
-function K = KinematicSim(theta_L , theta_R)
+function K = KinematicSim(theta_L , theta_R, time_step)
 %--------------------------------------------------------------------------
 % Name: KinematicSim
 % Desc: Simulates the robot's kinematics graphically
 % Inputs: theta_L - angular velocity of left wheel
 %         theta_R - angular velocity of right wheel
+%         time_step - the desired amount of time passed between each
+%                     iteration of the function call
 % Outputs: K - a 3x1 matrix detailing the kinematics
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
 % Last Modified: 2/10/2020
@@ -78,7 +80,7 @@ K = transMatrix * inMat;    % K = |  Y_dot  | -> velocity in y
          [((Ypos+0.24*cos(heading))+(Ypos-0.24*cos(heading)))/2 ...
             Ypos+0.24*sin(heading+pi/2)], 'Linewidth',3);
     
-    pause(0.5); % Simulate time step
+    pause(time_step); % Simulate time step
     
     heading = heading + K(3,1); % Update heading
                                  
