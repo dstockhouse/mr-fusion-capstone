@@ -5,15 +5,42 @@ use std::f64;
 use std::f64::consts::PI;
 use gpx;
 
+trait IntoTangential {
+    fn into_tangential(self) -> TangentialPoint;
+}
+
+pub trait Point {
+    fn get(&self) -> (f64, f64, f64);
+}
+
+pub struct TangentialPoint {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64
+}
+
+
 #[derive(Debug)]
 pub struct GPSPoint {
-    pub longitude: f64,
     pub latitude: f64,
+    pub longitude: f64,
     pub height: f64
 }
 
+impl IntoTangential for GPSPoint {
+    fn into_tangential(self) -> TangentialPoint {
+        unimplemented!();
+    }
+}
+
+impl Point for GPSPoint {
+    fn get(&self) -> (f64, f64, f64) {
+        (self.latitude, self.longitude, self.height)
+    }
+}
+
 impl PartialEq for GPSPoint {
-    fn eq(&self, other: &Self) -> bool{
+    fn eq(&self, other: &Self) -> bool {
         self.latitude == other.latitude 
             &&
         self.longitude == other.longitude
@@ -38,45 +65,51 @@ impl GPSPoint {
 }
 
 #[derive(Debug)]
-pub struct Edge {
+pub struct Edge<T> {
     // For debugging, finding out what line we are looking at on the map
     pub name: String,
-    pub gps_points: Vec<GPSPoint>,
+
+    // T, in this case, can be a point relative to our tangential frame, or the gps frame
+    pub points: Vec<T>,
 }
 
 #[derive(Debug)]
-pub struct Vertex {
+// A is a lifetime
+pub struct Vertex<'a, T> {
     // Will be used to display key locations to UI
     pub name: String,
 
-    // Will be used to identify adjacent nodes and edges
-    pub(self) gps_point: GPSPoint,
+    // Will be used to identify adjacent nodes and edges. T will be either a GPSPoint or a point
+    // in our tangential frame.
+    pub(self) point: T,
 
     // Key data to determine the shortest path using Dijkstra's Algorithm
-    pub parent_vertex: Option<&'static Vertex>,
+    pub parent_vertex: Option<&'a Vertex<'a, T>>,
     pub tentative_distance: Option<f64>,
 }
 
-pub struct Graph {
-    pub vertices: Vec<Vertex>,
-    pub edges: Vec<Edge>,
+pub struct Graph <'a, T> {
+    pub vertices: Vec<Vertex<'a, T>>,
+    pub edges: Vec<Edge<T>>,
     pub connection_matrix: Vec<Vec<Option<usize>>> //Matrix of indices of edges
 }
 
-impl Vertex {
-    fn new(name: String, gps_point: GPSPoint) -> Vertex {
+impl <'a> Vertex<'a, GPSPoint> {
+    fn new(name: String, point: GPSPoint) -> Vertex<'a, GPSPoint> {
         Vertex {
             name,
-            gps_point,
+            point,
             parent_vertex: None,
             tentative_distance: None,
         }
     }
 }
 
-impl PartialEq for Vertex {
-    fn eq(&self, other: &Vertex) -> bool {
-        if self.name == other.name && self.gps_point == other.gps_point {
+impl<'a, T> PartialEq for Vertex<'a, T> 
+    where T: Point {
+    fn eq(&self, other: &Vertex<'a, T>) -> bool {
+
+        if self.point.get() != other.point.get() {
             return true;
         }
 
@@ -84,24 +117,10 @@ impl PartialEq for Vertex {
     }
 }
 
-pub(self) fn parse_gps_string(gps_string: &String) -> (f64, f64, f64) {
-    let gps_data = gps_string
-        .trim() // Remove whitespace
-        .split(",") // Remove commas and store remaining information in Vec
-        .map(|s| s.parse().unwrap()) // Convert vec of strings to floating points
-        .collect::<Vec<f64>>();
-
-    let longitude = gps_data[0];
-    let latitude = gps_data[1];
-    let height = gps_data[2];
-
-    (longitude, latitude, height)
-}
-
 pub(self) fn connect_vertices_with_edges(
-    edges: Vec<Edge>, 
-    vertices: Vec<Vertex>
-) -> Graph {
+    edges: Vec<Edge<GPSPoint>>, 
+    vertices: Vec<Vertex<GPSPoint>>
+) -> Graph<GPSPoint> {
 
     let connection_matrix = vec![vec![None; vertices.len()]; vertices.len()];
     let mut graph = Graph {
@@ -111,17 +130,17 @@ pub(self) fn connect_vertices_with_edges(
     };
     
     for edge_number in 0..graph.edges.len() {
-        let start_of_edge = graph.edges[edge_number].gps_points.first();
-        let end_of_edge = graph.edges[edge_number].gps_points.last();
+        let start_of_edge = &graph.edges[edge_number].points.first().unwrap();
+        let end_of_edge = &graph.edges[edge_number].points.last().unwrap();
         let mut start_vertex_index = None;
         let mut end_vertex_index = None;
 
         for vertex_number in 0..graph.vertices.len() {
             let vertex = &graph.vertices[vertex_number];
-            if Some(&vertex.gps_point) == start_of_edge {
+            if &&vertex.point == start_of_edge {
                 start_vertex_index = Some(vertex_number as usize);
             }
-            else if Some(&vertex.gps_point) ==  end_of_edge {
+            else if &&vertex.point ==  end_of_edge {
                 end_vertex_index = Some(vertex_number as usize);
             }
         }
@@ -137,7 +156,7 @@ pub(self) fn connect_vertices_with_edges(
 }
 
 
-pub fn initialize_from_kml_file(name: &str) -> Graph {
+pub fn initialize_from_kml_file(name: &str) -> Graph<GPSPoint> {
     // Open file and read contents to memory
     let file = File::open(name).unwrap();
     let reader = BufReader::new(file);
@@ -155,7 +174,7 @@ pub fn initialize_from_kml_file(name: &str) -> Graph {
             
             Vertex::new(name, GPSPoint{longitude, latitude, height})
         })
-        .collect::<Vec<Vertex>>();
+        .collect::<Vec<Vertex<GPSPoint>>>();
 
     let edges = gpx_data.tracks.into_iter() 
         .map(|track| {
@@ -171,9 +190,9 @@ pub fn initialize_from_kml_file(name: &str) -> Graph {
 
             let name = track.name.unwrap();
 
-            Edge{name, gps_points}
+            Edge{name, points: gps_points}
         })
-        .collect::<Vec<Edge>>();
+        .collect::<Vec<Edge<GPSPoint>>>();
     
     let graph = connect_vertices_with_edges(edges, vertices);
 
@@ -181,13 +200,13 @@ pub fn initialize_from_kml_file(name: &str) -> Graph {
 
 }
 
-pub fn graph_to_geo_json_string(graph: &Graph) -> String {
+pub fn graph_to_geo_json_string(graph: &Graph<GPSPoint>) -> String {
     // Allocating Memory
     let number_of_vertices_and_edges = graph.edges.len() + graph.vertices.len();
     let mut features = Vec::with_capacity(number_of_vertices_and_edges);
 
     for edge in graph.edges.iter() {
-        let edge_points = edge.gps_points.iter()
+        let edge_points = edge.points.iter()
             .map(|point| vec![point.longitude, point.latitude])
             .collect();
 
@@ -208,8 +227,8 @@ pub fn graph_to_geo_json_string(graph: &Graph) -> String {
 
     for vertex in graph.vertices.iter() {
         let vertex_point = vec![
-            vertex.gps_point.longitude,
-            vertex.gps_point.latitude
+            vertex.point.longitude,
+            vertex.point.latitude
         ];
 
         let geometry = Geometry::new(

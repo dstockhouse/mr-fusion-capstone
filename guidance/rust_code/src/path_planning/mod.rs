@@ -5,22 +5,22 @@ use std::f64;
 
 fn plan_path() {
     // TODO: Send Message to UI
-    unimplemented!();
+    
 
     // TODO: Is robot on edge?
     unimplemented!();
 
 }
 
-pub(self) fn robot_on_edge(graph: &Graph, robot_loc: &GPSPoint) -> Result<(), Error> {
+pub(self) fn robot_on_edge(graph: &Graph<GPSPoint>, robot_loc: &GPSPoint) -> Result<(), Error> {
 
     let mut min = f64::MAX;
     
     let edges = &graph.edges;
 
     for edge in edges.iter() {
-        let gps_point_n = edge.gps_points.iter();
-        let mut gps_point_n_plus_1  = edge.gps_points.iter();
+        let gps_point_n = edge.points.iter();
+        let mut gps_point_n_plus_1  = edge.points.iter();
         gps_point_n_plus_1.next();
 
         let points_n_n_plus_1 = gps_point_n.zip(gps_point_n_plus_1);

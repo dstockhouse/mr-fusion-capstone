@@ -2,18 +2,6 @@
 use crate::graph;
 
 #[test]
-fn parse_gps_string() {
-    let gps_string = 
-        String::from("          -112.4484635,34.6157165,0");
-    
-    let (long, lat, height) = graph::parse_gps_string(&gps_string);
-
-    assert_eq!(long, -112.4484635);
-    assert_eq!(lat, 34.6157165);
-    assert_eq!(height, 0.0);
-}
-
-#[test]
 fn initialize_from_kml_file_test_triangle() {
 
     let graph = graph::initialize_from_kml_file("src/graph/Test Triangle.gpx");
@@ -38,13 +26,13 @@ fn initialize_from_kml_file_single_edge() {
     let edge = &edges[0];
 
     assert_eq!(edges.len(), 1);
-    assert_eq!(edge.gps_points.len(), 3);
-    assert_eq!(edge.gps_points[0].longitude, -112.4484608);
-    assert_eq!(edge.gps_points[0].latitude, 34.615871);
-    assert_eq!(edge.gps_points[1].longitude, -112.4484635);
-    assert_eq!(edge.gps_points[1].latitude, 34.6157165);
-    assert_eq!(edge.gps_points[2].longitude, -112.4484742);
-    assert_eq!(edge.gps_points[2].latitude, 34.6155377);
+    assert_eq!(edge.points.len(), 3);
+    assert_eq!(edge.points[0].longitude, -112.4484608);
+    assert_eq!(edge.points[0].latitude, 34.615871);
+    assert_eq!(edge.points[1].longitude, -112.4484635);
+    assert_eq!(edge.points[1].latitude, 34.6157165);
+    assert_eq!(edge.points[2].longitude, -112.4484742);
+    assert_eq!(edge.points[2].latitude, 34.6155377);
 }
 
 #[test]
