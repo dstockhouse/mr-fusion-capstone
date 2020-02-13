@@ -58,9 +58,7 @@ constants.max_rows = 360;
 %% Gaussian pyramid
 
 gaussian_levels = 4;
-[p_depth, p_points] = gaussian_pyramid(start_depth,...
-	gaussian_levels,...
-	constants);
+[p_depth, p_points] = gaussian_pyramid(start_depth, gaussian_levels, constants);
 
 % Plot the pyramid
 normimage = mat2gray(start_depth);
@@ -73,46 +71,52 @@ rows = constants.max_rows;
 for ii = 1:gaussian_levels
 
     clear normimage;
-	normimage(1:rows,1:cols) = mat2gray(p_depth(ii, 1:rows, 1:cols));
-	figure(1+ii);
-	imshow(normimage);
-    
+    normimage(1:rows,1:cols) = mat2gray(p_depth(ii, 1:rows, 1:cols));
+    figure(1+ii);
+    imshow(normimage);
+
     cols = cols/2;
     rows = rows/2;
 
 end
 
-% Allocate space for images
+% Enough room to save transformation state for each pyramid level
+p_kai = zeros(gaussian_levels, 6);
+p_transformations = zeros(gaussian_levels, 4, 4);
+accumulatedTransformation = eye(4);
 
 cols = constants.max_cols;
 rows = constants.max_rows;
 % Iterate through the gaussian pyramid
 for image_level = gaussian_levels:-1:1
-    
-	%% Warp Image
 
-	% Don't warp if top of pyramid
-	if image_level == gaussian_levels
-		% Copy top level
+    %% Warp Image
+
+    % Don't warp if top of pyramid
+    if image_level == gaussian_levels
+        % Copy top level
         points_warped = p_points(1, 1:rows, 1:cols, :);
     else
         points_warped = warp_image(p_points(image_level, 1:rows, 1:cols, :), cumulativeTransformation, constants);
-	end
+    end
 
-	%% Take the average of the old PC and new warped PC
+    %% Take the average of the old PC and new warped PC
     [points_average, num_points] = average_point_clouds(points_old, points_warped, constants);
 
-	%% Compute depth derivatives
+    %% Compute depth derivatives
 
-	%% Compute uncertainties & weighting
-    weights = compute_weighting( cumulativeTransformation);
+    %% Compute uncertainties & weighting
+%    weights = compute_weights( cumulativeTransformation);
 
-	%% Solve weighted least squares
+    %% Solve weighted least squares
 
-	%% Filter velocity
-    
-    
+    %% Filter velocity
+%    p_kai(image_level, :) = filter_velocity( ... stuff ... );
+%    p_transformations(image_level,:,:) = kai2transformation(p_kai(image_level, :));
+
     %% Update state for next loop
+    accumulatedTransformation = p_transformations(image_level,:,:) * accumulatedTransformation;
+
     cols = cols / 2;
     rows = rows / 2;
 
@@ -120,3 +124,4 @@ end
 
 % If more than 2 images in sequence
 points_old = p_points;
+
