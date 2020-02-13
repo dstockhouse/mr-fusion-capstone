@@ -56,7 +56,6 @@ pub(self) fn robot_on_edge(graph: &Graph<GPSPoint>, robot_loc: &GPSPoint) -> Res
         }
     }
     
-    println!("min: {}", min);
     Err(Error::RobotNotOnMap)
     
 }

@@ -3,9 +3,10 @@ use std::io::{prelude::*, BufReader};
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 use std::f64;
 use std::f64::consts::PI;
+use std::ops::Sub;
 use gpx;
 
-trait IntoTangential {
+pub(self) trait IntoTangential {
     fn into_tangential(self) -> TangentialPoint;
 }
 
@@ -13,12 +14,28 @@ pub trait Point {
     fn get(&self) -> (f64, f64, f64);
 }
 
+#[derive(Debug, PartialEq)]
 pub struct TangentialPoint {
     pub x: f64,
     pub y: f64,
     pub z: f64
 }
 
+impl Sub for &TangentialPoint {
+    type Output = (f64, f64, f64);
+
+    fn sub(self, other: Self) -> (f64, f64, f64) {
+        (other.x-self.x, other.y-self.y, other.z-self.z)
+    }
+}
+
+impl TangentialPoint {
+    fn distance(&self, other: &Self) -> f64 {
+        let (x, y, z) = other - self;
+
+        (x.powi(2) + y.powi(2) + z.powi(2)).sqrt()
+    }
+}
 
 #[derive(Debug)]
 pub struct GPSPoint {
@@ -44,23 +61,6 @@ impl PartialEq for GPSPoint {
         self.latitude == other.latitude 
             &&
         self.longitude == other.longitude
-    }
-}
-
-impl GPSPoint {
-    /// Takes two GPS points and determines the distance between them.
-    /// Source of algorithm https://www.movable-type.co.uk/scripts/latlong.html
-    fn distance(&self, other: &Self) -> f64 {
-        let r = 6371e3; // Radious of Earth m
-        let lat1 = self.latitude * PI/180.0; // rad
-        let long1 = self.longitude * PI/180.0; //rad
-        let lat2 = other.longitude * PI/180.0; //rad
-        let long2 = other.longitude * PI/180.0; //rad
-
-        let a = ((lat2 - lat1)/2.0).sin().powi(2) + lat1.cos()*lat2.cos() * ((long2 - long1)/2.0).sin().powi(2);
-        let c = 2.0 * (a.sqrt().atan2((1.0-a).sqrt()));
-
-        return r * c;
     }
 }
 
