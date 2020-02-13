@@ -15,7 +15,7 @@
  * Revision 0.2
  * 	Last edited 5/06/2019
  *
-\***************************************************************************/
+ \***************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,15 +110,15 @@ int VN200GPSPacketParse(char *buf, int len, GPS_DATA *data) {
 
 	// Scan for fields in packet string
 	rc = sscanf(currentPacket, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f",
-		&(data->time), &(data->week), &(data->GpsFix), &(data->NumSats),
-		&(data->Latitude), &(data->Longitude), &(data->Altitude),
-		&(data->NedVelX), &(data->NedVelY), &(data->NedVelZ),
-		&(data->NorthAcc), &(data->EastAcc), &(data->VertAcc), &(data->SpeedAcc), &(data->TimeAcc));
+			&(data->time), &(data->week), &(data->GpsFix), &(data->NumSats),
+			&(data->Latitude), &(data->Longitude), &(data->Altitude),
+			&(data->NedVelX), &(data->NedVelY), &(data->NedVelZ),
+			&(data->NorthAcc), &(data->EastAcc), &(data->VertAcc), &(data->SpeedAcc), &(data->TimeAcc));
 	if(rc < 15) {
 		logDebug("%s: Didn't match entire formatted string: %d\n", __func__, rc);
 
-		// Malformed packet, return 1 to indicate not fully parsed
-		return 1;
+		// Malformed packet, return to indicate not fully parsed
+		return -3;
 	}
 
 	return len;

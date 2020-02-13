@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -32,76 +33,123 @@
 
 int main(void) {
 
-	int numRead, numParsed, numConsumed, i;
-	double time;
+    int numRead, numParsed, numConsumed, i;
+    double time;
 
-	// Instances of structure variables
-	VN200_DEV dev;
+    // Instances of structure variables
+    VN200_DEV dev;
 
-	struct timespec delaytime;
-	int starttime;
+    struct timespec delaytime;
+    int starttime;
 
-	logDebug("Initializing...\n");
+    logDebug("Initializing...\n");
 
-	VN200Init(&dev, 50, VN200_BAUD, VN200_INIT_MODE_BOTH);
-	sleep(1);
+    VN200Init(&dev, 50, VN200_BAUD, VN200_INIT_MODE_BOTH);
+    sleep(1);
 
-	char *command = "VNWRG,06,248";
-	VN200Command(&dev, command, strlen(command), 0);
-	VN200FlushOutput(&dev);
+    char *command = "VNWRG,06,248";
+    VN200Command(&dev, command, strlen(command), 0);
+    VN200FlushOutput(&dev);
 
-	// while(1) {
-	int cumulative = 0;
-	while(cumulative < 100000) {
+    // while(1) {
+    int cumulative = 0;
+    while(cumulative < 100000) {
 
-		getTimestamp(NULL, &time);
+        getTimestamp(NULL, &time);
 #ifdef VERBOSE_DEBUG
-		logDebug("Current Time: %lf\n", time);
+        logDebug("Current Time: %lf\n", time);
 #endif
 
-		numRead = VN200Poll(&dev);
-		cumulative += numRead;
+        numRead = VN200Poll(&dev);
+        cumulative += numRead;
 #ifdef STANDARD_DEBUG
-		logDebug("Read %d bytes from UART\n", numRead);
+        logDebug("Read %d bytes from UART\n", numRead);
 #endif
 
 #ifdef VERBOSE_DEBUG
-		if(numRead > 0) {
+        if(numRead > 0) {
 
-			logDebug("\tRaw Data:\n");
-			logDebug("\t\t");
-			for(i = 0; i < numRead; i++) {
-				logDebug("%c", dev.inbuf.buffer[i]);
-			}
-		}
+            logDebug("\tRaw Data:\n");
+            logDebug("\t\t");
+            for(i = 0; i < numRead; i++) {
+                logDebug("%c", dev.inbuf.buffer[i]);
+            }
+        }
 #endif
 
 #if 0
-		do {
+        do {
 
-			numParsed = VN200Parse(&dev, &data);
+            numParsed = VN200Parse(&dev);
 #ifdef STANDARD_DEBUG
-			logDebug("Parsed %d bytes from buffer\n", numParsed);
+            logDebug("Parsed %d bytes from buffer\n", numParsed);
+
+            logDebug("packet ring buffer not empty: start = %d, end = %d\n", dev.ringbuf.start, dev.ringbuf.end);
 #endif
 
-			numConsumed = VN200Consume(&dev, numParsed);
+            int packetIndex;
+            for (packetIndex = dev.ringbuf.start;
+                    packetIndex != dev.ringbuf.end;
+                    packetIndex = (packetIndex + 1) % VN200_PACKET_RING_BUFFER_SIZE) {
 
 
-		} while(numConsumed > 0);
+                VN200_PACKET *packet = &(dev.ringbuf.packets[dev.ringbuf.start]);
+
+                logDebug("\tLooping packets: i=%d, pi=%d\n", packetIndex, packet->startIndex);
+
+                if (packet->contentsType == VN200_PACKET_CONTENTS_TYPE_GPS) {
+                    GPS_DATA *gps_packet = &(packet->GPSData);
+                    logDebug("GPS packet data:\n"
+                            "\tLat: %f\n"
+                            "\tLon: %f\n"
+                            "\tAlt: %f\n",
+                            gps_packet->Latitude,
+                            gps_packet->Longitude,
+                            gps_packet->Altitude);
+
+                } else if (packet->contentsType == VN200_PACKET_CONTENTS_TYPE_IMU) {
+                    IMU_DATA *imu_packet = &(packet->IMUData);
+                    logDebug("IMU packet data:\n"
+                            "\tAccel: %f, %f, %f\n"
+                            "\tGyro: %f, %f, %f\n"
+                            "\tCompass: %f, %f, %f\n",
+                            imu_packet->accel[0],
+                            imu_packet->accel[1],
+                            imu_packet->accel[2],
+                            imu_packet->gyro[0],
+                            imu_packet->gyro[1],
+                            imu_packet->gyro[2],
+                            imu_packet->compass[0],
+                            imu_packet->compass[1],
+                            imu_packet->compass[2]);
+
+                } else {
+                    logDebug("Packet unidentified.\n");
+                }
+            }
+
+            logDebug("There are %d packets still in ring buffer.\n",
+                    VN200_PACKET_RING_BUFFER_MOD(dev.ringbuf.end - dev.ringbuf.start));
+
+            numConsumed = VN200Consume(&dev, numParsed);
+
+            logDebug("%d bytes left in input buffer.\n", dev.inbuf.length);
+
+        } while (numConsumed > 0);
 #endif
 
-		numConsumed = VN200Consume(&dev, numRead);
+        numConsumed = VN200Consume(&dev, numRead);
 #ifdef STANDARD_DEBUG
-		logDebug("Consumed %d bytes from buffer\n", numConsumed);
+        logDebug("Consumed %d bytes from buffer\n", numConsumed);
 #endif
 
-		usleep(10);
+        // usleep(10);
 
-	}
+    }
 
-	VN200Destroy(&dev);
+    VN200Destroy(&dev);
 
-	return 0;
+    return 0;
 
 }
 

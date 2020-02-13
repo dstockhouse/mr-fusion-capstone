@@ -20,11 +20,11 @@
 #define __CONTROL_H
 
 #define STANDARD_DEBUG
-#define VERBOSE_DEBUG
+#undef VERBOSE_DEBUG
 
-#undef DEBUG_OUT_PRINTF
-#define DEBUG_OUT_SYSLOG
-#define DEBUG_OUT_LOGFILE
+#define DEBUG_OUT_PRINTF
+#undef DEBUG_OUT_SYSLOG
+#undef DEBUG_OUT_LOGFILE
 
 #endif
 

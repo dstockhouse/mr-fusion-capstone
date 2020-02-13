@@ -102,11 +102,11 @@ int VN200IMUPacketParse(char *buf, int len, IMU_DATA *data) {
 			&(data->accel[0]), &(data->accel[1]), &(data->accel[2]),
 			&(data->gyro[0]), &(data->gyro[1]), &(data->gyro[2]),
 			&(data->temp), &(data->baro));
-	if(rc < 15) {
+	if(rc < 11) {
 		logDebug("%s: Didn't match entire formatted string: %d\n", __func__, rc);
 
-		// Malformed packet, return 1 to indicate not fully parsed
-		return 1;
+		// Malformed packet, return error to indicate not fully parsed
+		return -3;
 	}
 
 	return len;

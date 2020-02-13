@@ -21,6 +21,7 @@
 #include <inttypes.h>
 #include <time.h>
 
+#include "utils.h"
 #include "buffer.h"
 #include "logger.h"
 
@@ -91,6 +92,7 @@ typedef struct {
 
 // Large enough to not worry about overrunning
 #define VN200_PACKET_RING_BUFFER_SIZE 256
+#define VN200_PACKET_RING_BUFFER_MOD(N) MOD(N, VN200_PACKET_RING_BUFFER_SIZE)
 
 // Input buffer for data of multiple packets
 typedef struct {

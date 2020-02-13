@@ -14,6 +14,8 @@
  *
 \***************************************************************************/
 
+#include "debuglog.h"
+
 #include "VN200_CRC.h"
 
 // Calculates the 8-bit checksum for the given byte sequence. 
@@ -22,10 +24,11 @@ unsigned char VN200CalculateChecksum(unsigned char data[], unsigned int length) 
 	unsigned int i;
 	unsigned char cksum = 0;
 
-	// printf("\t\t\tIn calculateChecksum:\n");
+	// Keeping these log statements here as they are helpful debugging CRC errors
+	// logDebug("\t\t\tIn calculateChecksum:\n");
 	for(i=0; i<length; i++){
 		cksum ^= data[i];
-		// printf("\t\t\t        Adding %c; %02x\n", data[i], cksum);
+		// logDebug("\t\t\t        Adding %c; %02x\n", data[i], cksum);
 	}
 
 	return cksum;

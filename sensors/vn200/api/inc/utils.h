@@ -23,7 +23,7 @@
 
 // Mod that is always positive, unlike %. Use when taking mod of a negative
 // number, such as for array bounds
-#define MOD(S,T) ((((S)%(T))>0)?((S)%(T)):((S)%(T)+(T)))
+#define MOD(S,T) ((((S)%(T))<0)?((S)%(T)+(T)):((S)%(T)))
 
 #endif
 
