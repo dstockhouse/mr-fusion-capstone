@@ -12,6 +12,10 @@
  * Revision 0.1
  * 	Last edited 2/20/2019
  *
+ * Revision 0.2
+ * 	Added function to flush log file
+ * 	Last edited 2/13/2020
+ *
  ***************************************************************************/
 
 #include "debuglog.h"
@@ -50,7 +54,9 @@ int generateFilename(char *buf, int bufSize, time_t *filetime,
 	int charsWritten;
 
 	struct timespec randseed;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &randseed);
+    // Different time source
+	// clock_gettime(CLOCK_MONOTONIC_RAW, &randseed);
+	clock_gettime(CLOCK_MONOTONIC, &randseed);
 	srand(randseed.tv_sec + randseed.tv_nsec);
 
 	// Time variables
@@ -209,6 +215,9 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 	}
 	logDebug("Created log file %s\n", logFile->filename);
 
+    // Flush file to ensure creation
+    LogFlush(logFile);
+
 	// Return 0 on success
 	return 0;
 
@@ -239,8 +248,10 @@ int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
 	if(rc < 0) {
 		perror("Failed to write to log file");
 		logDebug("Failed to write to log file");
-		return -1;
 	}
+
+    // Flush always for now, but may change later
+    // LogFlush(logFile);
 
 	// Return bytes written
 	return rc;
@@ -248,12 +259,39 @@ int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
 } // LogUpdate(LOG_FILE *, char *, int)
 
 
-/**** Function LogClose ****
+/**** Function LogFlush ****
  *
- * Closes an open log file
+ * Flushes all pending I/O writes to disk
  *
  * Arguments:
- * 	None
+ * 	logFile - The logger object to flush
+ *
+ * Return value:
+ * 	On success, returns 0, otherwise returns an error code
+ */
+int LogFlush(LOG_FILE *logFile) {
+
+	int rc;
+
+	rc = fsync(logFile->fd);
+	if(rc) {
+		perror("Failed to sync log file");
+		logDebug("Failed to sync log file");
+	}
+
+	// Return code from system service call
+    return rc;
+
+} // LogFlush(LOG_FILE *)
+
+
+
+/**** Function LogClose ****
+ *
+ * Closes an open log file, which can no longer be used
+ *
+ * Arguments:
+ * 	logFile - The logger object to close
  *
  * Return value:
  * 	On success, returns 0, otherwise returns a negative number
@@ -266,11 +304,10 @@ int LogClose(LOG_FILE *logFile) {
 	if(rc) {
 		perror("Failed to close log file");
 		logDebug("Failed to close log file");
-		return -1;
 	}
 
-	// Return 0 on success
-	return 0;
+	// Return code from system service call
+    return rc;
 
 } // LogClose(LOG_FILE *)
 

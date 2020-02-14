@@ -23,6 +23,7 @@ MAININCDIR = $(MAINDIR)/inc
 
 #MAIN = vn200rawsimpletest
 MAIN = oldparsetest
+#MAIN = buftest
 MAINSRC = $(MAINSRCDIR)/$(MAIN).c
 MAINOBJ = $(OBJDIR)/$(MAIN).o
 MAINBIN = $(BINDIR)/$(MAIN)

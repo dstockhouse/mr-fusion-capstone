@@ -87,7 +87,6 @@ int getTimestamp(struct timespec *ts, double *td) {
 /**** Function VN200BaseInit ****
  *
  * Initializes a VN200 IMU/GPS before it is setup for either functionality.
- * Like ADS-B UART initializer, but does not initialize log file
  *
  * Arguments: 
  * 	dev - Pointer to VN200_DEV instance to initialize
@@ -121,10 +120,12 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
     BufferEmpty(&(dev->inbuf));
     BufferEmpty(&(dev->outbuf));
 
+#if 0 // TODO REMOVE
     // Initialize packet ring buffer
     dev->ringbuf.start = 0;
     dev->ringbuf.end = 0;
     dev->ringbuf.buf = &(dev->inbuf);
+#endif
 
     return 0;
 
@@ -200,12 +201,15 @@ int VN200Poll(VN200_DEV *dev) {
     // Update input buffer endpoint
     dev->inbuf.length += numRead;
 
+#if 0 // TODO REMOVE
+
     // Update ring buffer endpoints, generating new packets as needed
 #ifdef STANDARD_DEBUG
     logDebug("Updating endpoints\n");
 #endif
     VN200PacketRingBufferUpdateEndpoints(&(dev->ringbuf));
 
+#endif
 
     // This is now handled by UpdateEndpoints function
 #if 0
@@ -278,9 +282,13 @@ int VN200Consume(VN200_DEV *dev, int num) {
 #endif
     num = BufferRemove(&(dev->inbuf), num);
 #ifdef STANDARD_DEBUG
-    logDebug("Consumed %d bytes. Updating packet indices\n", num);
+    logDebug("Consumed %d bytes, %d remaining.\n", num, dev->inbuf.length);
 #endif
 
+
+#if 0 // TODO REMOVE
+
+    logDebug("Updating packet indices.\n");
     // Loop through ring buffer to adjust every packet
     VN200_PACKET_RING_BUFFER *ringbuf = &(dev->ringbuf);
     VN200_PACKET *packet;
@@ -313,6 +321,8 @@ int VN200Consume(VN200_DEV *dev, int num) {
 
 #ifdef STANDARD_DEBUG
     logDebug("Consumed %d packets\n", packetsConsumed);
+#endif
+
 #endif
 
     return num;
@@ -647,6 +657,7 @@ int VN200Init(VN200_DEV *dev, int fs, int baud, int mode) {
 } // VN200Init(VN200_DEV *, int)
 
 
+#if 0 // TODO REMOVE
 /**** Function VN200Parse ****
  *
  * Parses data from VN200 input buffer and determine packet type. Will parse as
@@ -711,4 +722,5 @@ int VN200Parse(VN200_DEV *dev) {
     return numParsed;
 
 } // VN200Parse(VN200_DEV *)
+#endif
 

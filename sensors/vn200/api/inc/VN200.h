@@ -62,7 +62,7 @@ int VN200Destroy(VN200_DEV *dev);
 
 int VN200Init(VN200_DEV *dev, int baud, int fs, int mode);
 
-int VN200Parse(VN200_DEV *dev);
+// int VN200Parse(VN200_DEV *dev);
 
 #endif
 

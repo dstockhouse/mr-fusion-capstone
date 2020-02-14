@@ -12,6 +12,9 @@
  * Revision 0.1
  * 	Last edited 2/20/2019
  *
+ * Revision 0.2
+ * 	Last edited 2/13/2020
+ *
  ***************************************************************************/
 
 #ifndef __LOGGER_H
@@ -52,6 +55,8 @@ int generateFilename(char *buf, int bufSize, time_t *time,
 int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext);
 
 int LogUpdate(LOG_FILE *logFile, const char *buf, int length);
+
+int LogFlush(LOG_FILE *logFile);
 
 int LogClose(LOG_FILE *logFile);
 

@@ -15,12 +15,11 @@
  * 	Last edited 2/20/2019
  *
  * Revision 0.2
- * 	Changed return value of BufferRemove
- * 	Last edited 2/25/2019
+ * 	Changed into a ring buffer implementation (all under the hood)
+ * 	Code that uses buffer.length may need to be modified
+ * 	Last edited 2/13/2020
  *
-\***************************************************************************/
-
-#include "buffer.h"
+ \***************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +27,9 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include "debuglog.h"
+
+#include "buffer.h"
 
 /**** Function BufferAdd ****
  *
@@ -41,29 +43,30 @@
  * 	Returns number of elements added (1 or 0)
  *      If buf is NULL returns -1
  */
-int BufferAdd(BYTE_BUFFER *buf, char data) {
+int BufferAdd(BYTE_BUFFER *buf, unsigned char data) {
 
-	// Exit if buffer pointer invalid
-	if(buf == NULL) {
-		return -1;
-	}
+    // Exit if buffer pointer invalid
+    if(buf == NULL) {
+        return -1;
+    }
 
-	// Ensure buffer is not full
-	if(buf->length < BYTE_BUFFER_LEN - 1) {
+    // Ensure buffer is not full
+    if(!BufferIsFull(buf)) {
 
-		// Increase length and put element at end of buffer
-		buf->buffer[buf->length] = data;
-		buf->length += 1;
+        // Increase length and put element at end of buffer
+        buf->buffer[buf->end] = data;
+        buf->end = BYTE_BUFFER_MOD(buf->end + 1);
+        buf->length = BufferLength(buf);
 
-		// Added one element
-		return 1;
+        // Added one element
+        return 1;
 
-	} // else
+    }
 
-	// Didn't add anything
-	return 0;
+    // Didn't add anything
+    return 0;
 
-} // BufferAdd(BYTE_BUFFER *, char)
+} // BufferAdd(BYTE_BUFFER *, unsigned char)
 
 
 /**** Function BufferAddArray ****
@@ -79,27 +82,29 @@ int BufferAdd(BYTE_BUFFER *buf, char data) {
  * 	On success returns number of elements successfully added
  *      If buf is NULL returns -1
  */
-int BufferAddArray(BYTE_BUFFER *buf, char *data, int numToAdd) {
+int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
 
-	int i, numAdded = 0;
+    int i, numAdded = 0;
 
-	if(buf == NULL) {
-		return -1;
-	}
+    if(buf == NULL) {
+        return -1;
+    }
 
-	// Add as many elements as will fit
-	for(i = 0; i < numToAdd; i++) {
+    // Add as many elements as will fit
+    for(i = 0; i < numToAdd && !BufferIsFull(buf); i++) {
 
-		// Use above function to add one element and increment if successful
-		if(BufferAdd(buf, data[i]) > 0) {
-			numAdded++;
-		}
-	}
+        // if (!(i%1000)) logDebug("\nAdded elt %d", i);
 
-	// Return number successfully added
-	return numAdded;
+        // Use above function to add one element and increment if successful
+        if(BufferAdd(buf, data[i]) > 0) {
+            numAdded++;
+        }
+    }
 
-} // BufferAddArray(BYTE_BUFFER *, char *, int)
+    // Return number successfully added
+    return numAdded;
+
+} // BufferAddArray(BYTE_BUFFER *, unsigned char *, int)
 
 
 /**** Function BufferRemove ****
@@ -111,36 +116,57 @@ int BufferAddArray(BYTE_BUFFER *buf, char *data, int numToAdd) {
  * 	numToRemove - Number of elements to remove from buffer
  *
  * Return value:
- * 	On success returns number of elements removed
- *      If buf is NULL returns -1
+ * 	On returns number of elements removed. Zero elements returned on error.
  */
 int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
 
-	int i, numRemoved;
+    int i, numRemoved;
 
-	if(buf == NULL) {
-		return -1;
-	}
+    if (buf == NULL || numToRemove <= 0) {
+        return 0;
+    }
 
-	if(numToRemove <= 0) {
-		return 0;
-	}
+    // If requesting to remove more than the length, just remove the length
+    if (numToRemove > BufferLength(buf)) {
+        numToRemove = BufferLength(buf);
+    }
 
-	// Always remove from index 0 and shift elements backward
-	for(i = 0; i + numToRemove < buf->length; i++) {
-		buf->buffer[i] = buf->buffer[i + numToRemove];
-	}
+    // Remove from start by changing start index (don't shift elements)
+    buf->start = BYTE_BUFFER_MOD(buf->start + numToRemove);
 
-	// Calculate number of elements that were actually removed
-	numRemoved = buf->length - i;
+    // Update new length with the number of elements removed (how far the loop made it)
+    buf->length = BufferLength(buf);
 
-	// Update new length with the number of elements removed (how far the loop made it)
-	buf->length = i;
-
-	// Return number actually removed
-	return numRemoved;
+    // Return number actually removed (either num requested or previous length)
+    return numToRemove;
 
 } // BufferRemove(BYTE_BUFFER *, int)
+
+
+/**** Function BufferIndex ****
+ *
+ * Accesses an element at an index
+ *
+ * Arguments: 
+ * 	buf   - Pointer to BYTE_BUFFER instance to modify
+ * 	index - Offset from start to index
+ *
+ * Return value:
+ * 	On returns number of elements removed. Zero elements returned on error.
+ */
+unsigned char BufferIndex(BYTE_BUFFER *buf, int index) {
+
+    int i;
+
+    if (buf == NULL || index < 0 || index >= BufferLength(buf)) {
+        // Failure can't be detected by the calling function, but at least don't crash
+        return 0;
+    }
+
+    // Return number at that index
+    return buf->buffer[BYTE_BUFFER_MOD(buf->start + index)];
+
+} // BufferIndex(BYTE_BUFFER *, int)
 
 
 /**** Function BufferEmpty ****
@@ -156,17 +182,66 @@ int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
  */
 int BufferEmpty(BYTE_BUFFER *buf) {
 
-	// Exit if buffer pointer invalid
-	if(buf == NULL) {
-		// Invalid buffer is treated as full
-		return -1;
-	}
+    // Exit if buffer pointer invalid
+    if(buf == NULL) {
+        // Invalid buffer is treated as full
+        return -1;
+    }
 
-	// Leave data in buffer but consider data to be invalid
-	buf->length = 0;
+    // Leave data in buffer but consider empty
+    buf->start = buf->end;
+    buf->length = 0;
 
-	// Return on success
-	return 0;
+    // Return on success
+    return 0;
 
 } // BufferEmpty(BYTE_BUFFER *)
+
+
+/**** Function BufferIsFull ****
+ *
+ * Returns true if the buffer is full
+ *
+ * Arguments: 
+ * 	buf - Pointer to BYTE_BUFFER instance to examine
+ *
+ * Return value:
+ * 	On success returns 0 if empty, 1 if full
+ */
+int BufferIsFull(BYTE_BUFFER *buf) {
+
+    // Exit if buffer pointer invalid
+    if(buf == NULL) {
+        // Invalid buffer is treated as full
+        return -1;
+    }
+
+    // Return true if start + 1 == end
+    return (BufferLength(buf) == (BYTE_BUFFER_LEN - 1));
+
+} // BufferIsFull(BYTE_BUFFER *)
+
+
+/**** Function BufferLength ****
+ *
+ * Returns true if the buffer is full
+ *
+ * Arguments: 
+ * 	buf - Pointer to BYTE_BUFFER instance to examine
+ *
+ * Return value:
+ * 	On success returns 0 if empty, 1 if full
+ */
+int BufferLength(BYTE_BUFFER *buf) {
+
+    // Exit if buffer pointer invalid
+    if(buf == NULL) {
+        // Invalid buffer
+        return -1;
+    }
+
+    // Return true if start + 1 == end
+    return BYTE_BUFFER_MOD(buf->end - buf->start);
+
+} // BufferLength(BYTE_BUFFER *)
 
