@@ -5,6 +5,27 @@
     "version": "0.2.0",
     "configurations": [
 
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test into_tangential",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["into_tangential"],
+            "cwd": "${workspaceFolder}"
+        },
 
         {
             "type": "lldb",

@@ -1,14 +1,12 @@
 use std::fs::File;
-use std::io::{prelude::*, BufReader};
-use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
+use std::io::BufReader;
 use std::f64;
-use std::f64::consts::PI;
 use std::ops::Sub;
-use gpx;
 
-pub(self) trait IntoTangential {
-    fn into_tangential(self) -> TangentialPoint;
-}
+mod conversions;
+
+use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
+use gpx;
 
 pub trait Point {
     fn get(&self) -> (f64, f64, f64);
@@ -25,7 +23,7 @@ impl Sub for &TangentialPoint {
     type Output = (f64, f64, f64);
 
     fn sub(self, other: Self) -> (f64, f64, f64) {
-        (other.x-self.x, other.y-self.y, other.z-self.z)
+        (self.x-other.x, self.y-other.y, self.z-other.z)
     }
 }
 
@@ -39,28 +37,22 @@ impl TangentialPoint {
 
 #[derive(Debug)]
 pub struct GPSPoint {
-    pub latitude: f64,
-    pub longitude: f64,
+    pub lat: f64,
+    pub long: f64,
     pub height: f64
-}
-
-impl IntoTangential for GPSPoint {
-    fn into_tangential(self) -> TangentialPoint {
-        unimplemented!();
-    }
 }
 
 impl Point for GPSPoint {
     fn get(&self) -> (f64, f64, f64) {
-        (self.latitude, self.longitude, self.height)
+        (self.lat, self.long, self.height)
     }
 }
 
 impl PartialEq for GPSPoint {
     fn eq(&self, other: &Self) -> bool {
-        self.latitude == other.latitude 
+        self.lat == other.lat 
             &&
-        self.longitude == other.longitude
+        self.long == other.long
     }
 }
 
@@ -166,13 +158,13 @@ pub fn initialize_from_kml_file(name: &str) -> Graph<GPSPoint> {
     let vertices = gpx_data.waypoints.into_iter()
         .map(|vertex_data| {
             // long, lat order is intentional. They are stored in this order in the file.
-            let (longitude, latitude) = vertex_data.point().x_y();
+            let (long, lat) = vertex_data.point().x_y();
 
             let height = vertex_data.elevation.unwrap();
             let name = vertex_data.name.unwrap();
             
             
-            Vertex::new(name, GPSPoint{longitude, latitude, height})
+            Vertex::new(name, GPSPoint{long, lat, height})
         })
         .collect::<Vec<Vertex<GPSPoint>>>();
 
@@ -182,9 +174,9 @@ pub fn initialize_from_kml_file(name: &str) -> Graph<GPSPoint> {
             let gps_points = track.segments[0].points.iter()
                 .map(|waypoint| {
                     let height = waypoint.elevation.unwrap();
-                    let (longitude, latitude) = waypoint.point().x_y();
+                    let (long, lat) = waypoint.point().x_y();
 
-                    GPSPoint{longitude, latitude, height}
+                    GPSPoint{long, lat, height}
                 })
                 .collect::<Vec<GPSPoint>>();
 
@@ -207,7 +199,7 @@ pub fn graph_to_geo_json_string(graph: &Graph<GPSPoint>) -> String {
 
     for edge in graph.edges.iter() {
         let edge_points = edge.points.iter()
-            .map(|point| vec![point.longitude, point.latitude])
+            .map(|point| vec![point.long, point.lat])
             .collect();
 
         let geometry = Geometry::new(
@@ -227,8 +219,8 @@ pub fn graph_to_geo_json_string(graph: &Graph<GPSPoint>) -> String {
 
     for vertex in graph.vertices.iter() {
         let vertex_point = vec![
-            vertex.point.longitude,
-            vertex.point.latitude
+            vertex.point.long,
+            vertex.point.lat
         ];
 
         let geometry = Geometry::new(
