@@ -25,20 +25,26 @@ if size(pointCloudOld) ~= size(pointCloudNew)
     return
 end
 
+depth_dim = size(pointCloudOld);
+rows = depth_dim(1);
+cols = depth_dim(2);
+
 pointCloudAvg = zeros(size(pointCloudOld));
 numValidPoints = 0;
 
 % Step through each pixel
-for jj=1:(cols-1)
-   for ii = 1:(rows-1)
+for jj=1:cols
+   for ii = 1:rows
 
        % Only average if both have positive depth
        if pointCloudOld(jj, ii, 3) > 0 && pointCloudNew(jj, ii, 3) > 0
 
+           % Average xyz at that pixel
            pointCloudAvg(jj, ii, 1) = (pointCloudOld(jj, ii, 1) + pointCloudNew(jj, ii, 1)) / 2;
            pointCloudAvg(jj, ii, 2) = (pointCloudOld(jj, ii, 2) + pointCloudNew(jj, ii, 2)) / 2;
            pointCloudAvg(jj, ii, 3) = (pointCloudOld(jj, ii, 3) + pointCloudNew(jj, ii, 3)) / 2;
 
+           % Count a valid point
            numValidPoints = numValidPoints + 1;
        end
 
