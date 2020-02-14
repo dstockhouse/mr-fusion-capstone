@@ -95,11 +95,14 @@ for image_level = gaussian_levels:-1:1
 	if image_level == gaussian_levels
 		% Copy top level
         points_warped = p_points(1, 1:rows, 1:cols, :);
+        % Initialize old points for first image
+        points_old = p_points;
     else
         points_warped = warp_image(p_points(image_level, 1:rows, 1:cols, :), transformation, constants);
 	end
 
 	%% Take the average of the old PC and new warped PC
+    % Error popping up here
     [points_average, num_points] = average_point_clouds(points_old, points_warped, constants);
 
 	%% Compute depth derivatives

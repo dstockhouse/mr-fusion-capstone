@@ -20,7 +20,7 @@ rows = depth_dim(1);
 cols = depth_dim(2);
 focal_pt = cols / (2*tan(0.5*constants.fovh));
 
-if size(pointCloudOld) != size(pointCloudNew)
+if size(pointCloudOld) ~= size(pointCloudNew)
     fprintf('Cannot average. Input point clouds are not the same length!!!');
     return
 end
