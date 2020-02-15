@@ -64,30 +64,49 @@ Note: You will be required to restart your system after running this command.
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
 ```
 
-3. Navigate to the **Microsoft Store** ![](./read_me_images/microsoft_store.png) and download Ubuntu 
+3. Navigate to the **Microsoft Store** ![](doc/read_me_images/microsoft_store.png) and download Ubuntu.
 
-![](read_me_images/ubuntu_download.png)
+![](doc/read_me_images/ubuntu_download.png)
 
 4. Install Ubuntu by running the downloaded application. You should get a terminal that looks similar to the following.
 
-![](read_me_images/ubuntu_install.png)
+![](doc/read_me_images/ubuntu_install.png)
 
 5. After the ubuntu installation is completed, download and install our development environment [Visual Studio Code](https://code.visualstudio.com/).
    
 6. Launch VSCode and install the **Remote - WSL** extension by following the call outs in the image below. This will allow us to run commands on our ubuntu environment from VSCode. 
 
-![](./read_me_images/install_remote_wsl.png)
+![](doc/read_me_images/install_remote_wsl.png)
 
-7. Open the 
+A green icon should now be visible in the bottom left of your screen.
 
-### Dependencies
-To install dependencies that allow for the code to be built, navigate to the directory in that contains the `install_dependencies.sh` file and run it using th following command.
+![](doc/read_me_images/wsl_icon.png)
+
+7. Press the green button in the bottom left corner and select **Remote-WSL: New Window**. A new instance of VSCode should launch, and be connected to our ubuntu environment.
+   
+8. In the new VSCode instance, open your terminal using `Ctrl + ~`
+
+9. Clone the Mr. Fusion Repo
+
+```
+git clone https://github.com/dstockhouse/mr-fusion-capstone.git
+```  
+
+10.  To install dependencies such as make, gcc, and rust, that allow for the code to be built, navigate to the directory that contains the `install_dependencies.sh` file and run it using th following command.
 
 ```
 sudo ./install_dependencies.sh
 ```
 
-## Building
+Note: You will be prompted to specify what type of installations you want. Select default for all of them.
+
+1.  Install dependencies, such as CGreen, for unit tests  by navigating to the directory that contains the `install_dev_dependencies.sh` script and running the following command.
+
+```
+sudo ./install_dev_dependencies.sh
+```
+
+## Building and Tests
 
 To build the executable for each of the subsystems, enter each subsystem directory and execute `make`. To execute the
 test suite, first `make clean` and then run `make test`. Cgreen must be installed to build and run the test suite.
