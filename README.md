@@ -45,6 +45,48 @@ Subteam members:
 * Joy Fucella
 * Duncan Patel
 
+## Environment
+
+For running unit tests the computer should be compliant with the `x86` instruction set architecture and run the ubuntu operating system.
+
+For running the application, the hardware should abide by the ARM-A architecture running ubuntu.
+
+### Setting up your Environment on a Windows Host
+
+The following section is intended to setup your environment so you may develop, compile, and run unit tests on your person machine running Windows.
+
+
+1. Start by Enabling a feature that allows your windows machine to run linux by running the **Windows Power Shell** as an **Administrator** and entering the following command.
+
+Note: You will be required to restart your system after running this command.
+
+``` powershell
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+```
+
+3. Navigate to the **Microsoft Store** ![](./read_me_images/microsoft_store.png) and download Ubuntu 
+
+![](read_me_images/ubuntu_download.png)
+
+4. Install Ubuntu by running the downloaded application. You should get a terminal that looks similar to the following.
+
+![](read_me_images/ubuntu_install.png)
+
+5. After the ubuntu installation is completed, download and install our development environment [Visual Studio Code](https://code.visualstudio.com/).
+   
+6. Launch VSCode and install the **Remote - WSL** extension by following the call outs in the image below. This will allow us to run commands on our ubuntu environment from VSCode. 
+
+![](./read_me_images/install_remote_wsl.png)
+
+7. Open the 
+
+### Dependencies
+To install dependencies that allow for the code to be built, navigate to the directory in that contains the `install_dependencies.sh` file and run it using th following command.
+
+```
+sudo ./install_dependencies.sh
+```
+
 ## Building
 
 To build the executable for each of the subsystems, enter each subsystem directory and execute `make`. To execute the
@@ -68,8 +110,6 @@ To build and run the guidance executable with unit tests, enter
 ```
 cargo test
 ```
-
-
 
 ### Automated Tests
 
