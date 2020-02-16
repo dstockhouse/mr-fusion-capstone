@@ -54,34 +54,26 @@ int main(void) {
 	while(cumulative < 100000 && delaytime.tv_sec < starttime + 6) {
 
 		getTimestamp(NULL, &time);
-#ifdef VERBOSE_DEBUG
-		logDebug("Current Time: %lf\n", time);
-#endif
+		logDebug(L_VDEBUG, "Current Time: %lf\n", time);
 
 		numRead = VN200Poll(&dev);
 		cumulative += numRead;
-#ifdef STANDARD_DEBUG
-		logDebug("Read %d bytes from UART\n", numRead);
-#endif
+		logDebug(L_DEBUG, "Read %d bytes from UART\n", numRead);
 
-#ifdef VERBOSE_DEBUG
 		if(numRead > 0) {
 
-			logDebug("\tRaw Data:\n");
-			logDebug("\t\t");
+			logDebug(L_VDEBUG, "\tRaw Data:\n");
+			logDebug(L_VDEBUG, "\t\t");
 			for(i = 0; i < numRead; i++) {
-				logDebug("%c", dev.inbuf.buffer[i]);
+				logDebug(L_VDEBUG, "%c", dev.inbuf.buffer[i]);
 			}
 		}
-#endif
 
 #if 0
 		do {
 
 			numParsed = VN200Parse(&dev, &data);
-#ifdef STANDARD_DEBUG
-			logDebug("Parsed %d bytes from buffer\n", numParsed);
-#endif
+			logDebug(L_DEBUG, "Parsed %d bytes from buffer\n", numParsed);
 
 			numConsumed = VN200Consume(&dev, numParsed);
 
@@ -90,9 +82,7 @@ int main(void) {
 #endif
 
 		numConsumed = VN200Consume(&dev, numRead);
-#ifdef STANDARD_DEBUG
-		logDebug("Consumed %d bytes from buffer\n", numConsumed);
-#endif
+		logDebug(L_DEBUG, "Consumed %d bytes from buffer\n", numConsumed);
 
 		usleep(10);
 

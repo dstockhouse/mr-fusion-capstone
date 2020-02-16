@@ -85,13 +85,11 @@ int VN200IMUPacketParse(char *buf, int len, IMU_DATA *data) {
 		return -2;
 	}
 
-#ifdef VERBOSE_DEBUG
-	logDebug("\n\n%s - Data in buffer:\n", __func__);
+	logDebug(L_VDEBUG, "\n\n%s - Data in buffer:\n", __func__);
 	for(i = 0; i < len; i++) {
-		logDebug("%c", buf[i]);
+		logDebug(L_VDEBUG, "%c", buf[i]);
 	}
-	logDebug("\n\n");
-#endif
+	logDebug(L_VDEBUG, "\n\n");
 
 	// Copy string into local variable
 	strncpy(currentPacket, &(buf[0]), len);

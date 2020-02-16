@@ -93,7 +93,7 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
     // Add as many elements as will fit
     for(i = 0; i < numToAdd && !BufferIsFull(buf); i++) {
 
-        // if (!(i%1000)) logDebug("\nAdded elt %d", i);
+        // logDebug("\nAdded elt %d, l=%d", i, BufferLength(buf));
 
         // Use above function to add one element and increment if successful
         if(BufferAdd(buf, data[i]) > 0) {
@@ -145,7 +145,8 @@ int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
 
 /**** Function BufferIndex ****
  *
- * Accesses an element at an index
+ * Accesses an element at an index. Invalid indices still return something, so
+ * it is up to the calling function to make sure the index is less than length.
  *
  * Arguments: 
  * 	buf   - Pointer to BYTE_BUFFER instance to modify
@@ -160,6 +161,7 @@ unsigned char BufferIndex(BYTE_BUFFER *buf, int index) {
 
     if (buf == NULL || index < 0 || index >= BufferLength(buf)) {
         // Failure can't be detected by the calling function, but at least don't crash
+        // logDebug("Attempt to index past buffer bounds: l=%d, i=%d\n", BufferLength(buf), index);
         return 0;
     }
 

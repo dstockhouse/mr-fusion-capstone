@@ -87,15 +87,13 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
     int chkLength = sscanf(&(packetBuf[chkStartIndex + 1]), "%hhX", &chkOld);
     chkNew = VN200CalculateChecksum(&(packetBuf[packet->startIndex + 1]), packet->endIndex - packet->startIndex - 5);
 
-#ifdef VERBOSE_DEBUG
-    logDebug("Read checksum from index %d (%c) to %d (%c)\n",
+    logDebug(L_VDEBUG, "Read checksum from index %d (%c) to %d (%c)\n",
             chkStartIndex + 1, packetBuf[chkStartIndex + 1],
             chkStartIndex + chkLength + 1, packetBuf[chkStartIndex + chkLength + 1]);
-    logDebug("Computed checksum from index %d (%c) to %d (%c)\n",
+    logDebug(L_VDEBUG, "Computed checksum from index %d (%c) to %d (%c)\n",
             packet->startIndex, packetBuf[packet->startIndex],
             packet->endIndex - packet->startIndex - 4 + packet->startIndex,
             packetBuf[packet->endIndex - packet->startIndex - 4 + packet->startIndex]);
-#endif
 
 
     if(chkNew != chkOld) {
@@ -109,12 +107,11 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
         // Loop until comma is reached
     }
 
-#ifdef STANDARD_DEBUG
     if(i < packet->endIndex) {
         // Terminate string temporarily
         char temp = packetBuf[i];
         packetBuf[i] = '\0';
-        logDebug("%s: Packet ID at index %d is %s\n", __func__, packetIndex, &(packetBuf[packet->startIndex]));
+        logDebug(L_DEBUG, "%s: Packet ID at index %d is %s\n", __func__, packetIndex, &(packetBuf[packet->startIndex]));
         packetBuf[i] = temp;
     } else {
         char temp = packetBuf[i-1];
@@ -122,7 +119,6 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
         logDebug("%s: End of packet reached before packet ID for %d: %s\n", __func__, packetIndex, &(packetBuf[packet->startIndex]));
         packetBuf[i-1] = temp;
     }
-#endif
 
     // Length of packet ID string is the number travelled
     packetIDLength = i - packet->startIndex;
@@ -181,11 +177,11 @@ int VN200PacketParse(VN200_PACKET_RING_BUFFER *ringbuf, int packetIndex) {
         char tempbuf[512];
 
         // Printout confusion message
-        printf("%s: Unknown or improper message packet: ", __func__);
+        logDebug("%s: Unknown or improper message packet: ", __func__);
 
         snprintf(tempbuf, MIN(512, packet->endIndex - packet->startIndex), "%s", &(packetBuf[packet->startIndex]));
-        printf(tempbuf);
-        printf("\n");
+        logDebug(tempbuf);
+        logDebug("\n");
 
         // Set packet stats
         packet->contentsType = VN200_PACKET_CONTENTS_TYPE_OTHER;

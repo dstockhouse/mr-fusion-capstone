@@ -1,7 +1,7 @@
 /***************************************************************************\
  *
  * File:
- * 	oldparsetest.c
+ * 	vn200_main.c
  *
  * Description:
  *	Tests the VN200 combined functionality (rolling back refactoring)
@@ -10,7 +10,7 @@
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 2/12/2020
+ * 	Last edited 2/15/2020
  *
  ***************************************************************************/
 
@@ -34,7 +34,7 @@
 #include "VN200_IMU.h"
 
 
-int main(void) {
+int main(int argc, char **argv) {
 
     int numRead, numParsed, numConsumed, i, rc;
 
@@ -48,8 +48,15 @@ int main(void) {
     // Use logDebug(...) just like printf for printing stuff out
     logDebug("Initializing...\n");
 
+    char *devname;
+    if (argc > 1) {
+        devname = argv[1];
+    } else {
+        devname = VN200_DEV_NAME;
+    }
+
     // Initialize VN200 device at 50Hz sample frequency, baud rate, for both IMU and GPS packets
-    VN200Init(&dev, 50, VN200_BAUD, VN200_INIT_MODE_BOTH);
+    VN200Init(&dev, devname, 50, VN200_BAUD, VN200_INIT_MODE_BOTH);
 
     // Force into both IMU and GPE concurrent output mode
     char *command = "VNWRG,06,248";
@@ -60,7 +67,7 @@ int main(void) {
     VN200FlushOutput(&dev);
 
     // Loop forever (for test)
-    while(1) {
+    while (1) {
 
         // Poll the device for any input data (distinct from linux service call poll (2))
         numRead = VN200Poll(&dev);
@@ -72,42 +79,47 @@ int main(void) {
             // Store checksums
             unsigned char chkOld, chkNew;
 
-            // Convenient reference to VN200 device input buffer
-            unsigned char *packetBuf = dev.inbuf.buffer;
-
             // Determine start of first packet in buffer (starts on '$' character)
             int packetStart;
             for (packetStart = 0;
-                    packetStart < dev.inbuf.length && dev.inbuf.buffer[packetStart] != '$'; packetStart++) {
+                    packetStart < BufferLength(&(dev.inbuf)) && BufferIndex(&(dev.inbuf), packetStart) != '$'; packetStart++) {
                 // Loop until $ found
             }
 
             // Determine end of first packet (data ends on '*' character, then has 2 character checksum)
             int chkStartIndex;
-            for(chkStartIndex = packetStart; chkStartIndex < dev.inbuf.length - 3 && packetBuf[chkStartIndex] != '*'; chkStartIndex++) {
+            for (chkStartIndex = packetStart; chkStartIndex < BufferLength(&(dev.inbuf)) - 3 && BufferIndex(&(dev.inbuf), chkStartIndex) != '*'; chkStartIndex++) {
                 // Loop until * found
             }
 
             // Read received checksum from input buffer
-            int chkLength = sscanf(&(dev.inbuf.buffer[chkStartIndex + 1]), "%hhX", &chkOld);
+            unsigned char chkReadData[2];
+            BufferCopy(&(dev.inbuf), chkReadData, chkStartIndex + 1, 2);
+            int chkLength = sscanf(chkReadData, "%hhX", &chkOld);
 
             // Compute checksum of data (everything between $ and *, both excluded)
-            chkNew = VN200CalculateChecksum(&(dev.inbuf.buffer[packetStart + 1]), chkStartIndex - packetStart - 1);
+            int chkComputeLength = chkStartIndex - packetStart - 1;
+            {
+                unsigned char chkComputeData[chkComputeLength];
+                BufferCopy(&(dev.inbuf), chkComputeData, packetStart + 1, chkComputeLength);
+                chkNew = VN200CalculateChecksum(chkComputeData, chkComputeLength);
 
 #if 0
-            // Useful to keep around for debugging checksum, disable when not using
-            logDebug("Read checksum from index %d (%c) to %d (%c)\n",
-                    chkStartIndex + 1, packetBuf[chkStartIndex + 1],
-                    chkStartIndex + chkLength + 1, packetBuf[chkStartIndex + chkLength + 1]);
-            logDebug("Computed checksum from index %d (%c) to %d (%c)\n",
-                    packetStart + 1, packetBuf[packetStart + 1],
-                    chkStartIndex,
-                    packetBuf[chkStartIndex]);
+                // Useful to keep around for debugging checksum, disable when not using
+                logDebug("Read checksum from index %d (%c) to %d (%c)\n",
+                        chkStartIndex + 1, BufferIndex(&(dev.inbuf), chkStartIndex + 1),
+                        chkStartIndex + chkLength + 1, BufferIndex(&(dev.inbuf), chkStartIndex + chkLength + 1));
+                logDebug("Computed checksum from index %d (%c) to %d (%c)\n",
+                        packetStart + 1, BufferIndex(&(dev.inbuf), packetStart + 1),
+                        chkStartIndex,
+                        BufferIndex(&(dev.inbuf), chkStartIndex));
 #endif
+
+            } // Temporary block for computing checksum on stack
 
 
             // Verify checksums match
-            if(chkNew != chkOld) {
+            if (chkNew != chkOld) {
                 // Checksum failed, don't parse but skip to next packet
                 logDebug("Checksum failed: Read %02X but computed %02X\n", chkOld, chkNew);
 
@@ -117,8 +129,15 @@ int main(void) {
             } else {
 
                 // Search for end of packet ID (ex. VNIMU), starts after first comma
-                for(i = packetStart; i < chkStartIndex && packetBuf[i] != ','; i++) {
-                    // Loop until comma is reached
+                const int packetIDMaxLength = 16;
+                unsigned char packetIDString[packetIDMaxLength];
+                for (i = packetStart;
+                        i < chkStartIndex
+                            && i - packetStart < packetIDMaxLength
+                            && BufferIndex(&(dev.inbuf), i) != ',';
+                        i++) {
+                    // Loop until comma is reached, copy ID string into buffer
+                    packetIDString[i - packetStart] = BufferIndex(&(dev.inbuf), i);
                 }
 
                 // Length of packet ID string is the number travelled
@@ -131,24 +150,26 @@ int main(void) {
                 /**** Determine type of packet and parse accordingly ****/
 
                 // Packet is a GPS packet
-                if(packetIDLength == 6 && 
-                        !strncmp(&(packetBuf[packetStart]), "$VNGPE", packetIDLength)) {
+                if (packetIDLength == 6 && !strncmp(packetIDString, "$VNGPE", packetIDLength)) {
 
                     /****************************** Note: This needs to be updated to parse VNGPE packets instead of VNGPS
                      ******************************/
 
+                    unsigned char packetDataBuf[packetLen + 1];
+                    BufferCopy(&(dev.inbuf), packetDataBuf, packetDataStart, packetLen);
+
                     // Print ID for debugging
                     logDebug("Found a GPS Packet at index %d: %c%c%c%c%c%c\n",
                             packetStart,
-                            packetBuf[packetStart],
-                            packetBuf[packetStart+1],
-                            packetBuf[packetStart+2],
-                            packetBuf[packetStart+3],
-                            packetBuf[packetStart+4],
-                            packetBuf[packetStart+5]);
+                            BufferIndex(&(dev.inbuf), packetStart),
+                            BufferIndex(&(dev.inbuf), packetStart+1),
+                            BufferIndex(&(dev.inbuf), packetStart+2),
+                            BufferIndex(&(dev.inbuf), packetStart+3),
+                            BufferIndex(&(dev.inbuf), packetStart+4),
+                            BufferIndex(&(dev.inbuf), packetStart+5));
 
                     // Parse as GPS packet
-                    rc = VN200GPSPacketParse(&(packetBuf[packetDataStart]), packetLen, &gps_packet);
+                    rc = VN200GPSPacketParse(packetDataBuf, packetLen, &gps_packet);
 
                     // Eventually do something with timestamps
                     // gps_packet.timestamp = packet->timestamp;
@@ -170,20 +191,22 @@ int main(void) {
                     }
 
                     // Packet is an IMU packet
-                } else if(packetIDLength == 6 && 
-                        !strncmp(&(packetBuf[packetStart]), "$VNIMU", packetIDLength)) {
+                } else if (packetIDLength == 6 && !strncmp(packetIDString, "$VNIMU", packetIDLength)) {
+
+                    unsigned char packetDataBuf[packetLen + 1];
+                    BufferCopy(&(dev.inbuf), packetDataBuf, packetDataStart, packetLen);
 
                     logDebug("Found an IMU Packet at index %d: %c%c%c%c%c%c\n",
                             packetStart,
-                            packetBuf[packetStart],
-                            packetBuf[packetStart+1],
-                            packetBuf[packetStart+2],
-                            packetBuf[packetStart+3],
-                            packetBuf[packetStart+4],
-                            packetBuf[packetStart+5]);
+                            BufferIndex(&(dev.inbuf), packetStart),
+                            BufferIndex(&(dev.inbuf), packetStart+1),
+                            BufferIndex(&(dev.inbuf), packetStart+2),
+                            BufferIndex(&(dev.inbuf), packetStart+3),
+                            BufferIndex(&(dev.inbuf), packetStart+4),
+                            BufferIndex(&(dev.inbuf), packetStart+5));
 
                     // Parse as IMU packet
-                    rc = VN200IMUPacketParse(&(packetBuf[packetDataStart]), packetLen, &imu_packet);
+                    rc = VN200IMUPacketParse(packetDataBuf, packetLen, &imu_packet);
 
                     if (rc > 0) {
                         numParsed = rc;
@@ -224,9 +247,9 @@ int main(void) {
             numConsumed = VN200Consume(&dev, numParsed);
             logDebug("Consumed %d bytes (%d req) from buffer\n", numConsumed, numParsed);
 
-        } while(numConsumed > 0);
+        } while (numConsumed > 0);
 
-    } // while(1)
+    } // while (1)
 
     // Clean up device, for completeness
     VN200Destroy(&dev);

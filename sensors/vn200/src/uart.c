@@ -32,6 +32,7 @@
 
 #include "control.h"
 #include "debuglog.h"
+
 #include "uart.h"
 
 #include <stdio.h>
@@ -177,7 +178,7 @@ int UARTSetBaud(int fd, int baud) {
 			cfsetospeed(&uartOptions, B57600);
 			break;
 		default:
-			printf("Unexpected baud rate: %d\n", baud);
+			logDebug("Unexpected baud rate: %d\n", baud);
 			close(fd);
 			return -3;
 			break;

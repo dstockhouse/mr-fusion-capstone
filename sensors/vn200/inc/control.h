@@ -19,12 +19,15 @@
 #ifndef __CONTROL_H
 #define __CONTROL_H
 
-#define STANDARD_DEBUG
-#undef VERBOSE_DEBUG
+#define L_VDEBUG    0
+#define L_DEBUG     1
+#define L_INFO      2
+
+#define CONTROL_DEBUG_L_MASK    L_DEBUG
 
 #define DEBUG_OUT_PRINTF
 #undef DEBUG_OUT_SYSLOG
-#undef DEBUG_OUT_LOGFILE
+#define DEBUG_OUT_LOGFILE
 
 #endif
 
