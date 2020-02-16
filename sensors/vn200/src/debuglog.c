@@ -39,10 +39,10 @@
 // 1-3 options can be defined individually or simultaneously, in which case
 // debug will be logged in more than one location
 
-int logDebug(int debuglevel, const char *fstring, ...) {
+void logDebug(int debuglevel, const char *fstring, ...) {
 
     // Only log anything if the level is higher than the allowed mask
-    if (debuglevel > CONTROL_DEBUG_L_MASK) {
+    if (debuglevel >= CONTROL_DEBUG_L_MASK) {
 
         // Variadic arguments to pass to printf
         va_list args;
@@ -130,5 +130,5 @@ int logDebug(int debuglevel, const char *fstring, ...) {
 
     } // if (debuglevel > MASK)
 
-} // logDebug(const char *, ...)
+} // logDebug(int, const char *, ...)
 

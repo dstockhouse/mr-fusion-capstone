@@ -29,13 +29,13 @@
 
 #include "control.h"
 #include "buffer.h"
-#include "debuglog.h"
 #include "logger.h"
+#include "debuglog.h"
 #include "uart.h"
 #include "VN200_CRC.h"
 #include "VN200_GPS.h"
 #include "VN200_IMU.h"
-#include "VN200Packet.h"
+
 #include "VN200.h"
 
 
@@ -97,8 +97,6 @@ int getTimestamp(struct timespec *ts, double *td) {
  */
 int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
 
-    int i;
-
     // Exit on error if invalid pointer
     if (dev == NULL) {
         return -1;
@@ -112,7 +110,7 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
     }
 
     if (dev->fd < 0) {
-        logDebug("Couldn't initialize VN200 sensor\n");
+        logDebug(L_INFO, "Couldn't initialize VN200 sensor\n");
         return -2;
     }
 
@@ -147,7 +145,7 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
  */
 int VN200Poll(VN200_DEV *dev) {
 
-    int numToRead, numRead, startIndex, rc, ioctl_status;
+    int numToRead, numRead, rc, ioctl_status;
     unsigned char uartData[BYTE_BUFFER_LEN];
 
     // Exit on error if invalid pointer
@@ -157,42 +155,38 @@ int VN200Poll(VN200_DEV *dev) {
 
     // Ensure length of buffer is long enough to hold more data
     if (BufferIsFull(&(dev->inbuf))) {
-        logDebug("VN200Poll: Input buffer is full (%d bytes)\n",
+        logDebug(L_INFO, "VN200Poll: Input buffer is full (%d bytes). Potential loss of data\n",
                 BufferLength(&(dev->inbuf)));
         return -2;
     }
 
-    // Save buffer length for later
-    int buflen = BufferLength(&(dev->inbuf));
-
     // Check if UART data available
     rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
     if (rc) {
-        perror("VN200Poll: ioctl() failed to fetch FIONREAD");
+        logDebug(L_INFO, "%s: VN200Poll: ioctl() failed to fetch FIONREAD\n", strerror(errno));
         // Don't return, not a fatal error
         // return -3;
     }
 
     logDebug(L_DEBUG, "%d bytes available from UART device...\n", ioctl_status);
 
-    {
     // Calculate length and pointer to proper position in array
     numToRead = BYTE_BUFFER_LEN - BufferLength(&(dev->inbuf));
 
     logDebug(L_DEBUG, "Attempting to read %d bytes from uart device...\n", numToRead);
 
     // Read without blocking from UART device
-    numRead = UARTRead(dev->fd, uartBuf, numToRead);
+    numRead = UARTRead(dev->fd, uartData, numToRead);
     logDebug(L_DEBUG, "\tRead %d\n", numRead);
 
-    rc = BufferAddArray(&(dev->inbuf), uartBuf, numRead);
+    rc = BufferAddArray(&(dev->inbuf), uartData, numRead);
 
     if (rc != numRead) {
         logDebug(L_INFO, "WARNING: Couldn't add all bytes read from uart to input buffer\n");
     }
 
     // Log newly read data to file
-    LogUpdate(&(dev->logFile), uartBuf, numRead);
+    LogUpdate(&(dev->logFile), (char *) uartData, numRead);
 
     // Return number successfully and saved to buffer (may be 0)
     return rc;
@@ -221,7 +215,7 @@ int VN200Consume(VN200_DEV *dev, int num) {
 
     logDebug(L_VDEBUG, "Attempting to consume %d bytes\n", num);
     num = BufferRemove(&(dev->inbuf), num);
-    logDebug(L_VDEBUG, "Consumed %d bytes, %d remaining.\n", num, BufferLength(&(dev->inbuf));
+    logDebug(L_VDEBUG, "Consumed %d bytes, %d remaining.\n", num, BufferLength(&(dev->inbuf)));
 
     return num;
 
@@ -264,7 +258,7 @@ int VN200FlushInput(VN200_DEV *dev) {
     logDebug(L_VDEBUG, "\n");
 
     // Clear all characters from input buffer
-    num = VN200Consume(dev, BufferLength(&(dev->inbuf));
+    num = VN200Consume(dev, BufferLength(&(dev->inbuf)));
 
     return num;
 
@@ -301,7 +295,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num, int sendChk) {
     if (sendChk) {
 
         // Compute and send checksum
-        checksum = VN200CalculateChecksum(cmd, num);
+        checksum = VN200CalculateChecksum((unsigned char *)cmd, num);
         numWritten = snprintf(buf, commandMaxLen, "$%s*%02X\n", cmd, checksum);
 
     } else {
@@ -312,7 +306,7 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num, int sendChk) {
     } // if (sendChk)
 
     // Add command string to output buffer
-    BufferAddArray(&(dev->outbuf), buf, numWritten);
+    BufferAddArray(&(dev->outbuf), (unsigned char *) buf, numWritten);
 
     logDebug(L_VDEBUG, "Output buffer contents: \n");
     for (i = 0; i < dev->outbuf.length; i++) {
@@ -415,7 +409,6 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     int commandBufLen, logBufLen;
 
     char logFileDirName[512];
-    int logFileDirNameLength;
 
     // Exit on error if invalid pointer
     if (dev == NULL) {
@@ -427,7 +420,7 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
                 mode == VN200_INIT_MODE_IMU ||
                 mode == VN200_INIT_MODE_BOTH)) {
 
-        logDebug("VN200Init: Mode 0x%02x not recognized.\n", mode);
+        logDebug(L_INFO, "VN200Init: Initialization mode 0x%02x not recognized.\n", mode);
         return -2;
     }
 
@@ -441,10 +434,10 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     // Since multiple log files will be generated for the run, put them in
     // the same directory
     time_t dirtime = time(NULL);
-    logFileDirNameLength = generateFilename(logFileDirName, 512, &dirtime,
-            "log/SampleData/VN200", "RUN", "d");
+    generateFilename(logFileDirName, 512, &dirtime,
+            "log/data/VN200", "RUN", "d");
     LogInit(&(dev->logFile), logFileDirName, "VN200", LOG_FILEEXT_LOG);
-    logDebug("Logging to directory %s\n", logFileDirName);
+    logDebug(L_INFO, "Logging to directory %s\n", logFileDirName);
 
     // If GPS enabled, init GPS log file
     if (mode & VN200_INIT_MODE_GPS) {
@@ -529,7 +522,7 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     VN200FlushInput(dev);
     usleep(100000);
 
-    // Set sampling frequency
+    // Set sampling frequency (register 07)
     dev->fs = fs;
     commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%02d", "VNWRG,07,", dev->fs);
     VN200Command(dev, commandBuf, commandBufLen, 1);
@@ -538,7 +531,11 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     VN200FlushInput(dev);
     usleep(100000);
 
-    logDebug("Done UART configuring\n\n\n\n\n\n\n\n");
+    if (devname != NULL) {
+        logDebug(L_INFO, "Finished configuring UART for device %s\n", devname);
+    } else {
+        logDebug(L_INFO, "Finished configuring UART for default device\n");
+    }
 
     // Clear input buffer to prevent parsing "latent" data (temporary)
     VN200FlushInput(dev);
@@ -546,72 +543,4 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     return 0;
 
 } // VN200Init(VN200_DEV *, int)
-
-
-#if 0 // TODO REMOVE
-/**** Function VN200Parse ****
- *
- * Parses data from VN200 input buffer and determine packet type. Will parse as
- * many packets as are available in the buffer
- *
- * Arguments: 
- * 	dev  - Pointer to VN200_DEV instance to parse from
- *
- * Return value:
- *	On success, returns number of bytes parsed from buffer
- *	On failure, returns a negative number
- */
-int VN200Parse(VN200_DEV *dev) {
-
-    // Make extra sure there is enough room in the buffer
-    const int PACKET_BUF_SIZE = 1024;
-    char currentPacket[PACKET_BUF_SIZE], packetID[16];
-
-    int packetIDLength, packetIndex, logBufLen, i, rc, numParsed = 0;
-    struct timespec timestamp_ts;
-
-    // Local pointers to save for easier reference
-    VN200_PACKET *packet;
-    VN200_PACKET_RING_BUFFER *ringbuf;
-
-
-    // Exit on error if invalid pointer
-    if (dev == NULL) {
-        return -1;
-    }
-
-    // Make local ringbuf pointer
-    ringbuf = &(dev->ringbuf);
-
-    // Loop through all packets in ring buffer
-    for (packetIndex = ringbuf->start; packetIndex != ringbuf->end;
-            packetIndex = (packetIndex + 1) % VN200_PACKET_RING_BUFFER_SIZE) {
-
-        // Set up pointer to current packet
-        packet = &(ringbuf->packets[packetIndex]);
-
-        // If packet is incomplete, do nothing and return
-        if (VN200PacketIsIncomplete(packet)) {
-            return numParsed;
-        }
-
-        // Only parse if hasn't already been parsed
-        if (!(packet->isParsed)) {
-
-            int parseReturn = VN200PacketParse(ringbuf, packetIndex);
-
-            if (parseReturn >= 0) {
-                numParsed += parseReturn;
-            } else {
-                logDebug("VN200PacketParse failed: %d\n", parseReturn);
-            }
-
-        } // if packet not already parsed
-
-    } // for packets in ring buffer
-
-    return numParsed;
-
-} // VN200Parse(VN200_DEV *)
-#endif
 

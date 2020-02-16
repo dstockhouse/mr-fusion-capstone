@@ -38,8 +38,9 @@
 #include "logger.h"
 #include "uart.h"
 #include "VN200_CRC.h"
-#include "VN200_GPS.h"
 #include "VN200.h"
+
+#include "VN200_GPS.h"
 
 
 /**** Function VN200GPSInit ****
@@ -47,18 +48,19 @@
  * Initializes a VN200 UART device for GPS functionality
  *
  * Arguments: 
- * 	dev - Pointer to VN200_DEV instance to initialize
- * 	fs  - Sampling frequency to initialize the module to
+ * 	dev     - Pointer to VN200_DEV instance to initialize
+ * 	fs      - Sampling frequency to initialize the module to
+ * 	devname - Name of the UART device (set NULL to use default)
  *
  * Return value:
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int VN200GPSInit(VN200_DEV *dev, int fs) {
+int VN200GPSInit(VN200_DEV *dev, char *devname, int fs) {
 
-	return VN200Init(dev, fs, VN200_BAUD, VN200_INIT_MODE_GPS);
+    return VN200Init(dev, devname, fs, VN200_BAUD, VN200_INIT_MODE_GPS);
 
-} // VN200GPSInit(VN200_DEV *, int)
+} // VN200GPSInit(VN200_DEV *, char *, int)
 
 
 /**** Function VN200GPSPacketParse ****
@@ -80,67 +82,67 @@ int VN200GPSInit(VN200_DEV *dev, int fs) {
  *	On success, returns number of bytes parsed from buffer
  *	On failure, returns a negative number
  */
-int VN200GPSPacketParse(char *buf, int len, GPS_DATA *data) {
+int VN200GPSPacketParse(unsigned char *buf, int len, GPS_DATA *data) {
 
-	// 1K Should be enough for a single packet
-	const int PACKET_BUF_SIZE = 1024;
-	char currentPacket[PACKET_BUF_SIZE];
-	int i, rc;
+    // 1K Should be enough for a single packet
+    const int PACKET_BUF_SIZE = 1024;
+    char currentPacket[PACKET_BUF_SIZE];
+    int i, rc;
 
-	// Exit on error if invalid pointer
-	if(buf == NULL || data == NULL) {
-		return -1;
-	}
+    // Exit on error if invalid pointer
+    if(buf == NULL || data == NULL) {
+        return -1;
+    }
 
-	// Exit if invalid length
-	if(len < 0) {
-		return -2;
-	}
+    // Exit if invalid length
+    if(len < 0) {
+        return -2;
+    }
 
-	logDebug(L_VDEBUG, "\n\n%s - Data in buffer:\n", __func__);
-	for(i = 0; i < len; i++) {
-		logDebug(L_VDEBUG, "%c", buf[i]);
-	}
-	logDebug(L_VDEBUG, "\n\n");
+    logDebug(L_VDEBUG, "\n\n%s - Data in buffer:\n", __func__);
+    for(i = 0; i < len; i++) {
+        logDebug(L_VDEBUG, "%c", buf[i]);
+    }
+    logDebug(L_VDEBUG, "\n\n");
 
-	// Copy string into local variable
-	strncpy(currentPacket, &(buf[0]), len);
+    // Copy string into local variable
+    strncpy(currentPacket, &(buf[0]), len);
 
-	// Scan for fields in packet string
-	rc = sscanf(currentPacket, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f",
-			&(data->time), &(data->week), &(data->GpsFix), &(data->NumSats),
-			&(data->Latitude), &(data->Longitude), &(data->Altitude),
-			&(data->NedVelX), &(data->NedVelY), &(data->NedVelZ),
-			&(data->NorthAcc), &(data->EastAcc), &(data->VertAcc), &(data->SpeedAcc), &(data->TimeAcc));
-	if(rc < 15) {
-		logDebug("%s: Didn't match entire formatted string: %d\n", __func__, rc);
+    // Scan for fields in packet string
+    rc = sscanf(currentPacket, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f",
+            &(data->time), &(data->week), &(data->GpsFix), &(data->NumSats),
+            &(data->Latitude), &(data->Longitude), &(data->Altitude),
+            &(data->NedVelX), &(data->NedVelY), &(data->NedVelZ),
+            &(data->NorthAcc), &(data->EastAcc), &(data->VertAcc), &(data->SpeedAcc), &(data->TimeAcc));
+    if(rc < 15) {
+        logDebug(L_INFO, "%s: Didn't match entire formatted string: %d\n", __func__, rc);
 
-		// Malformed packet, return to indicate not fully parsed
-		return -3;
-	}
+        // Malformed packet, return to indicate not fully parsed
+        return -3;
+    }
 
-	return len;
+    return len;
 
-} // VN200GPSPacketParse(char *, int, GPS_DATA *)
+} // VN200GPSPacketParse(unsigned char *, int, GPS_DATA *)
 
 
 int VN200GPSLogParsed(LOG_FILE *log, GPS_DATA *data) {
 
-	char logBuf[512];
-	int logBufLen;
+    char logBuf[512];
+    int logBufLen;
 
-	// Log parsed data to file in CSV format
-	logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
-			data->time, data->week, data->GpsFix, data->NumSats,
-			data->Latitude, data->Longitude, data->Altitude,
-			data->NedVelX, data->NedVelY, data->NedVelZ,
-			data->NorthAcc, data->EastAcc, data->VertAcc,
-			data->SpeedAcc, data->TimeAcc, data->timestamp);
+    // Log parsed data to file in CSV format
+    logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
+            data->time, data->week, data->GpsFix, data->NumSats,
+            data->Latitude, data->Longitude, data->Altitude,
+            data->NedVelX, data->NedVelY, data->NedVelZ,
+            data->NorthAcc, data->EastAcc, data->VertAcc,
+            data->SpeedAcc, data->TimeAcc, data->timestamp);
 
-	// Update log file
-	LogUpdate(log, logBuf, logBufLen);
+    // Update log file
+    LogUpdate(log, logBuf, logBufLen);
 
-	return 0;
+    return 0;
 
 } // VN200GPSLogParsed(VN200_DEV *, GPS_DATA *)
 

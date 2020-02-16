@@ -28,7 +28,7 @@
 #include <time.h>
 
 // Variadic wrapper for appropriate log function
-int logDebug(const char *fmt, ...);
+void logDebug(int, const char *fmt, ...);
 
 #endif
 

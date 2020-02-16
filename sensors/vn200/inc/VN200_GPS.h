@@ -21,9 +21,9 @@
 #include "VN200Struct.h"
 #include "VN200.h"
 
-int VN200GPSInit(VN200_DEV *dev, int fs);
+int VN200GPSInit(VN200_DEV *dev, char *devname, int fs);
 
-int VN200GPSPacketParse(char *buf, int len, GPS_DATA *data);
+int VN200GPSPacketParse(unsigned char *buf, int len, GPS_DATA *data);
 
 int VN200GPSLogParsed(LOG_FILE *log, GPS_DATA *data);
 

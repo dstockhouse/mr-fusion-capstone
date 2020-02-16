@@ -28,8 +28,11 @@
 
 #include "utils.h"
 
-// 16K buffer, for now
+// 16K buffer, can be changed
 #define BYTE_BUFFER_LEN (16384)
+
+// Maximum number of elements that can be stored is the buffer length - 1
+#define BYTE_BUFFER_MAX_LEN (BYTE_BUFFER_LEN - 1)
 
 #define BYTE_BUFFER_MOD(T) MOD(T, BYTE_BUFFER_LEN)
 
@@ -38,19 +41,21 @@ typedef struct {
     unsigned char buffer[BYTE_BUFFER_LEN];
 } BYTE_BUFFER;
 
-int BufferAdd(BYTE_BUFFER *buf, unsigned char data);
+int BufferAdd(BYTE_BUFFER *, unsigned char);
 
-int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int length);
+int BufferAddArray(BYTE_BUFFER *, unsigned char *, int);
 
-int BufferRemove(BYTE_BUFFER *buf, int numToRemove);
+int BufferRemove(BYTE_BUFFER *, int);
 
-unsigned char BufferIndex(BYTE_BUFFER *buf, int index);
+unsigned char BufferIndex(BYTE_BUFFER *, int);
 
-int BufferEmpty(BYTE_BUFFER *buf);
+int BufferEmpty(BYTE_BUFFER *);
 
-int BufferIsFull(BYTE_BUFFER *buf);
+int BufferIsFull(BYTE_BUFFER *);
 
-int BufferLength(BYTE_BUFFER *buf);
+int BufferLength(BYTE_BUFFER *);
+
+int BufferCopy(BYTE_BUFFER *, unsigned char *, int, int);
 
 #endif
 

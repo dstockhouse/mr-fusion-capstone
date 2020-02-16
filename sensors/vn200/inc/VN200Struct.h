@@ -66,6 +66,7 @@ typedef enum {
 	VN200_PACKET_CONTENTS_TYPE_OTHER
 } VN200_PACKET_CONTENTS_TYPE;
 
+#if 0
 // A packet from the VN200 which may either be GPS, IMU, or other data.
 // Includes the raw data in a buffer and after parsing
 typedef struct {
@@ -107,19 +108,7 @@ typedef struct {
 	           // Buffer is full if start == end - 1
 
 } VN200_PACKET_RING_BUFFER;
-
-
-/* Old method 
-typedef struct {
-	int fd;
-	BYTE_BUFFER inbuf;
-	BYTE_BUFFER outbuf;
-	LOG_FILE logFile;
-	LOG_FILE logFileParsed;
-	int baud; // Baud rate 115200, 128000, 230400, 460800, 921600
-	int fs; // Sampling Frequency => 100
-} VN200_DEV;
-*/
+#endif
 
 typedef struct {
 
@@ -127,7 +116,6 @@ typedef struct {
 
 	BYTE_BUFFER inbuf;  // Input data buffer
 	BYTE_BUFFER outbuf;     // Output data buffer
-	VN200_PACKET_RING_BUFFER ringbuf; // Ring buffer for input packet data
 
 	LOG_FILE logFile; // Raw data log file
 	LOG_FILE logFileGPSParsed; // Parsed GPS data log file

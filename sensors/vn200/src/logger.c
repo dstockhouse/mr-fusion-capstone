@@ -48,43 +48,43 @@
  * 	Returns the number of characters written to buf (length of new string)
  */
 int generateFilename(char *buf, int bufSize, time_t *filetime, 
-		const char *dir, const char *pre, const char *ext) {
+        const char *dir, const char *pre, const char *ext) {
 
-	// Length of filename generated
-	int charsWritten;
+    // Length of filename generated
+    int charsWritten;
 
-	struct timespec randseed;
+    struct timespec randseed;
     // Different time source
-	// clock_gettime(CLOCK_MONOTONIC_RAW, &randseed);
-	clock_gettime(CLOCK_MONOTONIC, &randseed);
-	srand(randseed.tv_sec + randseed.tv_nsec);
+    // clock_gettime(CLOCK_MONOTONIC_RAW, &randseed);
+    clock_gettime(CLOCK_MONOTONIC, &randseed);
+    srand(randseed.tv_sec + randseed.tv_nsec);
 
-	// Time variables
-	struct tm currentTime;
-	time_t ltime;
-	if(filetime == NULL) {
-		ltime = time(NULL);
-		filetime = &ltime;
-	}
+    // Time variables
+    struct tm currentTime;
+    time_t ltime;
+    if(filetime == NULL) {
+        ltime = time(NULL);
+        filetime = &ltime;
+    }
 
-	// Get current time in UTC
-	localtime_r(filetime, &currentTime);
+    // Get current time in UTC
+    localtime_r(filetime, &currentTime);
 
-	// Create filename using date/time and input string
-	charsWritten = snprintf(buf, bufSize, 
-			"%s/%s-%02d.%02d.%04d_%02d-%02d-%02d_%d.%s",
-			dir, pre,
-			currentTime.tm_mon + 1,
-			currentTime.tm_mday,
-			currentTime.tm_year + 1900,
-			currentTime.tm_hour,
-			currentTime.tm_min,
-			currentTime.tm_sec,
-			rand(),
-			ext);
+    // Create filename using date/time and input string
+    charsWritten = snprintf(buf, bufSize, 
+            "%s/%s-%02d.%02d.%04d_%02d-%02d-%02d_%d.%s",
+            dir, pre,
+            currentTime.tm_mon + 1,
+            currentTime.tm_mday,
+            currentTime.tm_year + 1900,
+            currentTime.tm_hour,
+            currentTime.tm_min,
+            currentTime.tm_sec,
+            rand(),
+            ext);
 
-	// Return length of the new string
-	return charsWritten;
+    // Return length of the new string
+    return charsWritten;
 
 } // generateFilename(char *, int, time_t, char *, char *, char *)
 
@@ -103,45 +103,45 @@ int generateFilename(char *buf, int bufSize, time_t *filetime,
  */
 int mkdir_p(const char *pathname, mode_t mode) {
 
-	int pathnamelen, rc;
-	char localpathname[PATH_MAX], *dir;
+    int pathnamelen, rc;
+    char localpathname[PATH_MAX], *dir;
 
-	// Ensure pathname length is small enough
-	pathnamelen = strlen(pathname);
-	if(pathnamelen > PATH_MAX - 1) {
-		errno = ENAMETOOLONG;
-		return -1;
-	}
+    // Ensure pathname length is small enough
+    pathnamelen = strlen(pathname);
+    if(pathnamelen > PATH_MAX - 1) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
 
-	// Copy to local string to allow (temp) modifications
-	strcpy(localpathname, pathname);
+    // Copy to local string to allow (temp) modifications
+    strcpy(localpathname, pathname);
 
-	for(dir = localpathname + 1; *dir != '\0'; dir++) {
+    for(dir = localpathname + 1; *dir != '\0'; dir++) {
 
-		// If end of directory, mkdir everything before this
-		if(*dir == '/') {
+        // If end of directory, mkdir everything before this
+        if(*dir == '/') {
 
-			// Temporarily terminate string here
-			*dir = '\0';
+            // Temporarily terminate string here
+            *dir = '\0';
 
-			rc = mkdir(localpathname, mode);
-			if(rc && errno != EEXIST) {
-				return rc;
-			}
+            rc = mkdir(localpathname, mode);
+            if(rc && errno != EEXIST) {
+                return rc;
+            }
 
-			// Restore
-			*dir = '/';
-		}
+            // Restore
+            *dir = '/';
+        }
 
-	} // for
+    } // for
 
-	// Make final directory
-	rc = mkdir(pathname, mode);
-	if(rc && errno != EEXIST) {
-		return rc;
-	}
+    // Make final directory
+    rc = mkdir(pathname, mode);
+    if(rc && errno != EEXIST) {
+        return rc;
+    }
 
-	return 0;
+    return 0;
 
 } // int mkdir_p(const char *, mode_t)
 
@@ -161,65 +161,60 @@ int mkdir_p(const char *pathname, mode_t mode) {
  */
 int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 
-	int rc;
-	char extString[8];
+    int rc;
+    char extString[8];
 
-	// Get seconds since epoch
-	logFile->timestamp = time(NULL);
+    // Get seconds since epoch
+    logFile->timestamp = time(NULL);
 
-	// Determine filename extension, default is log
-	switch(ext) {
-		case LOG_FILEEXT_BIN:
-			strcpy(extString, "bin");
-			logFile->bin = 1;
-			break;
+    // Determine filename extension, default is log
+    switch(ext) {
+        case LOG_FILEEXT_BIN:
+            strcpy(extString, "bin");
+            logFile->bin = 1;
+            break;
 
-		case LOG_FILEEXT_CSV:
-			strcpy(extString, "csv");
-			logFile->bin = 0;
-			break;
+        case LOG_FILEEXT_CSV:
+            strcpy(extString, "csv");
+            logFile->bin = 0;
+            break;
 
-		case LOG_FILEEXT_LOG:
-		default:
-			strcpy(extString, "log");
-			logFile->bin = 0;
-			break;
+        case LOG_FILEEXT_LOG:
+        default:
+            strcpy(extString, "log");
+            logFile->bin = 0;
+            break;
 
-	} // switch(ext)
+    } // switch(ext)
 
-	// Generate filename for the log file
-	logFile->filenameLength = generateFilename(logFile->filename, LOG_FILENAME_LENGTH, 
-			&(logFile->timestamp), dir, pre, extString);
-	if(logFile->filenameLength == LOG_FILENAME_LENGTH) {
-		printf("Filename too long, using %s\n", logFile->filename);
-		logDebug("Filename too long, using %s\n", logFile->filename);
-	}
+    // Generate filename for the log file
+    logFile->filenameLength = generateFilename(logFile->filename, LOG_FILENAME_LENGTH, 
+            &(logFile->timestamp), dir, pre, extString);
+    if(logFile->filenameLength == LOG_FILENAME_LENGTH) {
+        logDebug(L_INFO, "Filename too long, using %s\n", logFile->filename);
+    }
 
-	// Create directory if it doesn't exist
-	rc = mkdir_p(dir, 0777);
-	// rc = mkdir(dir, 0777);
-	if(rc && errno != EEXIST) {
-		perror("Failed to create directory");
-		logDebug("Failed to create directory");
-		printf(dir);
-		return -1;
-	}
+    // Create directory if it doesn't exist
+    rc = mkdir_p(dir, 0777);
+    // rc = mkdir(dir, 0777);
+    if(rc && errno != EEXIST) {
+        logDebug(L_INFO, "%s: Failed to create directory '%s'\n", strerror(errno), dir);
+        return -1;
+    }
 
-	// Open and create the log file, appending if it already exists
-	logFile->fd = open(logFile->filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
-	if(logFile->fd < 0) {
-		perror("Failed to create log file");
-		printf("%s\n", logFile->filename);
-		logDebug("Failed to create log file %s\n", logFile->filename);
-		return -2;
-	}
-	logDebug("Created log file %s\n", logFile->filename);
+    // Open and create the log file, appending if it already exists
+    logFile->fd = open(logFile->filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
+    if(logFile->fd < 0) {
+        logDebug(L_INFO, "%s: Failed to create log file %s\n", strerror(errno), logFile->filename);
+        return logFile->fd;
+    }
+    logDebug(L_INFO, "Created log file %s\n", logFile->filename);
 
     // Flush file to ensure creation
     LogFlush(logFile);
 
-	// Return 0 on success
-	return 0;
+    // Return 0 on success
+    return 0;
 
 } // LogInit(LOG_FILE *, char *, char *, int)
 
@@ -239,22 +234,21 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
  */
 int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
 
-	int rc;
+    int rc;
 
-	// printf("In LU: attempting to read %d bytes from address %p\n", length, buf);
+    // printf("In LU: attempting to read %d bytes from address %p\n", length, buf);
 
-	// Write data to file
-	rc = write(logFile->fd, buf, length);
-	if(rc < 0) {
-		perror("Failed to write to log file");
-		logDebug("Failed to write to log file");
-	}
+    // Write data to file
+    rc = write(logFile->fd, buf, length);
+    if(rc < 0) {
+        logDebug(L_INFO, "%s: Failed to write to log file\n", strerror(errno));
+    }
 
     // Flush always for now, but may change later
     // LogFlush(logFile);
 
-	// Return bytes written
-	return rc;
+    // Return bytes written
+    return rc;
 
 } // LogUpdate(LOG_FILE *, char *, int)
 
@@ -271,19 +265,17 @@ int LogUpdate(LOG_FILE *logFile, const char *buf, int length) {
  */
 int LogFlush(LOG_FILE *logFile) {
 
-	int rc;
+    int rc;
 
-	rc = fsync(logFile->fd);
-	if(rc) {
-		perror("Failed to sync log file");
-		logDebug("Failed to sync log file");
-	}
+    rc = fsync(logFile->fd);
+    if(rc) {
+        logDebug(L_INFO, "%s: Failed to sync log file\n", strerror(errno));
+    }
 
-	// Return code from system service call
+    // Return code from system service call
     return rc;
 
 } // LogFlush(LOG_FILE *)
-
 
 
 /**** Function LogClose ****
@@ -298,15 +290,14 @@ int LogFlush(LOG_FILE *logFile) {
  */
 int LogClose(LOG_FILE *logFile) {
 
-	int rc;
+    int rc;
 
-	rc = close(logFile->fd);
-	if(rc) {
-		perror("Failed to close log file");
-		logDebug("Failed to close log file");
-	}
+    rc = close(logFile->fd);
+    if(rc) {
+        logDebug(L_INFO, "%s: Failed to close log file\n", strerror(errno));
+    }
 
-	// Return code from system service call
+    // Return code from system service call
     return rc;
 
 } // LogClose(LOG_FILE *)

@@ -54,51 +54,51 @@ int main(void) {
     // Initialize
     BufferEmpty(&testbuf);
 
-    logDebug("Adding %d...\n", testval);
+    logDebug(L_INFO, "Adding %d...\n", testval);
 
     BufferAdd(&testbuf, testval);
 
-    logDebug("\tNew size: %d\n\t", testbuf.length);
+    logDebug(L_INFO, "\tNew size: %d\n\t", testbuf.length);
 
 //     for(i = 0; i < BufferLength(&testbuf); i++) {
-//         logDebug("%d, ", BufferIndex(&testbuf, i));
-//         if(i % 20 == 19) logDebug("\n\t");
+//         logDebug(L_INFO, "%d, ", BufferIndex(&testbuf, i));
+//         if(i % 20 == 19) logDebug(L_INFO, "\n\t");
 //     }
 
-    logDebug("\n\nAdding array...\n");
+    logDebug(L_INFO, "\n\nAdding array...\n");
 
     BufferAddArray(&testbuf, data, DATA_LEN);
 
-    logDebug("\tNew size: %d\n\t", testbuf.length);
+    logDebug(L_INFO, "\tNew size: %d\n\t", testbuf.length);
 
 //     for(i = 0; i < BufferLength(&testbuf); i++) {
-//         logDebug("%d, ", BufferIndex(&testbuf, i));
-//         if(i % 20 == 19) logDebug("\n\t");
+//         logDebug(L_INFO, "%d, ", BufferIndex(&testbuf, i));
+//         if(i % 20 == 19) logDebug(L_INFO, "\n\t");
 //     }
 
     while (BufferLength(&testbuf) > 0) {
-        logDebug("\n\nRemoving (%d) elements...\n", REMOVE_LEN);
+        logDebug(L_INFO, "\n\nRemoving (%d) elements...\n", REMOVE_LEN);
 
         int removed = BufferRemove(&testbuf, REMOVE_LEN);
-        logDebug("%d removed\n", removed);
+        logDebug(L_INFO, "%d removed\n", removed);
 
-        logDebug("\tNew size: %d\n\t", testbuf.length);
+        logDebug(L_INFO, "\tNew size: %d\n\t", testbuf.length);
 
 //     for(i = 0; i < BufferLength(&testbuf); i++) {
-//         logDebug("%d, ", BufferIndex(&testbuf, i));
-//         if(i % 20 == 19) logDebug("\n\t");
+//         logDebug(L_INFO, "%d, ", BufferIndex(&testbuf, i));
+//         if(i % 20 == 19) logDebug(L_INFO, "\n\t");
 //     }
     }
 
-    logDebug("\n\nRemoving too many (%d)...\n", testbuf.length + 30);
+    logDebug(L_INFO, "\n\nRemoving too many (%d)...\n", testbuf.length + 30);
 
     i = BufferRemove(&testbuf, testbuf.length);
 
-    logDebug("\tNew size: %d\n\n\n", testbuf.length);
+    logDebug(L_INFO, "\tNew size: %d\n\n\n", testbuf.length);
 
 //     for(i = 0; i < BufferLength(&testbuf); i++) {
-//         logDebug("%d, ", BufferIndex(&testbuf, i));
-//         if(i % 20 == 19) logDebug("\n\t");
+//         logDebug(L_INFO, "%d, ", BufferIndex(&testbuf, i));
+//         if(i % 20 == 19) logDebug(L_INFO, "\n\t");
 //     }
 
 
@@ -114,31 +114,31 @@ int main(void) {
     int iters = 20000000;
     for (i = 0; i < iters; i++) {
 
-        logDebug(" %3d:  ", i);
+        logDebug(L_INFO, " %3d:  ", i);
 
         int numToAdd = rand() % maxAdd;
 
-        logDebug("populating %d... ", numToAdd);
+        logDebug(L_INFO, "populating %d... ", numToAdd);
 
         int j;
         for (j = 0; j < numToAdd; j++) {
             randdata[i] = numToAdd + j;
         }
-        logDebug("Adding (%d)... ", numToAdd);
+        logDebug(L_INFO, "Adding (%d)... ", numToAdd);
         int added = BufferAddArray(&testbuf, randdata, numToAdd);
-        logDebug("added %d, length (%d), s,e=(%d,%d)\n", added, BufferLength(&testbuf), testbuf.start, testbuf.end);
+        logDebug(L_INFO, "added %d, length (%d), s,e=(%d,%d)\n", added, BufferLength(&testbuf), testbuf.start, testbuf.end);
 
-        logDebug("       ");
+        logDebug(L_INFO, "       ");
 
         int numToRemove = rand() % 20000;
 
-        logDebug("Removing (%d)... ", numToRemove);
+        logDebug(L_INFO, "Removing (%d)... ", numToRemove);
         int removed = BufferRemove(&testbuf, numToRemove);
-        logDebug("removed %d, length (%d), s,e=(%d,%d)\n", removed, BufferLength(&testbuf), testbuf.start, testbuf.end);
+        logDebug(L_INFO, "removed %d, length (%d), s,e=(%d,%d)\n", removed, BufferLength(&testbuf), testbuf.start, testbuf.end);
 
     }
 
-    logDebug("\n\nTest complete\n\n");
+    logDebug(L_INFO, "\n\nTest complete\n\n");
 
     // Success
     return 0;

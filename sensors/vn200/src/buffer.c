@@ -46,12 +46,12 @@
 int BufferAdd(BYTE_BUFFER *buf, unsigned char data) {
 
     // Exit if buffer pointer invalid
-    if(buf == NULL) {
+    if (buf == NULL) {
         return -1;
     }
 
     // Ensure buffer is not full
-    if(!BufferIsFull(buf)) {
+    if (!BufferIsFull(buf)) {
 
         // Increase length and put element at end of buffer
         buf->buffer[buf->end] = data;
@@ -86,17 +86,17 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
 
     int i, numAdded = 0;
 
-    if(buf == NULL) {
+    if (buf == NULL) {
         return -1;
     }
 
     // Add as many elements as will fit
-    for(i = 0; i < numToAdd && !BufferIsFull(buf); i++) {
+    for (i = 0; i < numToAdd && !BufferIsFull(buf); i++) {
 
-        // logDebug("\nAdded elt %d, l=%d", i, BufferLength(buf));
+        // logDebug(L_VDEBUG, "\nAdded elt %d, l=%d", i, BufferLength(buf));
 
         // Use above function to add one element and increment if successful
-        if(BufferAdd(buf, data[i]) > 0) {
+        if (BufferAdd(buf, data[i]) > 0) {
             numAdded++;
         }
     }
@@ -119,8 +119,6 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
  * 	On returns number of elements removed. Zero elements returned on error.
  */
 int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
-
-    int i, numRemoved;
 
     if (buf == NULL || numToRemove <= 0) {
         return 0;
@@ -145,8 +143,9 @@ int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
 
 /**** Function BufferIndex ****
  *
- * Accesses an element at an index. Invalid indices still return something, so
- * it is up to the calling function to make sure the index is less than length.
+ * Accesses an element at an index. Invalid indices still return something
+ * indistinguishable from valid data, so it is up to the calling function to
+ * make sure the index is less than the buffer length.
  *
  * Arguments: 
  * 	buf   - Pointer to BYTE_BUFFER instance to modify
@@ -157,11 +156,9 @@ int BufferRemove(BYTE_BUFFER *buf, int numToRemove) {
  */
 unsigned char BufferIndex(BYTE_BUFFER *buf, int index) {
 
-    int i;
-
     if (buf == NULL || index < 0 || index >= BufferLength(buf)) {
         // Failure can't be detected by the calling function, but at least don't crash
-        // logDebug("Attempt to index past buffer bounds: l=%d, i=%d\n", BufferLength(buf), index);
+        // logDebug(L_VDEBUG, "Attempt to index past buffer bounds: l=%d, i=%d\n", BufferLength(buf), index);
         return 0;
     }
 
@@ -185,13 +182,13 @@ unsigned char BufferIndex(BYTE_BUFFER *buf, int index) {
 int BufferEmpty(BYTE_BUFFER *buf) {
 
     // Exit if buffer pointer invalid
-    if(buf == NULL) {
+    if (buf == NULL) {
         // Invalid buffer is treated as full
         return -1;
     }
 
-    // Leave data in buffer but consider empty
-    buf->start = buf->end;
+    // Change indices to ignore all elements previously stored, and rezero
+    buf->start = buf->end = 0;
     buf->length = 0;
 
     // Return on success
@@ -213,7 +210,7 @@ int BufferEmpty(BYTE_BUFFER *buf) {
 int BufferIsFull(BYTE_BUFFER *buf) {
 
     // Exit if buffer pointer invalid
-    if(buf == NULL) {
+    if (buf == NULL) {
         // Invalid buffer is treated as full
         return -1;
     }
@@ -226,7 +223,7 @@ int BufferIsFull(BYTE_BUFFER *buf) {
 
 /**** Function BufferLength ****
  *
- * Returns true if the buffer is full
+ * Returns number of elements currently stored in circular buffer
  *
  * Arguments: 
  * 	buf - Pointer to BYTE_BUFFER instance to examine
@@ -237,7 +234,7 @@ int BufferIsFull(BYTE_BUFFER *buf) {
 int BufferLength(BYTE_BUFFER *buf) {
 
     // Exit if buffer pointer invalid
-    if(buf == NULL) {
+    if (buf == NULL) {
         // Invalid buffer
         return -1;
     }
@@ -246,4 +243,41 @@ int BufferLength(BYTE_BUFFER *buf) {
     return BYTE_BUFFER_MOD(buf->end - buf->start);
 
 } // BufferLength(BYTE_BUFFER *)
+
+
+/**** Function BufferCopy ****
+ *
+ * Copies elements from the circular buffer into a linear array
+ *
+ * Arguments: 
+ * 	buf   - Pointer to BYTE_BUFFER instance to copy from
+ * 	dest  - Pointer to linear destination buffer
+ * 	start - Index in buf to start copying
+ * 	num   - Number of elements to copy
+ *
+ * Return value:
+ * 	On success returns number of elements copied
+ */
+int BufferCopy(BYTE_BUFFER *buf, unsigned char *dest, int start, int num) {
+
+    // Exit if buffer pointer invalid
+    if (buf == NULL || dest == NULL) {
+        // Invalid buffer
+        return -1;
+    }
+
+    int numAvailable = BufferLength(buf) - start;
+    if (numAvailable < num) {
+        num = numAvailable;
+    }
+
+    // Copy buffer elements into destination buffer starting at start index
+    int i;
+    for (i = 0; i < num; i++) {
+        dest[i] = BufferIndex(buf, i + start);
+    }
+
+    return i;
+
+} // BufferCopy(BYTE_BUFFER *, unsigned char *, int, int)
 

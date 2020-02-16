@@ -32,7 +32,6 @@
 #include "logger.h"
 #include "uart.h"
 #include "VN200Struct.h"
-#include "VN200Packet.h"
 
 #define VN200_DEVNAME "/dev/ttyUSB0"
 #define VN200_BAUD 57600
@@ -60,9 +59,7 @@ int VN200FlushOutput(VN200_DEV *dev);
 
 int VN200Destroy(VN200_DEV *dev);
 
-int VN200Init(VN200_DEV *dev, int baud, int fs, int mode);
-
-// int VN200Parse(VN200_DEV *dev);
+int VN200Init(VN200_DEV *dev, char *devname, int baud, int fs, int mode);
 
 #endif
 

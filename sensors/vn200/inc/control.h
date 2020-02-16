@@ -19,6 +19,7 @@
 #ifndef __CONTROL_H
 #define __CONTROL_H
 
+#define L_VVDEBUG   -1
 #define L_VDEBUG    0
 #define L_DEBUG     1
 #define L_INFO      2
