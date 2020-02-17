@@ -266,6 +266,12 @@ int BufferCopy(BYTE_BUFFER *buf, unsigned char *dest, int start, int num) {
         return -1;
     }
 
+    // Copy no elements if inputs are negative
+    if (start < 0 || num < 0) {
+        return 0;
+    }
+
+    // If less elements in buffer than requested, adjust number to copy
     int numAvailable = BufferLength(buf) - start;
     if (numAvailable < num) {
         num = numAvailable;

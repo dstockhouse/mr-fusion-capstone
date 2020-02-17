@@ -160,7 +160,10 @@ int VN200Poll(VN200_DEV *dev) {
         return -2;
     }
 
-    // Check if UART data available
+    // Some systems don't have this ioctl parameter. Since this isn't a
+    // completely necessary check, it can be skipped if not found.
+#ifdef FIONREAD
+    // Check if how many bytes of UART data available
     rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
     if (rc) {
         logDebug(L_INFO, "%s: VN200Poll: ioctl() failed to fetch FIONREAD\n", strerror(errno));
@@ -169,6 +172,7 @@ int VN200Poll(VN200_DEV *dev) {
     }
 
     logDebug(L_DEBUG, "%d bytes available from UART device...\n", ioctl_status);
+#endif
 
     // Calculate length and pointer to proper position in array
     numToRead = BYTE_BUFFER_LEN - BufferLength(&(dev->inbuf));
