@@ -3,9 +3,9 @@ use crate::graph;
 use crate::graph::conversions::IntoTangential;
 
 #[test]
-fn initialize_from_kml_file_test_triangle() {
+fn initialize_from_gpx_file_test_triangle() {
 
-    let graph = graph::initialize_from_kml_file("src/graph/Test Triangle.gpx");
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
 
     for row in 0..graph.connection_matrix.len() {
         for column in 0..graph.connection_matrix[0].len() {
@@ -20,8 +20,8 @@ fn initialize_from_kml_file_test_triangle() {
 }
 
 #[test]
-fn initialize_from_kml_file_single_edge() {
-    let graph = graph::initialize_from_kml_file("src/graph/Test Single Edge.gpx");
+fn initialize_from_gpx_file_single_edge() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
 
     let edges = &graph.edges;
     let edge = &edges[0];
@@ -38,7 +38,7 @@ fn initialize_from_kml_file_single_edge() {
 
 #[test]
 fn graph_to_geo_json_string() {
-    let graph = graph::initialize_from_kml_file("src/graph/Test Single Edge.gpx");
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
     
     let json_string = graph::graph_to_geo_json_string(&graph);
     let expected_json_string = r#"{"features":[{"geometry":{"coordinates":[[-112.4484608,34.615871],[-112.4484635,34.6157165],[-112.4484742,34.6155377]],"type":"LineString"},"id":"Line 3","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484608,34.615871],"type":"Point"},"id":"Point 1","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484742,34.6155377],"type":"Point"},"id":"Point 2","properties":{},"type":"Feature"}],"type":"FeatureCollection"}"#;
@@ -92,3 +92,4 @@ fn tangential_sub() {
         (1.0, 2.0, 3.0)
     )
 }   
+
