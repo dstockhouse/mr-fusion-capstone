@@ -1,6 +1,7 @@
 
 use crate::graph;
 use crate::graph::conversions::IntoTangential;
+use crate::graph::TangentialPoint;
 
 #[test]
 fn initialize_from_gpx_file_test_triangle() {
@@ -93,3 +94,19 @@ fn tangential_sub() {
     )
 }   
 
+#[test]
+fn graph_into_tangential() {
+    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
+    let graph = graph.into_tangential();
+
+    let origin = graph.vertices.iter()
+        .filter(|vertex| 
+                    vertex.name.contains("King Engineering (Front Entrance)")
+        ).next().unwrap();
+
+    
+    assert_eq!(origin.point, 
+        TangentialPoint{x: 0.0, y: 0.0, z: 0.0}
+    );
+
+}

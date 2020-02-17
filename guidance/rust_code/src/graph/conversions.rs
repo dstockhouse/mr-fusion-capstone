@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 
-use super::{GPSPoint, TangentialPoint};
-use nalgebra::{Vector3, RealField, inverse, Matrix3};
+use super::{GPSPoint, TangentialPoint, Graph, Edge, Vertex};
+use nalgebra::{Vector3, Matrix3};
 
 // Distance from the earth relative to the equator (m)
 const RO: f64 = 6378137.0;
@@ -16,11 +16,15 @@ const ORIGIN: GPSPoint = GPSPoint {
     height: 1582.3
 };
 
-pub(super) trait IntoTangential {
-    fn into_tangential(self) -> TangentialPoint;
+pub trait IntoTangential {
+    type Output;
+
+    fn into_tangential(self) -> Self::Output;
 }
 
 impl IntoTangential for GPSPoint {
+
+    type Output = TangentialPoint;
 
     fn into_tangential(self) -> TangentialPoint {
 
@@ -42,7 +46,7 @@ impl IntoTangential for GPSPoint {
               ORIGIN.lat.cos(),                         0.0,                  -ORIGIN.lat.sin() 
         ).try_inverse().unwrap();
 
-        let result = (c_e_k * r_kb_e);
+        let result = c_e_k * r_kb_e;
 
         TangentialPoint{
             x: result[0],
@@ -75,5 +79,35 @@ impl GPSPoint {
             long: self.long * PI/180.0,
             height: self.height * PI/180.0
         }
+    }
+}
+
+impl<'a> IntoTangential for Graph<'a, GPSPoint> {
+    
+    type Output = Graph<'a, TangentialPoint>;
+
+    fn into_tangential(self) -> Self::Output {
+        
+        // Preserving the connection matrix
+        let connection_matrix = self.connection_matrix;
+
+        let edges = self.edges.into_iter().map(|edge| {
+            let name = edge.name;
+            let points = edge.points.into_iter().map(|gps_point| {
+                gps_point.into_tangential()
+            }).collect::<Vec<TangentialPoint>>();
+
+            Edge{name, points}
+
+        }).collect();
+
+        let vertices = self.vertices.into_iter().map(|vertex| {
+            let name = vertex.name;
+            let point = vertex.point.into_tangential();
+
+            Vertex::new(name, point)
+        }).collect(); 
+
+        Graph{connection_matrix, edges, vertices}
     }
 }

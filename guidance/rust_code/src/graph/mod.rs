@@ -3,7 +3,7 @@ use std::io::BufReader;
 use std::f64;
 use std::ops::Sub;
 
-mod conversions;
+pub mod conversions;
 
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 use gpx;
@@ -86,8 +86,8 @@ pub struct Graph <'a, T> {
     pub connection_matrix: Vec<Vec<Option<usize>>> //Matrix of indices of edges
 }
 
-impl <'a> Vertex<'a, GPSPoint> {
-    fn new(name: String, point: GPSPoint) -> Vertex<'a, GPSPoint> {
+impl <'a, T> Vertex<'a, T> {
+    fn new(name: String, point: T) -> Vertex<'a, T> {
         Vertex {
             name,
             point,
@@ -148,7 +148,7 @@ pub(self) fn connect_vertices_with_edges(
 }
 
 
-pub fn initialize_from_kml_file(name: &str) -> Graph<GPSPoint> {
+pub fn initialize_from_gpx_file(name: &str) -> Graph<GPSPoint> {
     // Open file and read contents to memory
     let file = File::open(name).unwrap();
     let reader = BufReader::new(file);

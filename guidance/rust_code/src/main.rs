@@ -12,7 +12,7 @@ use states::States;
 
 
 fn main() {
-    let graph = graph::initialize_from_kml_file("src/graph/School Map.gpx");
+    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
 
     // Writing the graph back to disk for visual confirmation
     let geo_json_string = graph::graph_to_geo_json_string(&graph);
