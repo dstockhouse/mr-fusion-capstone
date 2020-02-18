@@ -33,6 +33,10 @@ focal_pt = cols / (2*tan(0.5*constants.fovh));
 disp_u_i = 0.5 * (cols - 1);
 disp_v_i = 0.5 * (rows - 1);
 
+% Pre-allocate warped image
+warped = zeros(rows, cols, 3);
+wacu = zeros(rows, cols);
+
 % Step through each pixel, warping based on previous estimated velocity (prev step in pyramid)
 for i=1:cols
    for j = 1:rows
@@ -73,23 +77,23 @@ for i=1:cols
               delta_d = vwarp - vwarp_d;
               % Warped pixel close to real value
               if (abs((round(uwarp) - uwarp))+abs((round(vwarp)-vwarp))) < 0.05
-                  warped(round(vwarp),round(uwarp)) = warped(round(vwarp),round(uwarp)) + depth_w;
+                  warped(round(vwarp),round(uwarp),3) = warped(round(vwarp),round(uwarp),3) + depth_w;
                   wacu(round(vwarp),round(uwarp)) = wacu(round(vwarp),round(uwarp)) + 1;
               else % Weight the closest pixels
                   w_ur = delta_l.^2 + delta_d.^2;
-                  warped(vwarp_u, uwarp_r) = warped(vwarp_u, uwarp_r) + (w_ur .* depth_w);
+                  warped(vwarp_u, uwarp_r,3) = warped(vwarp_u, uwarp_r,3) + (w_ur .* depth_w);
                   wacu(round(vwarp_u),round(uwarp_r)) = wacu(round(vwarp_u),round(uwarp_r)) + w_ur;
                   
                   w_ul = delta_r.^2 + delta_d.^2;
-                  warped(vwarp_u, uwarp_l) = warped(vwarp_u, uwarp_l) + (w_ul .* depth_w);
+                  warped(vwarp_u, uwarp_l,3) = warped(vwarp_u, uwarp_l,3) + (w_ul .* depth_w);
                   wacu(round(vwarp_u),round(uwarp_l)) = wacu(round(vwarp_u),round(uwarp_l)) + w_ul;
                   
                   w_dr = delta_l.^2 + delta_u.^2;
-                  warped(vwarp_d, uwarp_r) = warped(vwarp_d, uwarp_r) + (w_dr .* depth_w);
+                  warped(vwarp_d, uwarp_r,3) = warped(vwarp_d, uwarp_r,3) + (w_dr .* depth_w);
                   wacu(round(vwarp_d),round(uwarp_r)) = wacu(round(vwarp_d),round(uwarp_r)) + w_dr;
                   
                   w_dl = delta_r.^2 + delta_u.^2;
-                  warped(vwarp_d, uwarp_l) = warped(vwarp_d, uwarp_l) + (w_dl .* depth_w);
+                  warped(vwarp_d, uwarp_l,3) = warped(vwarp_d, uwarp_l,3) + (w_dl .* depth_w);
                   wacu(round(vwarp_d),round(uwarp_l)) = wacu(round(vwarp_d),round(uwarp_l)) + w_dl;
               end
            end

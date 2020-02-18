@@ -15,11 +15,6 @@ function [pointCloudAvg, numValidPoints] = average_point_clouds(pointCloudOld, p
 %
 
 % Get dimensions of original image
-depth_dim = size(pointCloud);
-rows = depth_dim(1);
-cols = depth_dim(2);
-focal_pt = cols / (2*tan(0.5*constants.fovh));
-
 if size(pointCloudOld) ~= size(pointCloudNew)
     fprintf('Cannot average. Input point clouds are not the same length!!!');
     return
@@ -33,8 +28,8 @@ pointCloudAvg = zeros(size(pointCloudOld));
 numValidPoints = 0;
 
 % Step through each pixel
-for jj=1:cols
-   for ii = 1:rows
+for ii = 1:cols
+   for jj = 1:rows
 
        % Only average if both have positive depth
        if pointCloudOld(jj, ii, 3) > 0 && pointCloudNew(jj, ii, 3) > 0
