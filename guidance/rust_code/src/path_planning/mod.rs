@@ -15,43 +15,41 @@ fn plan_path() {
 pub(self) fn robot_on_edge(graph: &Graph<TangentialPoint>, robot_loc: &TangentialPoint) -> Result<(), Error> {
 
     let mut min = f64::MAX;
-    
-    let edges = &graph.edges;
 
-    for edge in edges.iter() {
-        let gps_point_n = edge.points.iter();
-        let mut gps_point_n_plus_1  = edge.points.iter();
-        gps_point_n_plus_1.next();
+    for edge in graph.edges.iter() {
+        let point_n = edge.points.iter();
+        let mut point_n_plus_1  = edge.points.iter();
+        point_n_plus_1.next();
 
-        let points_n_n_plus_1 = gps_point_n.zip(gps_point_n_plus_1);
-
-        for (gps_point_n, gps_point_n_plus_1) in points_n_n_plus_1 {
+        if edge.name.contains("entrance") {
+            println!("Remove this line");
+        }
+        
+        let steps = 80.0;
+        let points_n_n_plus_1 = point_n.zip(point_n_plus_1);
+        for (point_n, point_n_plus_1) in points_n_n_plus_1 {
             // segmenting points on the line into more points
-            let steps = 80.0;
-            let start_x = gps_point_n.x;
-            let final_x = gps_point_n_plus_1.x;
-            let start_y = gps_point_n.y;
-            let final_y = gps_point_n_plus_1.y;
+            let (start_x, final_x) = (point_n.x, point_n_plus_1.x);
+            let (start_y, final_y) = (point_n.y, point_n_plus_1.y);
+            let (start_z, final_z) = (point_n.z, point_n_plus_1.z);
             
-            let x_step = (final_x - start_x) / steps;
-            let y_step = (final_y - start_y) / steps;
+            let (x_step, y_step, z_step) = ((final_x - start_x) / steps, 
+                                            (final_y - start_y) / steps,
+                                            (final_z - start_z) / steps);
 
-            let mut x = start_x;
-            let mut y = start_y;
+            let (mut x, mut y, mut z) = (start_x, start_y, start_z);
+
             for _ in 0..steps as u32 {
-                x = x + x_step;
-                y = y + y_step;
-
-                let x_diff =  x - robot_loc.x;
-                let y_diff = y - robot_loc.y;
-                if min > (x - robot_loc.x).powi(2) + (y - robot_loc.y).powi(2) {
-                    min = (x - robot_loc.x).powi(2) + (y - robot_loc.y).powi(2)
-                }
                 
-                if (x - robot_loc.x).powi(2) + (y - robot_loc.y).powi(2) <= ROBOT_RADIOUS.powi(2) {
-                    // Then the robot's radius contains an edge
+                let temp_point = TangentialPoint{x, y, z};
+                
+                if temp_point.distance(robot_loc) <= ROBOT_RADIOUS {
                     return Ok(());
                 }
+
+                x += x_step;
+                y += y_step;
+                z += z_step;
             }
         }
     }

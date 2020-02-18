@@ -28,7 +28,7 @@ impl Sub for &TangentialPoint {
 }
 
 impl TangentialPoint {
-    fn distance(&self, other: &Self) -> f64 {
+    pub fn distance(&self, other: &Self) -> f64 {
         let (x, y, z) = other - self;
 
         (x.powi(2) + y.powi(2) + z.powi(2)).sqrt()

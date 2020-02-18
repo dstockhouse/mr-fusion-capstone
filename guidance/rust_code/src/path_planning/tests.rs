@@ -27,9 +27,9 @@ fn robot_on_graph_true_case() {
         .into_tangential();
 
     let king_front_entrance = graph::GPSPoint {
-        lat: 34.365316,
-        long: -112.270342,
-        height: 1582.341
+        lat: 34.6147979,
+        long: -112.4509615,
+        height: 1582.3
     }.into_tangential();
 
     let robot_on_path = path_planning::robot_on_edge(&graph, &king_front_entrance);
