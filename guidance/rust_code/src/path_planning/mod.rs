@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::graph::{Graph, TangentialPoint};
-use crate::constants::ROBOT_RADIOUS;
+use crate::constants::ROBOT_RADIUS;
 use std::f64;
 
 fn plan_path() {
@@ -43,7 +43,7 @@ pub(self) fn robot_on_edge(graph: &Graph<TangentialPoint>, robot_loc: &Tangentia
                 
                 let temp_point = TangentialPoint{x, y, z};
                 
-                if temp_point.distance(robot_loc) <= ROBOT_RADIOUS {
+                if temp_point.distance(robot_loc) <= ROBOT_RADIUS {
                     return Ok(());
                 }
 

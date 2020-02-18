@@ -75,9 +75,9 @@ impl GPSPoint {
     /// Converts the GPS from degrees to radians
     fn to_rad(&self) -> GPSPoint {
         GPSPoint {
-            lat: self.lat * PI/180.0,
-            long: self.long * PI/180.0,
-            height: self.height * PI/180.0
+            lat: self.lat.to_radians(),
+            long: self.long.to_radians(),
+            height: self.height
         }
     }
 }
