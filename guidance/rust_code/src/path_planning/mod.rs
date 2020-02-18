@@ -14,16 +14,11 @@ fn plan_path() {
 
 pub(self) fn robot_on_edge(graph: &Graph<TangentialPoint>, robot_loc: &TangentialPoint) -> Result<(), Error> {
 
-    let mut min = f64::MAX;
-
     for edge in graph.edges.iter() {
+        
         let point_n = edge.points.iter();
         let mut point_n_plus_1  = edge.points.iter();
         point_n_plus_1.next();
-
-        if edge.name.contains("entrance") {
-            println!("Remove this line");
-        }
         
         let steps = 80.0;
         let points_n_n_plus_1 = point_n.zip(point_n_plus_1);

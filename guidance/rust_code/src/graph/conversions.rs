@@ -1,4 +1,3 @@
-use std::f64::consts::PI;
 
 use super::{GPSPoint, TangentialPoint, Graph, Edge, Vertex};
 use nalgebra::{Vector3, Matrix3};
