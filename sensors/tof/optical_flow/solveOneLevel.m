@@ -1,4 +1,4 @@
-function [kai, est_cov] = solveOneLevel(pointCloudAvg,weights,du,dv,dt, constants)
+function [kai, est_cov] = solveOneLevel(pointCloudAvg,weights,du,dv,dt, numValidPoints, constants)
 % Input:
 %    pointCloudAvg
 %      Point cloud that is a spatial average of both inputs
@@ -21,6 +21,9 @@ cols = depth_dim(2);
 
 f_inv = cols/(2*tan(0.5*constants.fovh));
 cont = 1;
+
+A = zeros(numValidPoints, 6);
+B = zeros(numValidPoints, 1);
 
 for u = 2:cols-1
     for v = 2:rows-1

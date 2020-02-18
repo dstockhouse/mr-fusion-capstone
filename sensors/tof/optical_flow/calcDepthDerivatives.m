@@ -36,7 +36,11 @@ for u = 1:cols-1
       end
    end
 end
+
 % Spatial derivatives
+du = zeros(rows,cols);
+dv = zeros(rows,cols);
+dt = zeros(rows,cols);
 for v = 1:rows-1
     for u = 2:cols-2
         if null(v,u) == false

@@ -53,13 +53,14 @@ constants.fov_horizontal = 69 *pi/180;
 constants.fov_vertical   = 51 *pi/180;
 constants.fovh = constants.fov_horizontal;
 constants.fovv = constants.fov_vertical;
+constants.fps = 1;
 
 constants.max_cols = 640;
 constants.max_rows = 360;
 
 %% Gaussian pyramid
 
-gaussian_levels = 4;
+gaussian_levels = 3;
 [p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
 [p_depth_new, p_points_new] = gaussian_pyramid(move_depth, gaussian_levels, constants);
 
@@ -67,9 +68,6 @@ gaussian_levels = 4;
 normimage = mat2gray(start_depth);
 figure(1);
 imshow(normimage);
-
-cols = constants.max_cols;
-rows = constants.max_rows;
 
 % for ii = 1:gaussian_levels
 % 
@@ -88,8 +86,9 @@ p_kai = zeros(gaussian_levels, 6);
 p_transformations = zeros(gaussian_levels, 4, 4);
 accumulatedTransformation = eye(4);
 
-cols = constants.max_cols;
-rows = constants.max_rows;
+cols = round(constants.max_cols / 2^gaussian_levels);
+rows = round(constants.max_rows / 2^gaussian_levels);
+kai_est = zeros(6, 1);
 % Iterate through the gaussian pyramid
 for image_level = gaussian_levels:-1:1
 
@@ -113,22 +112,28 @@ for image_level = gaussian_levels:-1:1
     [points_average, num_points] = average_point_clouds(level_points_old, level_points_warped, constants);
 
     %% Compute depth derivatives
+    [du, dv, dt] = calcDepthDerivatives(points_average, level_points_old, level_points_new, constants);
+    differentials(1:rows, 1:cols, 1) = du;
+    differentials(1:rows, 1:cols, 2) = dv;
+    differentials(1:rows, 1:cols, 3) = dt;
 
     %% Compute uncertainties & weighting
-%    weights = compute_weights( cumulativeTransformation);
+    weights = compute_weights(level_points_old, level_points_new, points_average, differentials, kai_est, accumulatedTransformation, constants);
 
     %% Solve weighted least squares
+%     solveOneLevel(
 
     %% Filter velocity
 %    p_kai(image_level, :) = filter_velocity( ... stuff ... );
 %    p_transformations(image_level,:,:) = kai2transformation(p_kai(image_level, :));
+   p_transformations(image_level,:,:) = eye(4);
 
     %% Update state for next loop
     level_transformation = reshape(p_transformations(image_level,:,:),4,4);
     accumulatedTransformation = level_transformation * accumulatedTransformation;
 
-    cols = cols / 2;
-    rows = rows / 2;
+    cols = cols * 2;
+    rows = rows * 2;
 
 end
 
