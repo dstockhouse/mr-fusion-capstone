@@ -1,4 +1,4 @@
-function K = KinematicSim(theta_L , theta_R, time_step)
+function K = KinematicSim(theta_L , theta_R, time_step, scenario)
 %--------------------------------------------------------------------------
 % Name: KinematicSim
 % Desc: Simulates the robot's kinematics graphically
@@ -6,9 +6,10 @@ function K = KinematicSim(theta_L , theta_R, time_step)
 %         theta_R - angular velocity of right wheel
 %         time_step - the desired amount of time passed between each
 %                     iteration of the function call
+%         scenario - a string to serve as the graph title
 % Outputs: K - a 3x1 matrix detailing the kinematics
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
-% Last Modified: 2/10/2020
+% Last Modified: 2/18/2020
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------
@@ -47,6 +48,9 @@ xlim([-5 5]);
 ylim([-5 5]);
 grid on
 daspect([1 1 1])
+xlabel('Meters');
+ylabel('Meters');
+title(scenario);
 axis normal
 
 %----------------------------------------------------------------------
@@ -67,6 +71,8 @@ K = transMatrix * inMat;    % K = |  Y_dot  | -> velocity in y
     % Update robot's position
     %----------------------------------------------------------------------
     Xpos = Xpos+K(1,1); Ypos = Ypos+K(2,1);
+    
+    rectangle('Position',[Xpos Ypos 0.01 0.01])
     
     %----------------------------------------------------------------------
     % Draw Robot's new position
