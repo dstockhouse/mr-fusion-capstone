@@ -41,9 +41,9 @@ impl IntoTangential for GPSPoint {
 
         // The transformation matrix that converts the basis or our coordinate system
         let c_e_k = Matrix3::new(
-            -(self.long.cos() * self.lat.sin()),       -ORIGIN.long.sin(),   -(ORIGIN.lat.cos() * ORIGIN.long.cos()), // Check this line
-            -(ORIGIN.lat.sin() * ORIGIN.long.sin()),    ORIGIN.long.cos(),   -(ORIGIN.lat.cos() * ORIGIN.long.sin()),
-              ORIGIN.lat.cos(),                         0.0,                  -ORIGIN.lat.sin() 
+            -(self.to_rad().long.cos() * self.to_rad().lat.sin()),       -ORIGIN.long.sin(),   -(ORIGIN.lat.cos() * ORIGIN.long.cos()), 
+            -(ORIGIN.lat.sin() * ORIGIN.long.sin()),                      ORIGIN.long.cos(),   -(ORIGIN.lat.cos() * ORIGIN.long.sin()),
+              ORIGIN.lat.cos(),                                           0.0,                  -ORIGIN.lat.sin() 
         ).try_inverse().unwrap();
 
         let result = c_e_k * r_kb_e;
@@ -53,7 +53,6 @@ impl IntoTangential for GPSPoint {
             y: result[1],
             z: result[2]
         }
-
     }
 }
 

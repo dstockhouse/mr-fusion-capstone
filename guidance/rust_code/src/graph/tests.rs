@@ -49,7 +49,7 @@ fn graph_to_geo_json_string() {
 }
 
 #[test]
-fn gps_distance() {
+fn distance() {
     
     let origin = graph::TangentialPoint {
         x: 0.0,
@@ -96,8 +96,7 @@ fn tangential_sub() {
 
 #[test]
 fn graph_into_tangential() {
-    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
-    let graph = graph.into_tangential();
+    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx").into_tangential();
 
     let origin = graph.vertices.iter()
         .filter(|vertex| 
