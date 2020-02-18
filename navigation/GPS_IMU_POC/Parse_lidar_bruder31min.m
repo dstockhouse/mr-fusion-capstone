@@ -15,7 +15,7 @@ vn200_data = zeros(41822, 14);
 vn200_txt_tag = zeros(41822, 1);
 vn200_accel = zeros(38020, 3);
 vn200_gyro = zeros(38020, 3);
-vn200_gps_ECEF = zeros(3802, 3);
+vn200_gps_ECEF_xyz = zeros(3802, 3);
 % vn200_baro = zeros(38020, 1);
 % vn200_mag_compass = zeros(38020, 3);
 
@@ -30,7 +30,8 @@ file_name = strcat('.\lidar_bruder_31min.log.csv');
 %% Parse through data in temp variables
 vn200_accel = zeros(1,3);
 vn200_gyro = zeros(1,3);
-vn200_gps_ECEF = zeros(1,3);
+vn200_gps_ECEF_xyz = zeros(1,3);
+vn200_gps_ECEF_vel = zeros(1,3);
 vn200_gps_Fs = 5;
 vn200_imu_Fs = 50;
 
@@ -46,16 +47,18 @@ for i = 1:length(vn200_txt_tag)
             vn200_mag_compass(size(vn200_mag_compass,1)+1, :) = vn200_data(i, [1,2,3]);
         end
     elseif vn200_txt_tag(i,1) == "$VNGPE"
-        if size(vn200_gps_ECEF, 1) == 1 && vn200_gps_ECEF(1,1) == 0
-           vn200_gps_ECEF(1, :) = vn200_data(i, [5,6,7]);
+        if size(vn200_gps_ECEF_xyz, 1) == 1 && vn200_gps_ECEF_xyz(1,1) == 0
+           vn200_gps_ECEF_xyz(1, :) = vn200_data(i, [5,6,7]);
+           vn200_gps_ECEF_vel(1, :) = vn200_data(i, [8,9,10]);
         else
-            vn200_gps_ECEF(size(vn200_gps_ECEF,1)+1, :) = vn200_data(i, [5,6,7]);
+            vn200_gps_ECEF_xyz(size(vn200_gps_ECEF_xyz,1)+1, :) = vn200_data(i, [5,6,7]);
+            vn200_gps_ECEF_vel(size(vn200_gps_ECEF_vel,1)+1, :) = vn200_data(i, [8,9,10]);
         end
     end
 end
 
 %% Save and export files for GPS and IMU data
-save('VN200_GPS_Data.mat','vn200_gps_ECEF','vn200_gps_Fs');
+save('VN200_GPS_Data.mat','vn200_gps_ECEF_xyz','vn200_gps_ECEF_vel','vn200_gps_Fs');
 save('VN200_IMU_Data.mat','vn200_accel','vn200_gyro','vn200_mag_compass','vn200_imu_Fs');
 
 
