@@ -12,8 +12,9 @@ BASENAME = $(shell basename $(lastword $(DIRNAME)))
 
 # Source and header directories
 MAINDIR = main
+TESTDIR = test
 SRCDIR = src
-INCDIR = inc ../system
+INCDIR = inc ../framework
 
 # bld and subdirectories
 BLDDIR = bld
@@ -34,8 +35,8 @@ MAINDEP = $(MAINBASE:%=$(DEPDIR)/%.d)
 MAINBIN = $(MAINBASE:%=$(BINDIR)/%.elf)
 
 # Test sources and binaries for cgreen
-TESTSRC = $(BASENAME)_test.c
-TESTBASE = $(basename $(TESTSRC))
+TESTSRC = $(notdir $(wildcard $(TESTDIR)/*.c))
+TESTBASE = $(foreach src,$(TESTSRC),$(basename $(src)))
 TESTOBJ = $(TESTBASE:%=$(OBJDIR)/%.o)
 TESTDEP = $(TESTBASE:%=$(DEPDIR)/%.d)
 TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
@@ -54,13 +55,14 @@ POSTCOMPILE = touch $@
 
 
 # Set up path for source file searching in main/ and src/
-SRCPATH = $(MAINDIR: =:):$(SRCDIR: =:)
+SRCPATH = $(MAINDIR: =:):$(TESTDIR: =:):$(SRCDIR: =:)
 vpath %.c $(SRCPATH)
 vpath %.o $(OBJDIR)
 
 # Useful debug print for make variables
-# $(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} MAINOBJ ${MAINOBJ} TESTOBJ ${TESTOBJ})
-# $(info DEPS ${DEPS} ${MAINDEP} ${TESTDEP} DEPFLAGS ${DEPFLAGS})
+$(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} MAINOBJ ${MAINOBJ} TESTOBJ ${TESTOBJ})
+$(info DEPS ${DEPS} ${MAINDEP} ${TESTDEP} DEPFLAGS ${DEPFLAGS})
+$(info TESTSRC=$(TESTSRC) TESTBASE=$(TESTBASE) TESTBIN=$(TESTBIN) TESTOBJ=$(TESTOBJ) TESTDEP=$(TESTDEP) OBJDIR=$(OBJDIR) )
 
 
 ### Start rules
@@ -68,6 +70,7 @@ vpath %.o $(OBJDIR)
 # Main is the default
 .PHONY: main
 main: $(MAINBIN)
+	cp $^ .
 
 # Perform unit test (after executing below rules)
 # Needs to include the cgreen library, which isn't necessary most of the time
@@ -79,7 +82,7 @@ test: $(TESTBIN)
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
 
-# Rule for all executable binaries (and directory)
+# Rule to make all executable binaries
 $(BINDIR)/%.elf: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
@@ -87,7 +90,7 @@ $(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
-# Rule for all object files (and directory)
+# Rule to make all object files
 .SECONDARY: $(OBJS) $(MAINOBJ) $(TESTOBJ) $(MAINBIN) $(TESTBIN)
 %.o: %.c
 $(OBJDIR)/%.o: $(DEPDIR)/%.d
@@ -95,7 +98,7 @@ $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
 	$(CC) $(CFLAGS) $(DEPFLAGS) $(INCFLAGS) -c $< -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
-# Rule for all directories when they are needed
+# Rule to make all directories when they are needed
 $(OBJDIR) $(DEPDIR) $(BINDIR):
 	mkdir -p $@
 
