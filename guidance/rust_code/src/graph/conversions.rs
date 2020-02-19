@@ -10,8 +10,8 @@ const E: f64 = 0.0818;
 
 // Front entrance of king
 const ORIGIN: GPSPointDeg = GPSPointDeg {
-    lat: 34.6147979,
-    long: -112.4509615,
+    lat: 34.6147979_f64,
+    long: -112.4509615_f64,
     height: 1582.3
 };
 
@@ -26,12 +26,14 @@ impl IntoTangential for GPSPointDeg {
     type Output = TangentialPoint;
 
     fn into_tangential(self) -> TangentialPoint {
+        
+        let origin = ORIGIN.to_rad();
 
         // vector from center of the earth to an arbitrary point on the map
         let r_ek_e = self.to_rad().to_xyz();
 
         // vector from the center of the earth to the origin of our tangential frame
-        let r_eb_e = ORIGIN.to_rad().to_xyz();
+        let r_eb_e = origin.to_xyz();
 
         // Vector that goes from origin to an arbitrary point of the map.
         // Still being expressed in terms of a rectangular frame with its origin at the center of
@@ -40,9 +42,9 @@ impl IntoTangential for GPSPointDeg {
 
         // The transformation matrix that converts the basis or our coordinate system
         let c_e_k = Matrix3::new(
-            -(self.to_rad().long.cos() * self.to_rad().lat.sin()),       -ORIGIN.long.sin(),   -(ORIGIN.lat.cos() * ORIGIN.long.cos()), 
-            -(ORIGIN.lat.sin() * ORIGIN.long.sin()),                      ORIGIN.long.cos(),   -(ORIGIN.lat.cos() * ORIGIN.long.sin()),
-              ORIGIN.lat.cos(),                                           0.0,                  -ORIGIN.lat.sin() 
+            -(self.to_rad().long.cos() * self.to_rad().lat.sin()),       -origin.long.sin(),   -(origin.lat.cos() * origin.long.cos()), 
+            -(origin.lat.sin() * origin.long.sin()),                      origin.long.cos(),   -(origin.lat.cos() * origin.long.sin()),
+              origin.lat.cos(),                                           0.0,                  -origin.lat.sin() 
         ).try_inverse().unwrap();
 
         let result = c_e_k * r_kb_e;
