@@ -1,21 +1,21 @@
 use crate::error::Error;
 use crate::graph::{Graph, TangentialPoint};
 use crate::constants::ROBOT_RADIUS;
-use std::f64;
+use crate::states::States;
 
-fn plan_path() {
+pub fn plan_path(graph: &Graph<TangentialPoint>) -> Result<States, Error>{
     // TODO: Send Message to UI
     
-
-    // TODO: Is robot on edge?
+    //robot_on_edge(&graph, robot_loc: &TangentialPoint)
+    
     unimplemented!();
 
 }
 
-pub(self) fn robot_on_edge(graph: &Graph<TangentialPoint>, robot_loc: &TangentialPoint) -> Result<(), Error> {
+pub(self) fn robot_on_edge(graph: &Graph<TangentialPoint>, robot_loc: &TangentialPoint) -> Result<usize, Error> {
 
     for edge in graph.edges.iter() {
-        
+
         let point_n = edge.points.iter();
         let mut point_n_plus_1  = edge.points.iter();
         point_n_plus_1.next();
