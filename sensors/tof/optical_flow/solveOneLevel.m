@@ -65,7 +65,7 @@ res = -B;
 for k=1:6
     res = res + var(k) * A(:,k);
 end
-est_cov = (1/(numValidPoints - 6))*inv(AtA)*norm(res);
+est_cov = (1/(numValidPoints - 6))*inv(AtA)*norm(res,2); % Might just be norm(res)^2
 
 % Update velocity
 kai = var;
