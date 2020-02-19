@@ -27,7 +27,9 @@ B = zeros(numValidPoints, 1);
 
 for u = 2:cols-1
     for v = 2:rows-1
-        if null(v,u) == false
+        
+        % Only compute if point has nonzero depth (real point)
+        if pointCloudAvg(v,u,3) > 1
             d = pointCloudAvg(v,u,3);
             inv_d = 1/d;
             x = pointCloudAvg(v,u,1);
@@ -48,9 +50,14 @@ for u = 2:cols-1
         end
     end
 end
+
+% Restrict to get rid of the points on the edges (not part of eqn above)
+A = A(1:cont-1,:);
+B = B(1:cont-1,:);
+
 % Solve the linear system of equations using weighted least squares
-AtA = A' .* A;
-AtB = A' .* B;
+AtA = A' * A;
+AtB = A' * B;
 var = linsolve(AtA,AtB);
 
 % Covariance matrix calc
@@ -58,7 +65,7 @@ res = -B;
 for k=1:6
     res = res + var(k) * A(:,k);
 end
-est_cov = (1/(num_valid_points - 6))*inv(AtA)*norm(res);
+est_cov = (1/(numValidPoints - 6))*inv(AtA)*norm(res);
 
 % Update velocity
 kai = var;

@@ -32,7 +32,7 @@ for ii = 1:cols
    for jj = 1:rows
 
        % Only average if both have positive depth
-       if pointCloudOld(jj, ii, 3) > 0 && pointCloudNew(jj, ii, 3) > 0
+       if pointCloudOld(jj, ii, 3) > 1 && pointCloudNew(jj, ii, 3) > 1
 
            % Average xyz at that pixel
            pointCloudAvg(jj, ii, 1) = (pointCloudOld(jj, ii, 1) + pointCloudNew(jj, ii, 1)) / 2;

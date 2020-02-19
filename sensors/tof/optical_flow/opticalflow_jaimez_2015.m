@@ -62,24 +62,47 @@ constants.max_rows = 360;
 
 gaussian_levels = 3;
 [p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
-[p_depth_new, p_points_new] = gaussian_pyramid(move_depth, gaussian_levels, constants);
+% Add noise to simulate 0 motion
+p_depth_new = p_depth_old + 10*randn(size(p_depth_old));
+p_points_new = p_points_old + 10*randn(size(p_points_old));
+% p_depth_new = p_depth_old;
+% p_points_new = p_points_old;
+% [p_depth_new, p_points_new] = gaussian_pyramid(move_depth, gaussian_levels, constants);
 
 % Plot the pyramid
 normimage = mat2gray(start_depth);
 figure(1);
 imshow(normimage);
 
-% for ii = 1:gaussian_levels
-% 
-%     clear normimage;
+cols = constants.max_cols;
+rows = constants.max_rows;
+for ii = 1:gaussian_levels
+
+    clear normimage points_temp;
 %     normimage(1:rows,1:cols) = mat2gray(p_depth(ii, 1:rows, 1:cols));
-%     figure(1+ii);
+    points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
+    figure(4+ii);
+    pcshow(points_temp);
+
+    cols = cols/2;
+    rows = rows/2;
+
+end
+
+cols = constants.max_cols;
+rows = constants.max_rows;
+for ii = 1:gaussian_levels
+
+    clear points_temp;
+    points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
+    figure(1+ii);
 %     imshow(normimage);
-% 
-%     cols = cols/2;
-%     rows = rows/2;
-% 
-% end
+    pcshow(points_temp);
+
+    cols = cols/2;
+    rows = rows/2;
+
+end
 
 % Enough room to save transformation state for each pyramid level
 p_kai = zeros(gaussian_levels, 6);
@@ -109,24 +132,43 @@ for image_level = gaussian_levels:-1:1
 	%% Take the average of the old PC and new warped PC
     % Error popping up here
     level_points_old = reshape(p_points_old(image_level,1:rows,1:cols,:), rows, cols, 3);
-    [points_average, num_points] = average_point_clouds(level_points_old, level_points_warped, constants);
+    [points_average, num_points] = average_point_clouds(...
+        level_points_old,...
+        level_points_warped,...
+        constants);
 
     %% Compute depth derivatives
-    [du, dv, dt] = calcDepthDerivatives(points_average, level_points_old, level_points_new, constants);
+    [du, dv, dt] = calcDepthDerivatives(...
+        points_average,...
+        level_points_old,...
+        level_points_new,...
+        constants);
     differentials(1:rows, 1:cols, 1) = du;
     differentials(1:rows, 1:cols, 2) = dv;
     differentials(1:rows, 1:cols, 3) = dt;
 
     %% Compute uncertainties & weighting
-    weights = compute_weights(level_points_old, level_points_new, points_average, differentials, kai_est, accumulatedTransformation, constants);
+    weights = compute_weights(...
+        level_points_old,...
+        level_points_new,...
+        points_average,...
+        differentials,...
+        kai_est,...
+        accumulatedTransformation,...
+        constants);
 
     %% Solve weighted least squares
-%     solveOneLevel(
+    [p_kai(image_level, :), est_cov] = solveOneLevel(...
+        points_average,...
+        weights,...
+        du, dv, dt,...
+        num_points,...
+        constants);
 
     %% Filter velocity
-%    p_kai(image_level, :) = filter_velocity( ... stuff ... );
-%    p_transformations(image_level,:,:) = kai2transformation(p_kai(image_level, :));
-   p_transformations(image_level,:,:) = eye(4);
+%     p_kai(image_level, :) = filter_velocity();
+    p_transformations(image_level,:,:) = kai2trans(p_kai(image_level, :)');
+%     p_transformations(image_level,:,:) = eye(4);
 
     %% Update state for next loop
     level_transformation = reshape(p_transformations(image_level,:,:),4,4);
@@ -140,4 +182,5 @@ end
 % If more than 2 images in sequence
 p_points_old = p_points_new;
 p_depth_old = p_depth_new;
+kai_est = trans2kai(accumulatedTransformation);
 

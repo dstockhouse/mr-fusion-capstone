@@ -20,17 +20,8 @@ depth_dim = size(pointCloudOld);
 rows = depth_dim(1);
 cols = depth_dim(2);
 
-% Perform this log in SE(3) ??? 
-% Still figuring this out
-transformationLog = logm(cumulativeTransformation) * constants.fps;
-
-% Unpack SE<3> matrix into se(3) vector
-transformationVector(1,1) = transformationLog(1,4);
-transformationVector(1,2) = transformationLog(2,4);
-transformationVector(1,3) = transformationLog(3,4);
-transformationVector(1,4) = transformationLog(3,2) - transformationLog(2,3);
-transformationVector(1,5) = transformationLog(1,3) - transformationLog(3,1);
-transformationVector(1,6) = transformationLog(2,1) - transformationLog(1,2);
+% Unpack SE(3) rigid transformation into se(3) vector
+transformationVector = trans2kai(cumulativeTransformation * constants.fps);
 
 % kai = velocity state [vx, vy, vz, wx, wy, wz]'
 kai_level = kai_est - transformationVector;
