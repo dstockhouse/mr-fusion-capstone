@@ -18,14 +18,14 @@ const ORIGIN: GPSPointDeg = GPSPointDeg {
 pub trait IntoTangential {
     type Output;
 
-    fn into_tangential(self) -> Self::Output;
+    fn into_tangential(&self) -> Self::Output;
 }
 
 impl IntoTangential for GPSPointDeg {
 
     type Output = TangentialPoint;
 
-    fn into_tangential(self) -> TangentialPoint {
+    fn into_tangential(&self) -> TangentialPoint {
         
         let origin = ORIGIN.to_rad();
 
@@ -79,35 +79,5 @@ impl GPSPointDeg {
             long: self.long.to_radians(),
             height: self.height
         }
-    }
-}
-
-impl<'a> IntoTangential for Graph<'a, GPSPointDeg> {
-    
-    type Output = Graph<'a, TangentialPoint>;
-
-    fn into_tangential(self) -> Self::Output {
-        
-        // Preserving the connection matrix
-        let connection_matrix = self.connection_matrix;
-
-        let edges = self.edges.into_iter().map(|edge| {
-            let name = edge.name;
-            let points = edge.points.into_iter().map(|gps_point| {
-                gps_point.into_tangential()
-            }).collect::<Vec<TangentialPoint>>();
-
-            Edge{name, points}
-
-        }).collect();
-
-        let vertices = self.vertices.into_iter().map(|vertex| {
-            let name = vertex.name;
-            let point = vertex.point.into_tangential();
-
-            Vertex::new(name, point)
-        }).collect(); 
-
-        Graph{connection_matrix, edges, vertices}
     }
 }

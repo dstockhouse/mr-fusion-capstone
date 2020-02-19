@@ -12,7 +12,7 @@ fn plan_path() {
 
 }
 
-pub(self) fn robot_on_edge(graph: &Graph<TangentialPoint>, robot_loc: &TangentialPoint) -> Result<(), Error> {
+pub(self) fn robot_on_edge(graph: &Graph, robot_loc: &TangentialPoint) -> Result<(), Error> {
 
     for edge in graph.edges.iter() {
         
@@ -24,9 +24,9 @@ pub(self) fn robot_on_edge(graph: &Graph<TangentialPoint>, robot_loc: &Tangentia
         let points_n_n_plus_1 = point_n.zip(point_n_plus_1);
         for (point_n, point_n_plus_1) in points_n_n_plus_1 {
             // segmenting points on the line into more points
-            let (start_x, final_x) = (point_n.x, point_n_plus_1.x);
-            let (start_y, final_y) = (point_n.y, point_n_plus_1.y);
-            let (start_z, final_z) = (point_n.z, point_n_plus_1.z);
+            let (start_x, final_x) = (point_n.tangential.x, point_n_plus_1.tangential.x);
+            let (start_y, final_y) = (point_n.tangential.y, point_n_plus_1.tangential.y);
+            let (start_z, final_z) = (point_n.tangential.z, point_n_plus_1.tangential.z);
             
             let (x_step, y_step, z_step) = ((final_x - start_x) / steps, 
                                             (final_y - start_y) / steps,

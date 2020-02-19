@@ -6,8 +6,7 @@ use crate::graph::conversions::IntoTangential;
 #[test]
 fn robot_on_graph_false_case() {
 
-    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx")
-        .into_tangential();
+    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
 
     let middle_of_watson_lake = graph::GPSPointDeg {
         lat: 34.351398,
@@ -23,8 +22,7 @@ fn robot_on_graph_false_case() {
 #[test]
 fn robot_on_graph_true_case() {
 
-    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx")
-        .into_tangential();
+    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
 
     let king_front_entrance = graph::GPSPointDeg {
         lat: 34.6147979,

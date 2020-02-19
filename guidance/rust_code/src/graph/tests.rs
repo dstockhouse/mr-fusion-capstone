@@ -29,12 +29,12 @@ fn initialize_from_gpx_file_single_edge() {
 
     assert_eq!(edges.len(), 1);
     assert_eq!(edge.points.len(), 3);
-    assert_eq!(edge.points[0].long, -112.4484608);
-    assert_eq!(edge.points[0].lat, 34.615871);
-    assert_eq!(edge.points[1].long, -112.4484635);
-    assert_eq!(edge.points[1].lat, 34.6157165);
-    assert_eq!(edge.points[2].long, -112.4484742);
-    assert_eq!(edge.points[2].lat, 34.6155377);
+    assert_eq!(edge.points[0].gps.long, -112.4484608);
+    assert_eq!(edge.points[0].gps.lat, 34.615871);
+    assert_eq!(edge.points[1].gps.long, -112.4484635);
+    assert_eq!(edge.points[1].gps.lat, 34.6157165);
+    assert_eq!(edge.points[2].gps.long, -112.4484742);
+    assert_eq!(edge.points[2].gps.lat, 34.6155377);
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn tangential_sub() {
 
 #[test]
 fn graph_into_tangential() {
-    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx").into_tangential();
+    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
 
     let origin = graph.vertices.iter()
         .filter(|vertex| 
@@ -104,7 +104,7 @@ fn graph_into_tangential() {
         ).next().unwrap();
 
     
-    assert_eq!(origin.point, 
+    assert_eq!(origin.point.tangential, 
         TangentialPoint{x: 0.0, y: 0.0, z: 0.0}
     );
 
