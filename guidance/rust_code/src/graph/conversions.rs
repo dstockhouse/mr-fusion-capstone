@@ -1,5 +1,5 @@
 
-use super::{GPSPoint, TangentialPoint, Graph, Edge, Vertex};
+use super::{GPSPointDeg, TangentialPoint, Graph, Edge, Vertex};
 use nalgebra::{Vector3, Matrix3};
 
 // Distance from the earth relative to the equator (m)
@@ -9,7 +9,7 @@ const RO: f64 = 6378137.0;
 const E: f64 = 0.0818;
 
 // Front entrance of king
-const ORIGIN: GPSPoint = GPSPoint {
+const ORIGIN: GPSPointDeg = GPSPointDeg {
     lat: 34.6147979,
     long: -112.4509615,
     height: 1582.3
@@ -21,7 +21,7 @@ pub trait IntoTangential {
     fn into_tangential(self) -> Self::Output;
 }
 
-impl IntoTangential for GPSPoint {
+impl IntoTangential for GPSPointDeg {
 
     type Output = TangentialPoint;
 
@@ -55,7 +55,7 @@ impl IntoTangential for GPSPoint {
     }
 }
 
-impl GPSPoint {
+impl GPSPointDeg {
 
     /// Converts spherical cords to rectangular
     fn to_xyz(&self) -> Vector3<f64> {
@@ -71,8 +71,8 @@ impl GPSPoint {
     }
 
     /// Converts the GPS from degrees to radians
-    fn to_rad(&self) -> GPSPoint {
-        GPSPoint {
+    fn to_rad(&self) -> GPSPointDeg {
+        GPSPointDeg {
             lat: self.lat.to_radians(),
             long: self.long.to_radians(),
             height: self.height
@@ -80,7 +80,7 @@ impl GPSPoint {
     }
 }
 
-impl<'a> IntoTangential for Graph<'a, GPSPoint> {
+impl<'a> IntoTangential for Graph<'a, GPSPointDeg> {
     
     type Output = Graph<'a, TangentialPoint>;
 

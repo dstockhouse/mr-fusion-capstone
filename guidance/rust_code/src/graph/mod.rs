@@ -36,24 +36,30 @@ impl TangentialPoint {
 }
 
 #[derive(Debug)]
-pub struct GPSPoint {
+pub struct GPSPointDeg {
     pub lat: f64,
     pub long: f64,
     pub height: f64
 }
 
-impl Point for GPSPoint {
+impl Point for GPSPointDeg {
     fn get(&self) -> (f64, f64, f64) {
         (self.lat, self.long, self.height)
     }
 }
 
-impl PartialEq for GPSPoint {
+impl PartialEq for GPSPointDeg {
     fn eq(&self, other: &Self) -> bool {
         self.lat == other.lat 
             &&
         self.long == other.long
     }
+}
+
+pub(self) struct GPSPointRad {
+    pub(self) lat: f64,
+    pub(self) long: f64,
+    pub(self) height: f64
 }
 
 #[derive(Debug)]
@@ -110,9 +116,9 @@ impl<'a, T> PartialEq for Vertex<'a, T>
 }
 
 pub(self) fn connect_vertices_with_edges(
-    edges: Vec<Edge<GPSPoint>>, 
-    vertices: Vec<Vertex<GPSPoint>>
-) -> Graph<GPSPoint> {
+    edges: Vec<Edge<GPSPointDeg>>, 
+    vertices: Vec<Vertex<GPSPointDeg>>
+) -> Graph<GPSPointDeg> {
 
     let connection_matrix = vec![vec![None; vertices.len()]; vertices.len()];
     let mut graph = Graph {
@@ -148,7 +154,7 @@ pub(self) fn connect_vertices_with_edges(
 }
 
 
-pub fn initialize_from_gpx_file(name: &str) -> Graph<GPSPoint> {
+pub fn initialize_from_gpx_file(name: &str) -> Graph<GPSPointDeg> {
     // Open file and read contents to memory
     let file = File::open(name).unwrap();
     let reader = BufReader::new(file);
@@ -164,9 +170,9 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph<GPSPoint> {
             let name = vertex_data.name.unwrap();
             
             
-            Vertex::new(name, GPSPoint{long, lat, height})
+            Vertex::new(name, GPSPointDeg{long, lat, height})
         })
-        .collect::<Vec<Vertex<GPSPoint>>>();
+        .collect::<Vec<Vertex<GPSPointDeg>>>();
 
     let edges = gpx_data.tracks.into_iter() 
         .map(|track| {
@@ -176,15 +182,15 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph<GPSPoint> {
                     let height = waypoint.elevation.unwrap();
                     let (long, lat) = waypoint.point().x_y();
 
-                    GPSPoint{long, lat, height}
+                    GPSPointDeg{long, lat, height}
                 })
-                .collect::<Vec<GPSPoint>>();
+                .collect::<Vec<GPSPointDeg>>();
 
             let name = track.name.unwrap();
 
             Edge{name, points: gps_points}
         })
-        .collect::<Vec<Edge<GPSPoint>>>();
+        .collect::<Vec<Edge<GPSPointDeg>>>();
     
     let graph = connect_vertices_with_edges(edges, vertices);
 
@@ -192,7 +198,7 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph<GPSPoint> {
 
 }
 
-pub fn graph_to_geo_json_string(graph: &Graph<GPSPoint>) -> String {
+pub fn graph_to_geo_json_string(graph: &Graph<GPSPointDeg>) -> String {
     // Allocating Memory
     let number_of_vertices_and_edges = graph.edges.len() + graph.vertices.len();
     let mut features = Vec::with_capacity(number_of_vertices_and_edges);

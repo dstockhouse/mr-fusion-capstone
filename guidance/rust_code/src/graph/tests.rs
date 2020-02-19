@@ -72,7 +72,7 @@ fn distance() {
 #[test]
 fn into_tangential() {
 
-    let king_front_entrance = graph::GPSPoint {
+    let king_front_entrance = graph::GPSPointDeg {
         lat: 34.6147979,
         long: -112.4509615,
         height: 1582.3
