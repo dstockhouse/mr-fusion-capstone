@@ -109,3 +109,29 @@ fn graph_into_tangential() {
     );
 
 }
+
+#[test]
+fn into_tangential_correct_distances() {
+
+    let king_start_edge = graph::GPSPointDeg {
+        lat: 34.6147979,
+        long: -112.4509615,
+        height: 1582.341
+    }.into_tangential();
+
+    let king_end_edge = graph::GPSPointDeg {
+        lat: 34.6148752,
+        long: -112.4509389,
+        height: 1581.907
+    }.into_tangential();
+
+    // Expected distance is about 8.8382
+    let distance_between_points = king_end_edge.distance(&king_start_edge);
+
+    assert!(
+        distance_between_points > 8.0
+            &&
+        distance_between_points < 9.0
+    );
+    
+}

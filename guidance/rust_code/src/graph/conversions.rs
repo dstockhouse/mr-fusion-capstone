@@ -1,5 +1,5 @@
 
-use super::{GPSPointDeg, TangentialPoint, Graph, Edge, Vertex, GPSPointRad};
+use super::{GPSPointDeg, TangentialPoint, GPSPointRad};
 use nalgebra::{Vector3, Matrix3};
 
 // Distance from the earth relative to the equator (m)
