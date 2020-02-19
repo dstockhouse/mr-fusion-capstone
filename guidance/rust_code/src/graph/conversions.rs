@@ -1,5 +1,5 @@
 
-use super::{GPSPointDeg, TangentialPoint, Graph, Edge, Vertex};
+use super::{GPSPointDeg, TangentialPoint, Graph, Edge, Vertex, GPSPointRad};
 use nalgebra::{Vector3, Matrix3};
 
 // Distance from the earth relative to the equator (m)
@@ -58,7 +58,17 @@ impl IntoTangential for GPSPointDeg {
 }
 
 impl GPSPointDeg {
+    /// Converts the GPS from degrees to radians
+    fn to_rad(&self) -> GPSPointRad {
+        GPSPointRad {
+            lat: self.lat.to_radians(),
+            long: self.long.to_radians(),
+            height: self.height
+        }
+    }
+}
 
+impl GPSPointRad {
     /// Converts spherical cords to rectangular
     fn to_xyz(&self) -> Vector3<f64> {
         
@@ -70,14 +80,5 @@ impl GPSPointDeg {
             (re + self.height) * self.lat.cos() * self.long.sin(),
             ((re + re*E.powi(2)) + self.height) * self.lat.sin()
         )
-    }
-
-    /// Converts the GPS from degrees to radians
-    fn to_rad(&self) -> GPSPointDeg {
-        GPSPointDeg {
-            lat: self.lat.to_radians(),
-            long: self.long.to_radians(),
-            height: self.height
-        }
     }
 }

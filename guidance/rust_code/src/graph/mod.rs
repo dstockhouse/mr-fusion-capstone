@@ -118,7 +118,7 @@ type EdgeIndex = usize;
 pub struct Graph <'a> {
     pub vertices: Vec<Vertex<'a>>,
     pub edges: Vec<Edge>,
-    pub connection_matrix: Vec<Vec<Option<EdgeIndex>>> //Matrix of indices of edges
+    pub connection_matrix: Vec<Vec<Option<EdgeIndex>>>
 }
 
 pub(self) fn connect_vertices_with_edges(
