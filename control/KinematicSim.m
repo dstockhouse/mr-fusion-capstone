@@ -1,4 +1,4 @@
-function K = KinematicSim(theta_L , theta_R, time_step, scenario)
+function K = KinematicSim(theta_L , theta_R, time_step, scenario, fig)
 %--------------------------------------------------------------------------
 % Name: KinematicSim
 % Desc: Simulates the robot's kinematics graphically
@@ -6,14 +6,15 @@ function K = KinematicSim(theta_L , theta_R, time_step, scenario)
 %         theta_R - angular velocity of right wheel
 %         time_step - the desired amount of time passed between each
 %                     iteration of the function call
-%         scenario - a string to serve as the graph title
+%         scenario - a string to serve as the graph title (debug only)
+%         fig - a tag used to determine what obstacles to draw (debug only)
 % Outputs: K - a 3x1 matrix detailing the kinematics
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
-% Last Modified: 2/18/2020
+% Last Modified: 2/19/2020
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------
-% Declare the heading as a persistent variable
+% Declare the current heading as a persistent variable
 %--------------------------------------------------------------------------
 persistent heading;
 if isempty(heading)
@@ -30,7 +31,7 @@ end
 
 persistent Ypos;
 if isempty(Ypos)
-    Ypos = 0;
+    Ypos = -1;
 end
 
 %--------------------------------------------------------------------------
@@ -44,14 +45,17 @@ R = .1524; % radius of the axle
 %----------------------------------------------------------------------
 clf('reset')
 
-xlim([-5 5]);
-ylim([-5 5]);
+%----------------------------------------------------------------------
+% Create Figure
+%----------------------------------------------------------------------
+xlim([-4 4]);
+ylim([-4 4]);
 grid on
 daspect([1 1 1])
 xlabel('Meters');
 ylabel('Meters');
 title(scenario);
-axis normal
+axis square
 
 %----------------------------------------------------------------------
 % Create kinematic model
@@ -67,27 +71,43 @@ K = transMatrix * inMat;    % K = |  Y_dot  | -> velocity in y
                             %     | PSI_dot | -> angular velocity
                                
     
-    %----------------------------------------------------------------------
-    % Update robot's position
-    %----------------------------------------------------------------------
-    Xpos = Xpos+K(1,1); Ypos = Ypos+K(2,1);
+%----------------------------------------------------------------------
+% Update robot's position
+%----------------------------------------------------------------------
+Xpos = Xpos+K(1,1); Ypos = Ypos+K(2,1);
     
-    rectangle('Position',[Xpos Ypos 0.01 0.01])
+rectangle('Position',[Xpos Ypos 0.01 0.01])
     
-    %----------------------------------------------------------------------
-    % Draw Robot's new position
-    %----------------------------------------------------------------------
-    % Base
-    line([Xpos-0.24*cos(heading) Xpos+0.24*cos(heading)], ...
-         [Ypos-0.24*sin(heading) Ypos+0.24*sin(heading)], 'Linewidth',3);
-    % Pointer
-    line([((Xpos+0.24*sin(heading))+(Xpos-0.24*sin(heading)))/2 ...
-            Xpos+0.24*cos(heading+pi/2)] , ...
-         [((Ypos+0.24*cos(heading))+(Ypos-0.24*cos(heading)))/2 ...
-            Ypos+0.24*sin(heading+pi/2)], 'Linewidth',3);
+%----------------------------------------------------------------------
+% Draw Robot's new position
+%----------------------------------------------------------------------
+% Base
+line([Xpos-0.24*cos(heading) Xpos+0.24*cos(heading)], ...
+     [Ypos-0.24*sin(heading) Ypos+0.24*sin(heading)], 'Linewidth',3);
+% Pointer
+line([((Xpos+0.24*sin(heading))+(Xpos-0.24*sin(heading)))/2 ...
+        Xpos+0.24*cos(heading+pi/2)] , ...
+     [((Ypos+0.24*cos(heading))+(Ypos-0.24*cos(heading)))/2 ...
+        Ypos+0.24*sin(heading+pi/2)], 'Linewidth',3);
+        
+%----------------------------------------------------------------------
+% Draw Obstacles
+%----------------------------------------------------------------------
+% Third scenario
+if fig == 3
+rectangle('Position',[-1,0.5,2,1], 'Curvature',0.5);
+end
     
-    pause(time_step); % Simulate time step
+% Fourth scenario
+if fig == 4
+rectangle('Position',[-0.3,0.6,0.6,0.5], 'Curvature',0.5);
+end
     
-    heading = heading + K(3,1); % Update heading
+%----------------------------------------------------------------------
+% Update Function
+%----------------------------------------------------------------------
+pause(time_step); % Simulate time step
+    
+heading = heading + K(3,1); % Update heading
                                  
 end % End of function
