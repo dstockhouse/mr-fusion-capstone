@@ -29,6 +29,7 @@ function warped = warp_image(pointCloud, transformation, constants)
 depth_dim = size(pointCloud);
 rows = depth_dim(1);
 cols = depth_dim(2);
+
 focal_pt = cols / (2*tan(0.5*constants.fovh));
 inv_f = 1/focal_pt;
 % disp_u_i = 0.5 * (cols - 1);

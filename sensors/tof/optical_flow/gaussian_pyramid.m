@@ -114,6 +114,7 @@ for level = 1:levels
     end % if level > 1
 
     % Calculate point cloud (xyz coords) for each pixel
+    % Could use depth2points function instead
     level_f_length = cols_l / (2 * tan(0.5 * constants.fov_horizontal));
     u_center_l = 0.5 * cols_l;
     v_center_l = 0.5 * rows_l;

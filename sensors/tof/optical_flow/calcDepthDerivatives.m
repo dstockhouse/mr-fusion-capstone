@@ -79,7 +79,7 @@ end
 for u = 1:cols
     for v = 1:rows
         if pointCloudAvg(v,u,3) > 0.1
-            dt(v,u) = constants.fps * (pointCloudAvg(v,u)-pointCloudOld(v,u));
+            dt(v,u) = constants.fps * (pointCloudAvg(v,u,3)-pointCloudOld(v,u,3));
         end
     end
 end

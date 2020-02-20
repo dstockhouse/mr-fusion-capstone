@@ -55,16 +55,19 @@ constants.fovh = constants.fov_horizontal;
 constants.fovv = constants.fov_vertical;
 constants.fps = 1;
 
-constants.max_cols = 640;
-constants.max_rows = 360;
+constants.cols = 640;
+constants.rows = 360;
 
 %% Gaussian pyramid
 
 gaussian_levels = 3;
-[p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
+[p_depth_old, p_points_old] = gaussian_pyramid(double(start_depth) ./ 1000, gaussian_levels, constants);
 
 % Add noise to simulate stationary camera
-new_depth = double(start_depth) + 10*randn(size(start_depth));
+% new_depth = double(start_depth) + 10*randn(size(start_depth));
+% new_depth = double(start_depth) ./ 1000;
+% new_depth = double(move_depth) ./ 1000;
+new_depth = double(rotate_depth) ./ 1000;
 [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
 
 % p_depth_new = p_depth_old + 10*randn(size(p_depth_old));
@@ -74,41 +77,48 @@ new_depth = double(start_depth) + 10*randn(size(start_depth));
 % [p_depth_new, p_points_new] = gaussian_pyramid(move_depth, gaussian_levels, constants);
 
 % Plot the pyramid
-PLOT_PYRAMID = false;
+PLOT_PYRAMID = true;
 if PLOT_PYRAMID
-    normimage = mat2gray(start_depth);
+    
+    % Show starting depth and points
+    cols = constants.cols;
+    rows = constants.rows;
     figure(1);
-    imshow(normimage);
-    
-    cols = constants.max_cols;
-    rows = constants.max_rows;
-    for ii = 1:gaussian_levels
-        
-        clear normimage points_temp;
-        %     normimage(1:rows,1:cols) = mat2gray(p_depth(ii, 1:rows, 1:cols));
-        points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
-        figure(4+ii);
-        pcshow(points_temp);
-        
-        cols = cols/2;
-        rows = rows/2;
-        
-    end
-    
-    cols = constants.max_cols;
-    rows = constants.max_rows;
+    imshownorm(reshape(p_depth_old(1,1:rows, 1:cols), rows, cols));
     for ii = 1:gaussian_levels
         
         clear points_temp;
         points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
         figure(1+ii);
-        %     imshow(normimage);
         pcshow(points_temp);
+        view(2);
         
         cols = cols/2;
         rows = rows/2;
         
     end
+    
+    % Show ending depth and points
+    cols = constants.cols;
+    rows = constants.rows;
+    figure(gaussian_levels+1);
+    imshownorm(reshape(p_depth_new(1,1:rows, 1:cols), rows, cols));
+    for ii = 1:gaussian_levels
+        
+        clear points_temp;
+        points_temp(1:rows, 1:cols, 1:3) = p_points_new(ii,1:rows,1:cols,:);
+        figure(gaussian_levels+ii+1);
+        pcshow(points_temp);
+        view(2);
+        
+        cols = cols/2;
+        rows = rows/2;
+        
+    end
+    
+    % Wait until user done looking at pyramid
+    fprintf('\tPress any key to continue...\n');
+    pause;
 end
 
 % Enough room to save transformation state for each pyramid level
@@ -180,6 +190,7 @@ for image_level = gaussian_levels:-1:1
     %% Update state for next loop
     level_transformation = reshape(p_transformations(image_level,:,:),4,4);
     accumulatedTransformation = level_transformation * accumulatedTransformation;
+    kai_level = trans2kai(accumulatedTransformation)
 
     cols = cols * 2;
     rows = rows * 2;
