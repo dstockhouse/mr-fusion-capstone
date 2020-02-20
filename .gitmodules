@@ -1,0 +1,3 @@
+[submodule "sensors/tof/v4l2_interface/aditof_sdk"]
+	path = sensors/tof/v4l2_interface/aditof_sdk
+	url = https://github.com/analogdevicesinc/aditof_sdk

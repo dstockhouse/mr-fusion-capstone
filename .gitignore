@@ -6,6 +6,7 @@
 *~
 *test
 *.pkt
+*.tof
 *.avi
 *.mp4
 *.asv
