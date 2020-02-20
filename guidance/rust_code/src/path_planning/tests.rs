@@ -14,7 +14,7 @@ fn robot_on_graph_false_case() {
         height: 1565.0
     }.into_tangential();
 
-    let robot_on_path = path_planning::robot_on_edge(&graph, &middle_of_watson_lake);
+    let robot_on_path = graph.closest_edge_to(&middle_of_watson_lake);
 
     assert_eq!(robot_on_path, Err(Error::RobotNotOnMap));
 }
@@ -30,7 +30,7 @@ fn robot_on_graph_true_case() {
         height: 1582.3
     }.into_tangential();
 
-    let robot_on_path = path_planning::robot_on_edge(&graph, &king_front_entrance);
+    let robot_on_path = graph.closest_edge_to(&king_front_entrance);
 
     assert_eq!(robot_on_path, Ok(()));
     

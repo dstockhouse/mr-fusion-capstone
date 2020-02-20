@@ -114,6 +114,13 @@ impl<'a> PartialEq for Vertex<'a>  {
 }
 
 type EdgeIndex = usize;
+type VertexIndex = usize;
+
+// Element at a matrix_index[i][j] indicates an Edge Index
+pub struct MatrixIndex {
+    pub ith: VertexIndex,
+    pub jth: VertexIndex
+}
 
 pub struct Graph <'a> {
     pub vertices: Vec<Vertex<'a>>,

@@ -125,7 +125,7 @@ fn into_tangential_correct_distances() {
         height: 1581.907
     }.into_tangential();
 
-    // Expected distance is about 8.8382
+    // Expected distance is about 8.8382m
     let distance_between_points = king_end_edge.distance(&king_start_edge);
 
     assert!(
@@ -135,3 +135,4 @@ fn into_tangential_correct_distances() {
     );
     
 }
+

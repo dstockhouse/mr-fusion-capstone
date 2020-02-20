@@ -28,6 +28,5 @@ fn main() {
             Err(err) => current_state = err.handle(),
             Ok(_) => ()
         }
-
     }
 }
