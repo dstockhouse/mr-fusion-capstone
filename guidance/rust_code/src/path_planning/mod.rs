@@ -1,9 +1,13 @@
-use crate::error::Error;
-use crate::graph::{Graph, TangentialPoint, MatrixIndex};
+use crate::graph;
+use crate::graph::{Graph, TangentialPoint, MatrixIndex, EdgeIndex};
 use crate::constants::ROBOT_RADIUS;
+use crate::error::Error;
+use crate::States;
+
 use std::f64;
 
-fn plan_path() {
+
+fn plan_path() -> Result<States, Error> {
     // TODO: Send Message to UI
     
 
@@ -16,7 +20,7 @@ fn plan_path() {
 impl<'a> Graph<'a> {
     /// Returns an error if the robot is not on the edge. Otherwise,
     /// returns the Matrix index indicating the edge containing the robot.
-    fn closest_edge_to(&self, robot_loc: &TangentialPoint) -> Result<(), Error> {
+    fn closest_edge_to(&self, robot_loc: &TangentialPoint) -> Result<MatrixIndex, Error> {
 
         for (edge_index, edge) in self.edges.iter().enumerate() {
             
@@ -43,7 +47,7 @@ impl<'a> Graph<'a> {
                     let temp_point = TangentialPoint{x, y, z};
                     
                     if temp_point.distance(robot_loc) <= ROBOT_RADIUS {
-                        // TODO: return matrix index here
+                        return self.connection_matrix_index_from(edge_index);
                     }
 
                     x += x_step;
@@ -53,10 +57,22 @@ impl<'a> Graph<'a> {
             }
         }
         
-        Err(Error::RobotNotOnMap)
+        Err(Error::PathPlanningNotOnMap)
     }
-}
 
+    fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
+        for (row_index, row) in self.connection_matrix.iter().enumerate() {
+            for (column_index, edge_index_in_connection_matrix) in row.iter().enumerate() {
+                if Some(edge_index) == *edge_index_in_connection_matrix {
+                    return Ok(MatrixIndex{ith: row_index, jth: column_index})
+                }
+            }
+        }
+
+        Err(Error::PathPlanningEdgeIndexNotInConnectionMatrix)
+    }
+    
+}
 
 #[cfg(test)]
 mod tests;

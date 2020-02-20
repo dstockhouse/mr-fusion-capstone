@@ -2,9 +2,10 @@ use crate::states::States;
 
 #[derive(PartialEq, Debug)]
 pub enum Error {
-    SubSystem,
-    PathDoesNotExist,
-    RobotNotOnMap,
+    WaitingSubSystem,
+    PathPlanningPathDoesNotExist,
+    PathPlanningNotOnMap,
+    PathPlanningEdgeIndexNotInConnectionMatrix,
 }
 
 impl Error {

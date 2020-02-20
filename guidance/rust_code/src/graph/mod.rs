@@ -113,10 +113,11 @@ impl<'a> PartialEq for Vertex<'a>  {
     }
 }
 
-type EdgeIndex = usize;
-type VertexIndex = usize;
+pub type EdgeIndex = usize;
+pub type VertexIndex = usize;
 
 // Element at a matrix_index[i][j] indicates an Edge Index
+#[derive(Debug, PartialEq)]
 pub struct MatrixIndex {
     pub ith: VertexIndex,
     pub jth: VertexIndex
