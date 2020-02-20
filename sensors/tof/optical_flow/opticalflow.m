@@ -24,7 +24,7 @@ rgb2 = imread('samples\rotate30deg_rgb.bmp');
 rawpoints2 = dlmread('samples\rotate30deg_pointcloud.txt');
 rawpc2 = pointCloud(rawpoints2);
 
-%% Gaussian pyramid
+%% Gaussian pyramid (nope)
 clc;
 low_res = double(imresize(depth, [45,80]));
 normimage = mat2gray(low_res);
@@ -62,3 +62,6 @@ Istats = regionprops(labels,'basic','Centroid');
 [maxVal, maxIndex] = max([Istats.Area]);
 
 imshow(BW,'Border','tight');
+
+%% Calling Jaimez's functions
+
