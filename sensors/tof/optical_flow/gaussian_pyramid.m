@@ -97,13 +97,19 @@ for level = 1:levels
 
                 else % for boundary pixels
 
-                    % Ignore for now
-                    p_depth(level, jj, ii) = 0;
+                    % Ignore complicated stuff and duplicate close to edges for now
 
                 end % inner/boundary pixels
 
             end % for jj
         end % for ii
+        
+        % Duplicate edge pixels
+        % TODO implement more complicated blurring
+        p_depth(level, :, 1) = p_depth(level, :, 2);
+        p_depth(level, 1, :) = p_depth(level, 2, :);
+        p_depth(level, :, cols_l) = p_depth(level, :, cols_l-1);
+        p_depth(level, rows_l, :) = p_depth(level, rows_l-1, :);
 
     end % if level > 1
 

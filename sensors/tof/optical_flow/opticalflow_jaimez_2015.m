@@ -62,46 +62,53 @@ constants.max_rows = 360;
 
 gaussian_levels = 3;
 [p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
-% Add noise to simulate 0 motion
-p_depth_new = p_depth_old + 10*randn(size(p_depth_old));
-p_points_new = p_points_old + 10*randn(size(p_points_old));
+
+% Add noise to simulate stationary camera
+new_depth = double(start_depth) + 10*randn(size(start_depth));
+[p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
+
+% p_depth_new = p_depth_old + 10*randn(size(p_depth_old));
+% p_points_new = p_points_old + 10*randn(size(p_points_old));
 % p_depth_new = p_depth_old;
 % p_points_new = p_points_old;
 % [p_depth_new, p_points_new] = gaussian_pyramid(move_depth, gaussian_levels, constants);
 
 % Plot the pyramid
-normimage = mat2gray(start_depth);
-figure(1);
-imshow(normimage);
-
-cols = constants.max_cols;
-rows = constants.max_rows;
-for ii = 1:gaussian_levels
-
-    clear normimage points_temp;
-%     normimage(1:rows,1:cols) = mat2gray(p_depth(ii, 1:rows, 1:cols));
-    points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
-    figure(4+ii);
-    pcshow(points_temp);
-
-    cols = cols/2;
-    rows = rows/2;
-
-end
-
-cols = constants.max_cols;
-rows = constants.max_rows;
-for ii = 1:gaussian_levels
-
-    clear points_temp;
-    points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
-    figure(1+ii);
-%     imshow(normimage);
-    pcshow(points_temp);
-
-    cols = cols/2;
-    rows = rows/2;
-
+PLOT_PYRAMID = false;
+if PLOT_PYRAMID
+    normimage = mat2gray(start_depth);
+    figure(1);
+    imshow(normimage);
+    
+    cols = constants.max_cols;
+    rows = constants.max_rows;
+    for ii = 1:gaussian_levels
+        
+        clear normimage points_temp;
+        %     normimage(1:rows,1:cols) = mat2gray(p_depth(ii, 1:rows, 1:cols));
+        points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
+        figure(4+ii);
+        pcshow(points_temp);
+        
+        cols = cols/2;
+        rows = rows/2;
+        
+    end
+    
+    cols = constants.max_cols;
+    rows = constants.max_rows;
+    for ii = 1:gaussian_levels
+        
+        clear points_temp;
+        points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
+        figure(1+ii);
+        %     imshow(normimage);
+        pcshow(points_temp);
+        
+        cols = cols/2;
+        rows = rows/2;
+        
+    end
 end
 
 % Enough room to save transformation state for each pyramid level

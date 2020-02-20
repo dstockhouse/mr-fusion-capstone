@@ -18,7 +18,7 @@ lin_trans = reshape(trans(1:3, 4), 3, 1);
 % vector
 % Adapted from http://ethaneade.com/lie.pdf and http://karnikram.info/blog/lie/
 
-theta = acos((trace(R) - 1)/2);
+theta = acos((trace(rot_mat) - 1)/2);
 if abs(theta) < 0.0000001
     w = zeros(3,1);
     v = lin_trans;
@@ -28,25 +28,11 @@ else
              rot_mat(2,1) - rot_mat(1,2)];
     w = theta / (2*sin(theta)) * w_pre;
     w_cross = vec2ss(w);
-    V_inv = (eye(3) - w_cross/2 + (w_cross^2 * 
-    v = 
+    
+    V_inv = eye(3) - w_cross/2 + ...
+        w_cross^2 * (1 - theta*sin(theta)/(2*(1-cos(theta)))) / theta^2;
+    v = V_inv * lin_trans;
 end
-
-% [k, theta] = dcm2k_theta(rot_mat);
-% w = k*theta;
-% w_cross = vec2ss(w);
-
-if abs(theta) < .00001
-    % Approximate to avoid singularities if theta very small
-    A = 1;
-    B = 0;
-    V_inv = eye(3) - 1/2*w_cross + w_cross^2;
-else
-    A = sin(theta) / theta;
-    B = 1 - cos(theta) / theta^2;
-    V_inv = eye(3) - 1/2*w_cross + 1/theta^2 * (1 - A/(2*B)) * w_cross^2;
-end
-v = V_inv * lin_trans;
 
 kai(1:3, 1) = v;
 kai(4:6, 1) = w;
