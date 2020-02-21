@@ -1,4 +1,4 @@
-function [depth_frames, ir_frames, constants] = read_tof_file(filename)
+function [depth_frames, ir_frames, constants] = read_tof_file(filename, limit)
 % Reads a *.tof file captured by the Arrow ToF SDK.
 %
 % Note: File format is described at 
@@ -14,11 +14,14 @@ function [depth_frames, ir_frames, constants] = read_tof_file(filename)
 %     Struct containing resolution, FOV, and FPS information for camera
 %     data
 
-filename = 'very_little_motion.tof';
-
 % Read contents of file
 fd = fopen(filename);
-raw_data = fread(fd);
+if exist('limit', 'var')
+    % Optionally impose a limit on the number of bytes to read
+    raw_data = fread(fd, limit);
+else
+    raw_data = fread(fd);
+end
 fclose(fd);
 
 %% Parse raw metadata into important fields
@@ -50,7 +53,7 @@ end
 fpos = fpos + field_len;
 
 % More metadata
-num_frames = (length(raw_data) - field_len * 3) / (width*height) / 2;
+num_frames = floor((length(raw_data) - field_len * 3) / (width*height) / 2);
 duration = num_frames / fps;
 
 % Height read from file is actually twice the pixel height. It stores a depth
