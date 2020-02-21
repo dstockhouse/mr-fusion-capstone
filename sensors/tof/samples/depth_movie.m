@@ -6,9 +6,9 @@ addpath('../optical_flow');
 % Ensure you downloaded the video file from 
 % http://mercury.pr.erau.edu/~stockhod/samples/very_little_motion.tof
 % and put it in this directory
-% filename = 'very_little_motion.tof';
+filename = 'very_little_motion.tof';
 % filename = 'E:\med_rotate_left_then_right.tof';
-filename = 'C:\Users\stockhod\Downloads\far_rotate_left_then_right.tof';
+% filename = 'C:\Users\stockhod\Downloads\far_rotate_left_then_right.tof';
 
 [depth_frames, ir_frames, constants] = read_tof_file(filename, 1000000000);
 rows = constants.rows;
@@ -27,7 +27,7 @@ fprintf('Read camera data: captured at %d fps\n', constants.fps);
 hfig = figure(1);
 % set(hfig, 'position', [0 0 1 1], 'units', 'normalized');
 
-save_movie = true;
+save_movie = false;
 if save_movie
     v = VideoWriter(['animation.mp4'], 'MPEG-4');
     v.FrameRate = constants.fps;
@@ -43,11 +43,11 @@ for ii = 1:constants.num_frames
     points = depth2points(double(depth)/1000, f_length);
     
     vfig = figure(1);
-%     subplot(2, 2, 1);
-    subplot(2, 1, 1);
+    subplot(2, 2, 1);
+%     subplot(2, 1, 1);
     imshownorm(depth);
-%     subplot(2, 2, 2);
-%     imshownorm(ir);
+    subplot(2, 2, 2);
+    imshownorm(ir);
     subplot(2, 1, 2);
     pcshow(points);
     title(['Frame ' num2str(ii) ' of ' num2str(constants.num_frames) ...
