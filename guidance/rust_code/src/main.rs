@@ -12,6 +12,7 @@ use states::States;
 
 
 fn main() {
+    
     let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
 
     // Writing the graph back to disk for visual confirmation

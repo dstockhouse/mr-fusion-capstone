@@ -113,8 +113,11 @@ impl<'a> PartialEq for Vertex<'a>  {
     }
 }
 
-pub type EdgeIndex = usize;
-pub type VertexIndex = usize;
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct EdgeIndex(pub usize);
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct VertexIndex(pub usize);
 
 // Element at a matrix_index[i][j] indicates an Edge Index
 #[derive(Debug, PartialEq)]
@@ -154,8 +157,8 @@ pub(self) fn connect_vertices_with_edges(
         let start_vertex_index = start_vertex_index.unwrap();
         let end_vertex_index = end_vertex_index.unwrap();
 
-        connection_matrix[start_vertex_index][end_vertex_index] = Some(edege_index);
-        connection_matrix[end_vertex_index][start_vertex_index] = Some(edege_index);
+        connection_matrix[start_vertex_index][end_vertex_index] = Some(EdgeIndex(edege_index));
+        connection_matrix[end_vertex_index][start_vertex_index] = Some(EdgeIndex(edege_index));
     }
 
     Graph {

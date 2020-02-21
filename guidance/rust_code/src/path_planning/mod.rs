@@ -1,10 +1,8 @@
-use crate::graph;
-use crate::graph::{Graph, TangentialPoint, MatrixIndex, EdgeIndex};
+use crate::graph::{Graph, TangentialPoint, MatrixIndex, EdgeIndex, VertexIndex};
 use crate::constants::ROBOT_RADIUS;
 use crate::error::Error;
 use crate::States;
 
-use std::f64;
 
 
 fn plan_path() -> Result<States, Error> {
@@ -16,14 +14,21 @@ fn plan_path() -> Result<States, Error> {
 
 }
 
+type Path = Vec<MatrixIndex>;
 
 impl<'a> Graph<'a> {
     /// Returns an error if the robot is not on the edge. Otherwise,
     /// returns the Matrix index indicating the edge containing the robot.
     fn closest_edge_to(&self, robot_loc: &TangentialPoint) -> Result<MatrixIndex, Error> {
 
-        for (edge_index, edge) in self.edges.iter().enumerate() {
-            
+        let edges_and_indices = self.edges.iter()
+            .enumerate()
+            .map(|(index, edge)| 
+                (EdgeIndex(index), edge)
+            );
+
+        for (edge_index, edge) in edges_and_indices {
+
             let point_n = edge.points.iter();
             let mut point_n_plus_1  = edge.points.iter();
             point_n_plus_1.next();
@@ -61,10 +66,14 @@ impl<'a> Graph<'a> {
     }
 
     fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
+
         for (row_index, row) in self.connection_matrix.iter().enumerate() {
             for (column_index, edge_index_in_connection_matrix) in row.iter().enumerate() {
                 if Some(edge_index) == *edge_index_in_connection_matrix {
-                    return Ok(MatrixIndex{ith: row_index, jth: column_index})
+                    return Ok(MatrixIndex{ 
+                        ith: VertexIndex(row_index), 
+                        jth: VertexIndex(column_index)
+                    })
                 }
             }
         }
@@ -72,6 +81,10 @@ impl<'a> Graph<'a> {
         Err(Error::PathPlanningEdgeIndexNotInConnectionMatrix)
     }
     
+    fn shortest_path(&self, start: VertexIndex, end: VertexIndex) -> Result<Path, Error> {
+        unimplemented!()
+    }
+
 }
 
 #[cfg(test)]
