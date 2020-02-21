@@ -76,7 +76,7 @@ pub struct Edge {
 impl Edge {
     fn new(name: String, points: Vec<Point>) -> Self {
 
-        // Determining the distnace of the edge for construction
+        // Determining the distance of the edge for construction
         let mut distance = 0.0;
 
         let poitns_n = points.iter().map(|point| &point.tangential);

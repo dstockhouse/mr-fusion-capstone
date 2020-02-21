@@ -69,5 +69,28 @@ fn connection_matrix_index_from_edge_not_in_connection_matrix() {
 
 #[test]
 fn shortest_path() {
+
+    // Preview this map to see how the names correspond to each vertex and edge
+    let triangle_graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
+
+    // Indices of the vertices get set in the order in which they are read from the gps file.
+    let vertex_with_name_point_2 = VertexIndex(1);
+    let vertex_with_name_point_3 = VertexIndex(2);
+
+    let mut shortest_path = triangle_graph.shortest_path(
+        vertex_with_name_point_2, 
+        vertex_with_name_point_3
+    ).unwrap().iter();
+
+    let expected_edge_with_name_line_5 = EdgeIndex(1);
+    
     unimplemented!();
+    /*
+    assert_eq!(
+        triangle_graph.connection_matrix[connection_index.next().unwrap()],
+        expected_edge_with_name_line_5
+    )
+    */
+
 }
+

@@ -1,13 +1,16 @@
 
 use crate::graph;
 use crate::graph::conversions::IntoTangential;
-use crate::graph::{TangentialPoint, Point, GPSPointDeg, Edge};
+use crate::graph::{TangentialPoint, Point, GPSPointDeg, Edge, MatrixIndex};
 
 #[test]
 fn initialize_from_gpx_file_test_triangle() {
 
     let graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
 
+    // Asserting the the diagonal of the matrix is none, meaning that no vertex has an edge that
+    // connects to itself. Anything not along the diagonal of the matrix should be populated with a 
+    // value in this specific case.
     for row in 0..graph.connection_matrix.len() {
         for column in 0..graph.connection_matrix[0].len() {
             if row == column {
@@ -158,4 +161,17 @@ fn edge_initialization() {
             distance: 3.0_f64.sqrt()
         }
     )
+}
+
+#[test]
+fn connection_matrix_indexing_good_index() {
+    
+    let single_edge_graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+    
+    assert_eq!(
+        single_edge_graph.connection_matrix[MatrixIndex{ith: 0, jth: 0}],
+        None
+    );
+
+
 }
