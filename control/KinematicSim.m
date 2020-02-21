@@ -1,4 +1,4 @@
-function K = KinematicSim(theta_L , theta_R, time_step, scenario)
+function [K, heading_act] = KinematicSim(theta_L , theta_R, time_step, scenario)
 %--------------------------------------------------------------------------
 % Name: KinematicSim
 % Desc: Simulates the robot's kinematics graphically
@@ -8,8 +8,9 @@ function K = KinematicSim(theta_L , theta_R, time_step, scenario)
 %                     iteration of the function call
 %         scenario - a string to serve as the graph title (debug only)
 % Outputs: K - a 3x1 matrix detailing the kinematics
+%          heading_act - the heading of the robot
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
-% Last Modified: 2/19/2020
+% Last Modified: 2/21/2020
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------
@@ -40,12 +41,12 @@ r = .5524; % radius of the wheels
 R = .1524; % radius of the axle
 
 %----------------------------------------------------------------------                           
-% Remove previous instance
+% Remove previous figure instance
 %----------------------------------------------------------------------
 clf('reset')
 
 %----------------------------------------------------------------------
-% Create Figure
+% Create figure
 %----------------------------------------------------------------------
 xlim([-4 4]);
 ylim([-4 4]);
@@ -75,10 +76,8 @@ K = transMatrix * inMat;    % K = |  Y_dot  | -> velocity in y
 %----------------------------------------------------------------------
 Xpos = Xpos+K(1,1)*time_step; Ypos = Ypos+K(2,1)*time_step;
     
-rectangle('Position',[Xpos Ypos 0.01 0.01])
-    
 %----------------------------------------------------------------------
-% Draw Robot's new position
+% Draw robot's new position
 %----------------------------------------------------------------------
 % Base
 line([Xpos-0.24*cos(heading) Xpos+0.24*cos(heading)], ...
@@ -90,10 +89,12 @@ line([((Xpos+0.24*sin(heading))+(Xpos-0.24*sin(heading)))/2 ...
         Ypos+0.24*sin(heading+pi/2)], 'Linewidth',3);
     
 %----------------------------------------------------------------------
-% Update Function
+% Update function
 %----------------------------------------------------------------------
-pause(time_step); % Simulate time step
+pause(time_step); % simulate time step
     
-heading = heading + K(3,1)*time_step; % Update heading
+heading = heading + K(3,1)*time_step; % update heading
+
+heading_act = heading; % return heading as output
                                  
 end % End of function
