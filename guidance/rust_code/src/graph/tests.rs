@@ -1,7 +1,7 @@
 
 use crate::graph;
 use crate::graph::conversions::IntoTangential;
-use crate::graph::TangentialPoint;
+use crate::graph::{TangentialPoint, Point, GPSPointDeg, Edge};
 
 #[test]
 fn initialize_from_gpx_file_test_triangle() {
@@ -136,3 +136,26 @@ fn into_tangential_correct_distances() {
     
 }
 
+#[test]
+fn edge_initialization() {
+    let points = vec![
+        Point {
+            tangential: TangentialPoint{x: 0.0, y: 0.0, z: 0.0},
+            gps: GPSPointDeg{lat: -1.0, long: -1.0, height: -1.0} // Unimportant for this test
+        } ,
+        Point {
+            tangential: TangentialPoint{x: 1.0, y: 1.0, z: 1.0},
+            gps: GPSPointDeg{lat: -1.0, long: -1.0, height: -1.0} // Unimportant for this test
+        }
+    ];
+    
+    let name = String::from("the slight");
+
+    assert_eq!(Edge::new(name.clone(), points.clone()),
+        Edge {
+            name,
+            points,
+            distance: 3.0_f64.sqrt()
+        }
+    )
+}

@@ -9,13 +9,15 @@ use conversions::IntoTangential;
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 use gpx;
 
-#[derive(Debug)]
+// Clone trait only for unit testing
+#[derive(Debug, Clone, PartialEq)]
 pub struct Point {
     pub gps: GPSPointDeg,
     pub tangential: TangentialPoint
 }
 
-#[derive(Debug, PartialEq)]
+// Clone Trait only for unit testing
+#[derive(Debug, PartialEq, Clone)]
 pub struct TangentialPoint {
     pub x: f64,
     pub y: f64,
@@ -38,7 +40,8 @@ impl TangentialPoint {
     }
 }
 
-#[derive(Debug)]
+// Clone trait only for unit testing
+#[derive(Debug, Clone)]
 pub struct GPSPointDeg {
     pub lat: f64,
     pub long: f64,
@@ -59,13 +62,40 @@ pub(self) struct GPSPointRad {
     pub(self) height: f64
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Edge {
     // For debugging, finding out what line we are looking at on the map
     pub name: String,
 
     // T, in this case, can be a point relative to our tangential frame, or the gps frame
     pub points: Vec<Point>,
+
+    pub distance: f64,
+}
+
+impl Edge {
+    fn new(name: String, points: Vec<Point>) -> Self {
+
+        // Determining the distnace of the edge for construction
+        let mut distance = 0.0;
+
+        let poitns_n = points.iter().map(|point| &point.tangential);
+        let mut points_n_plus_1 = points.iter().map(|point| &point.tangential);
+        points_n_plus_1.next();
+
+        let points_n_n_plus_1 = poitns_n.zip(points_n_plus_1);
+
+        for (point_n, points_n_plus_1) in points_n_n_plus_1 {
+            distance += point_n.distance(&points_n_plus_1);
+        }
+
+        Edge {
+            name,
+            points,
+            distance
+        }
+
+    }
 }
 
 #[derive(Debug)]
@@ -191,7 +221,7 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph {
     let edges = gpx_data.tracks.into_iter() 
         .map(|track| {
             // Indexing at 0 since for every track we are guaranteed to only have move segment.
-            let gps_points = track.segments[0].points.iter()
+            let points = track.segments[0].points.iter()
                 .map(|waypoint| {
                     let height = waypoint.elevation.unwrap();
                     let (long, lat) = waypoint.point().x_y();
@@ -204,7 +234,7 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph {
 
             let name = track.name.unwrap();
 
-            Edge{name, points: gps_points}
+            Edge::new(name, points)
         })
         .collect::<Vec<Edge>>();
     
