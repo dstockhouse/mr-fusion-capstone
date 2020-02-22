@@ -194,7 +194,7 @@ pub(self) fn connect_vertices_with_edges(
         let start_vertex_index = start_vertex_index.unwrap();
         let end_vertex_index = end_vertex_index.unwrap();
 
-        connection_matrix[(start_vertex_index, edege_index)] = Some(EdgeIndex(edege_index));
+        connection_matrix[(start_vertex_index, end_vertex_index)] = Some(EdgeIndex(edege_index));
         connection_matrix[(end_vertex_index, start_vertex_index)] = Some(EdgeIndex(edege_index));
     }
 

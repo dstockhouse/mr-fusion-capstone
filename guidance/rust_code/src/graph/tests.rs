@@ -162,18 +162,3 @@ fn edge_initialization() {
         }
     )
 }
-
-/*
-#[test]
-fn connection_matrix_indexing_good_index() {
-    
-    let single_edge_graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
-    
-    assert_eq!(
-        single_edge_graph.connection_matrix[MatrixIndex{ith: 0, jth: 0}],
-        None
-    );
-
-
-}
-*/
