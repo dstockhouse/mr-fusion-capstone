@@ -67,7 +67,7 @@ impl<'a> Graph<'a> {
 
     fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
 
-        for (row_index, row) in self.connection_matrix.iter().enumerate() {
+        for ((row,col), edge) in self.connection_matrix.iter().enumerate() {
             for (column_index, edge_index_in_connection_matrix) in row.iter().enumerate() {
                 if Some(edge_index) == *edge_index_in_connection_matrix {
                     return Ok(MatrixIndex{ 

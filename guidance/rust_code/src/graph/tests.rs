@@ -163,6 +163,7 @@ fn edge_initialization() {
     )
 }
 
+/*
 #[test]
 fn connection_matrix_indexing_good_index() {
     
@@ -175,3 +176,4 @@ fn connection_matrix_indexing_good_index() {
 
 
 }
+*/

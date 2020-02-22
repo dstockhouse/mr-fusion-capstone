@@ -8,6 +8,7 @@ pub mod conversions;
 use conversions::IntoTangential;
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 use gpx;
+use nalgebra::DMatrix;
 
 // Clone trait only for unit testing
 #[derive(Debug, Clone, PartialEq)]
@@ -159,7 +160,7 @@ pub struct MatrixIndex {
 pub struct Graph <'a> {
     pub vertices: Vec<Vertex<'a>>,
     pub edges: Vec<Edge>,
-    pub connection_matrix: Vec<Vec<Option<EdgeIndex>>>
+    pub connection_matrix: DMatrix<Option<EdgeIndex>> // D stands for dynamic
 }
 
 pub(self) fn connect_vertices_with_edges(
@@ -167,7 +168,13 @@ pub(self) fn connect_vertices_with_edges(
     vertices: Vec<Vertex>
 ) -> Graph {
 
-    let mut connection_matrix = vec![vec![None; vertices.len()]; vertices.len()];
+    let vertices_len = vertices.len();
+
+    let mut connection_matrix = DMatrix::from_vec(
+        vertices_len, // number of rows
+        vertices_len, // number of columns
+        vec![None; vertices_len * vertices_len] // initializing the array to None
+    );
     
     for (edege_index, edge) in edges.iter().enumerate() {
         let start_of_edge = edge.points.first().unwrap();
@@ -187,8 +194,8 @@ pub(self) fn connect_vertices_with_edges(
         let start_vertex_index = start_vertex_index.unwrap();
         let end_vertex_index = end_vertex_index.unwrap();
 
-        connection_matrix[start_vertex_index][end_vertex_index] = Some(EdgeIndex(edege_index));
-        connection_matrix[end_vertex_index][start_vertex_index] = Some(EdgeIndex(edege_index));
+        connection_matrix[(start_vertex_index, edege_index)] = Some(EdgeIndex(edege_index));
+        connection_matrix[(end_vertex_index, start_vertex_index)] = Some(EdgeIndex(edege_index));
     }
 
     Graph {
