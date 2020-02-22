@@ -67,12 +67,12 @@ impl<'a> Graph<'a> {
 
     fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
 
-        for ((row,col), edge) in self.connection_matrix.iter().enumerate() {
-            for (column_index, edge_index_in_connection_matrix) in row.iter().enumerate() {
-                if Some(edge_index) == *edge_index_in_connection_matrix {
+        for row in 0..self.connection_matrix.nrows() {
+            for col in 0..self.connection_matrix.ncols() {
+                if Some(edge_index) == self.connection_matrix[(row, col)] {
                     return Ok(MatrixIndex{ 
-                        ith: VertexIndex(row_index), 
-                        jth: VertexIndex(column_index)
+                        ith: VertexIndex(row), 
+                        jth: VertexIndex(col)
                     })
                 }
             }

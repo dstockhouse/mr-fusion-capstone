@@ -11,13 +11,13 @@ fn initialize_from_gpx_file_test_triangle() {
     // Asserting the the diagonal of the matrix is none, meaning that no vertex has an edge that
     // connects to itself. Anything not along the diagonal of the matrix should be populated with a 
     // value in this specific case.
-    for row in 0..graph.connection_matrix.len() {
-        for column in 0..graph.connection_matrix[0].len() {
+    for row in 0..graph.connection_matrix.nrows() {
+        for column in 0..graph.connection_matrix.ncols() {
             if row == column {
-                assert_eq!(graph.connection_matrix[row][column], None);
+                assert_eq!(graph.connection_matrix[(row, column)], None);
             }
             else {
-                assert_ne!(graph.connection_matrix[row][column], None);
+                assert_ne!(graph.connection_matrix[(row, column)], None);
             }
         }
     }
