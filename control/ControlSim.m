@@ -1,13 +1,13 @@
 function [theta_L, theta_R] = ControlSim(delta_heading)
 %--------------------------------------------------------------------------
 % Name: ControlSim
-% Desc: Simulates the robot's control scheme. Reads in a rate of rotation
-% and produces angular velocities for the left and right motors
+% Desc: Simulates the robot's control scheme. Reads in a desired heading
+%       change and produces angular velocities for the motors.
 % Inputs: delta_heading - change in heading in radians
 % Outputs: theta_L - angular velocity of left wheel in rad/sec
 %          theta_R - angular velocity of right wheel in rad/sec
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
-% Last Modified: 2/21/2020
+% Last Modified: 2/22/2020
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------
