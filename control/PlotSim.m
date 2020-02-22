@@ -1,4 +1,4 @@
-function plotty = PlotSim(K, heading, time_step, scenario)
+function plotty = PlotSim(K, heading, time_step, scenario, time, direction)
 %--------------------------------------------------------------------------
 % Name: PlotSim
 % Desc: Plots movement of the robot given its kinematics
@@ -11,52 +11,55 @@ function plotty = PlotSim(K, heading, time_step, scenario)
 % Last Modified: 2/22/2020
 %--------------------------------------------------------------------------
 
-%--------------------------------------------------------------------------
-% Denote and draw starting position
-%--------------------------------------------------------------------------
-persistent Xpos;
-if isempty(Xpos)
-    Xpos = 0;
-end
-
-persistent Ypos;
-if isempty(Ypos)
-    Ypos = -1;
-end
-
-
-%----------------------------------------------------------------------                           
+%--------------------------------------------------------------------------                           
 % Remove previous figure instance
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 clf('reset')
 
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % Create figure
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 xlim([-4 4]);
 ylim([-4 4]);
 grid on
 daspect([1 1 1])
 xlabel('Meters');
 ylabel('Meters');
-title(scenario);
+title([scenario ' - Time: ' num2str(time, '%.2f')]);
 axis square
 
-%----------------------------------------------------------------------
-% Update robot's position
-%----------------------------------------------------------------------
-Xpos = Xpos+K(1,1)*time_step; Ypos = Ypos+K(2,1)*time_step;
+%--------------------------------------------------------------------------
+% Create target paths
+%--------------------------------------------------------------------------
+
+line([0 0],[-4,0], 'LineStyle','--');
+
+switch direction
+    case 1
+        line([0 10*sin(0)],[0 10*cos(0)], 'LineStyle','--');
+    case 2
+        line([0 10*sin(pi/6)],[0 10*cos(pi/6)], 'LineStyle','--');
+    case 3
+        line([0 10*sin(pi/4)],[0 10*cos(pi/4)], 'LineStyle','--');
+    case 4
+        line([0 10*sin(pi/3)],[0 10*cos(pi/3)], 'LineStyle','--');
+    case 5
+        line([0 10*sin(pi/2)],[0 10*cos(pi/2)], 'LineStyle','--');
+end
     
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % Draw robot's new position
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % Base
-line([Xpos-0.24*cos(heading) Xpos+0.24*cos(heading)], ...
-     [Ypos-0.24*sin(heading) Ypos+0.24*sin(heading)], 'Linewidth',3);
+line([K(1,1)-0.24*cos(heading) K(1,1)+0.24*cos(heading)], ...
+     [K(2,1)-0.24*sin(heading) K(2,1)+0.24*sin(heading)], ...
+     'Color','black','Linewidth',3);
 % Pointer
-line([((Xpos+0.24*sin(heading))+(Xpos-0.24*sin(heading)))/2 ...
-        Xpos+0.24*cos(heading+pi/2)] , ...
-     [((Ypos+0.24*cos(heading))+(Ypos-0.24*cos(heading)))/2 ...
-        Ypos+0.24*sin(heading+pi/2)], 'Linewidth',3);
+line([((K(1,1)+0.24*sin(heading))+(K(1,1)-0.24*sin(heading)))/2 ...
+        K(1,1)+0.24*cos(heading+pi/2)] , ...
+     [((K(2,1)+0.24*cos(heading))+(K(2,1)-0.24*cos(heading)))/2 ...
+        K(2,1)+0.24*sin(heading+pi/2)], 'Color','black','Linewidth',3);
+    
+pause(time_step); % simulate time step
     
 end
