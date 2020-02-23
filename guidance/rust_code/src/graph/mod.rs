@@ -101,7 +101,7 @@ impl Edge {
 
 #[derive(Debug)]
 // A is a lifetime
-pub struct Vertex<'a> {
+pub struct Vertex {
     // Will be used to display key locations to UI
     pub name: String,
 
@@ -110,12 +110,13 @@ pub struct Vertex<'a> {
     pub(self) point: Point,
 
     // Key data to determine the shortest path using Dijkstra's Algorithm
-    pub parent_vertex: Option<&'a Vertex<'a>>,
-    pub tentative_distance: Option<f64>,
+    pub parent: Option<VertexIndex>,
+    pub tentative_distance: f64,
+    pub visited: bool
 }
 
-impl <'a> Vertex<'a> {
-    fn new(name: String, gps: GPSPointDeg) -> Vertex<'a> {
+impl Vertex {
+    fn new(name: String, gps: GPSPointDeg) -> Vertex {
 
         let tangential = gps.into_tangential();
 
@@ -127,14 +128,15 @@ impl <'a> Vertex<'a> {
         Vertex {
             name,
             point,
-            parent_vertex: None,
-            tentative_distance: None,
+            parent: None,
+            tentative_distance: f64::MAX,
+            visited: false
         }
     }
 }
 
-impl<'a> PartialEq for Vertex<'a>  {
-    fn eq(&self, other: &Vertex<'a>) -> bool {
+impl PartialEq for Vertex {
+    fn eq(&self, other: &Vertex) -> bool {
 
         if self.point.gps != other.point.gps {
             return true;
@@ -157,8 +159,8 @@ pub struct MatrixIndex {
     pub jth: VertexIndex
 }
 
-pub struct Graph <'a> {
-    pub vertices: Vec<Vertex<'a>>,
+pub struct Graph {
+    pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
     pub connection_matrix: DMatrix<Option<EdgeIndex>> // D stands for dynamic
 }

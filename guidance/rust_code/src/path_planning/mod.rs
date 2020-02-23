@@ -1,4 +1,6 @@
-use crate::graph::{Graph, TangentialPoint, MatrixIndex, EdgeIndex, VertexIndex};
+use std::f64;
+
+use crate::graph::{Graph, TangentialPoint, MatrixIndex, EdgeIndex, VertexIndex, Vertex};
 use crate::constants::ROBOT_RADIUS;
 use crate::error::Error;
 use crate::States;
@@ -16,7 +18,7 @@ fn plan_path() -> Result<States, Error> {
 
 type Path = Vec<MatrixIndex>;
 
-impl<'a> Graph<'a> {
+impl Graph {
     /// Returns an error if the robot is not on the edge. Otherwise,
     /// returns the Matrix index indicating the edge containing the robot.
     fn closest_edge_to(&self, robot_loc: &TangentialPoint) -> Result<MatrixIndex, Error> {
@@ -81,8 +83,55 @@ impl<'a> Graph<'a> {
         Err(Error::PathPlanningEdgeIndexNotInConnectionMatrix)
     }
     
-    fn shortest_path(&self, start: VertexIndex, end: VertexIndex) -> Result<Path, Error> {
-        unimplemented!()
+    fn shortest_path(&mut self, start: VertexIndex, end: VertexIndex) -> Result<Path, Error> {
+
+        // Initializing the the graph so all tentative distances are 0
+        // and not parent vertices are set.
+        for vertex in self.vertices.iter_mut() {
+            vertex.tentative_distance = f64::MAX;
+            vertex.visited = false;
+            vertex.parent = None;
+        }
+
+        // Setting the tentative distance of the start vertex to 0
+        self.vertices[start.0].tentative_distance = 0.0;
+
+        let mut vertex_index = start; // Keeps track of currently visiting vertex
+        let mut nodes_not_visited = self.vertices.len();
+
+        while nodes_not_visited != 0 {
+            let mut vertex = &mut self.vertices[vertex_index.0] as *mut Vertex;
+            let adj_vertices = self.connection_matrix.row(vertex_index.0);
+            let adj_vertices = adj_vertices.iter()
+                .enumerate()
+                .filter(|(_, edge_index)| edge_index.is_some())
+                .map(|(vertex_index, edge_index)| (vertex_index, edge_index.unwrap()));
+
+            for (adj_vertex_index, edge_index) in adj_vertices {
+                let adj_vertex = &mut self.vertices[adj_vertex_index] as *mut Vertex;
+                let connecting_edge = &self.edges[edge_index.0];
+
+                // Using the unsafe keywords since more than one mutable reference is needed.
+                // One to the currently visiting vertex and the other to the adjacent vertex.
+                unsafe {
+                    if !(*adj_vertex).visited {
+                        // Using the unsafe keywords since more than one mutable reference is needed.
+                        // One to the currently visiting vertex and the other to the adjacent vertex.
+                        (*adj_vertex).tentative_distance = 
+                        (*vertex).tentative_distance + connecting_edge.distance;
+
+                        (*vertex).visited = true; 
+                        nodes_not_visited -= 1;
+                    }
+                }
+            }
+
+
+        }
+        
+        
+
+        unimplemented!();
     }
 
 }

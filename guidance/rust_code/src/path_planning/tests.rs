@@ -71,7 +71,7 @@ fn connection_matrix_index_from_edge_not_in_connection_matrix() {
 fn shortest_path() {
 
     // Preview this map to see how the names correspond to each vertex and edge
-    let graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
+    let mut graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
 
     // Indices of the vertices get set in the order in which they are read from the gps file.
     let vertex_with_name_point_2 = VertexIndex(1);
@@ -83,20 +83,20 @@ fn shortest_path() {
     ).unwrap();
     let mut shortest_path = shortest_path.iter();
 
-    let mut expected_matrix_index = &MatrixIndex {
+    let expected_matrix_index = &MatrixIndex {
         ith: VertexIndex(1),
         jth: VertexIndex(2)
     };
-    let expected_edge_at_matrix_index = EdgeIndex(0);
+    let expected_edge_at_matrix_index = Some(EdgeIndex(0));
 
-    let mut actual_matrix_index = shortest_path.next().unwrap();
-    let actual_edge_at_matrix_index = graph.connection_matrix[actual_matrix_index];
+    let actual_matrix_index = shortest_path.next().unwrap();
+    let actual_edge_at_matrix_index = graph.connection_matrix[(actual_matrix_index.ith.0, actual_matrix_index.jth.0)];
     // Assertions
     assert_eq!(expected_matrix_index, actual_matrix_index);
     assert_eq!(expected_edge_at_matrix_index, actual_edge_at_matrix_index);
 
-    expected_matrix_index = None;
-    actual_matrix_index = shortest_path.next();
+    let expected_matrix_index = None;
+    let actual_matrix_index = shortest_path.next();
 
     assert_eq!(expected_matrix_index, actual_matrix_index);
 }

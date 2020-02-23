@@ -1,7 +1,7 @@
 
 use crate::graph;
 use crate::graph::conversions::IntoTangential;
-use crate::graph::{TangentialPoint, Point, GPSPointDeg, Edge, MatrixIndex};
+use crate::graph::{TangentialPoint, Point, GPSPointDeg, Edge};
 
 #[test]
 fn initialize_from_gpx_file_test_triangle() {
