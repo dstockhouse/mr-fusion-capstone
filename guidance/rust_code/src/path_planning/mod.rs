@@ -130,6 +130,7 @@ impl Graph {
             unsafe {(*vertex).visited = true;}
             nodes_not_visited -= 1;
 
+            // Selecting the next node to visit
             let mut min_dist = f64::MAX;
             for (index, vertex) in self.vertices.iter().enumerate() {
                 if vertex.tentative_distance < min_dist && !vertex.visited {
@@ -137,12 +138,35 @@ impl Graph {
                     vertex_index = VertexIndex(index);
                 }
             }
+        }
 
+        // After completing the while loop, we have either found the shortest path,
+        // or one does not exist. If one exists, then a stack of matrix indices will be outputted
+        // otherwise, an error message will be returned, indicating the path does not exist.
+        let mut dest_vertex = &self.vertices[end.0];
+        if dest_vertex.tentative_distance == f64::MAX {
+            return Err(Error::PathPlanningPathDoesNotExist);
         }
         
-        
+        // Pre allocating memory. Chosen path will never exceed the number of edges in the graph.
+        let mut connection_matrix_indices = Vec::with_capacity(self.edges.len());
 
-        unimplemented!();
+        let mut path_vertex_index = end;
+        while path_vertex_index != start {
+
+            let parent_vertex_index = self.vertices[path_vertex_index.0].parent.unwrap();
+            let matrix_index = MatrixIndex {
+                ith: path_vertex_index,
+                jth: parent_vertex_index
+            };
+
+            connection_matrix_indices.push(matrix_index);
+
+            path_vertex_index = parent_vertex_index;
+
+        }
+
+        return Ok(connection_matrix_indices);
     }
 
 }

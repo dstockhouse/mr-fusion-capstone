@@ -84,10 +84,10 @@ fn shortest_path() {
     let mut shortest_path = shortest_path.iter();
 
     let expected_matrix_index = &MatrixIndex {
-        ith: VertexIndex(1),
-        jth: VertexIndex(2)
+        ith: VertexIndex(2),
+        jth: VertexIndex(1)
     };
-    let expected_edge_at_matrix_index = Some(EdgeIndex(0));
+    let expected_edge_at_matrix_index = Some(EdgeIndex(1));
 
     let actual_matrix_index = shortest_path.next().unwrap();
     let actual_edge_at_matrix_index = graph.connection_matrix[(actual_matrix_index.ith.0, actual_matrix_index.jth.0)];
