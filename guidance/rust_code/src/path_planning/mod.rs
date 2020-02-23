@@ -99,10 +99,10 @@ impl Graph {
         let mut vertex_index = start; // Keeps track of currently visiting vertex
         let mut nodes_not_visited = self.vertices.len();
 
-        while nodes_not_visited != 0 {
+        while nodes_not_visited != 0 && vertex_index != end {
             let mut vertex = &mut self.vertices[vertex_index.0] as *mut Vertex;
-            let adj_vertices = self.connection_matrix.row(vertex_index.0);
-            let adj_vertices = adj_vertices.iter()
+            let connecting_edges = self.connection_matrix.row(vertex_index.0);
+            let adj_vertices = connecting_edges.iter()
                 .enumerate()
                 .filter(|(_, edge_index)| edge_index.is_some())
                 .map(|(vertex_index, edge_index)| (vertex_index, edge_index.unwrap()));
@@ -117,15 +117,26 @@ impl Graph {
                     if !(*adj_vertex).visited {
                         // Using the unsafe keywords since more than one mutable reference is needed.
                         // One to the currently visiting vertex and the other to the adjacent vertex.
-                        (*adj_vertex).tentative_distance = 
+                        let temp_distance = 
                         (*vertex).tentative_distance + connecting_edge.distance;
 
-                        (*vertex).visited = true; 
-                        nodes_not_visited -= 1;
+                        if temp_distance < (*adj_vertex).tentative_distance {
+                            (*adj_vertex).tentative_distance = temp_distance;
+                            (*adj_vertex).parent = Some(vertex_index);
+                        }
                     }
                 }
             }
+            unsafe {(*vertex).visited = true;}
+            nodes_not_visited -= 1;
 
+            let mut min_dist = f64::MAX;
+            for (index, vertex) in self.vertices.iter().enumerate() {
+                if vertex.tentative_distance < min_dist && !vertex.visited {
+                    min_dist = vertex.tentative_distance;
+                    vertex_index = VertexIndex(index);
+                }
+            }
 
         }
         
