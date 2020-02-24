@@ -70,13 +70,10 @@ impl Graph {
             }
         }
         
-        if closest_point == (TangentialPoint{x: f64::MAX, y: f64::MAX, z: f64::MAX}) {
-            return Err(Error::PathPlanningNotOnMap)
+        match closest_edge_index {
+            None => return Err(Error::PathPlanningNotOnMap),
+            Some(closest_edge_index) => self.connection_matrix_index_from(closest_edge_index)
         }
-        
-        // If the closest edge point got set to something other than f64::MAX then closest edge 
-        // is guaranteed to be set. Thus the use of unwrap()
-        self.connection_matrix_index_from(closest_edge_index.unwrap())
     }
 
     fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
