@@ -28,6 +28,9 @@ impl Graph {
             .map(|(index, edge)| 
                 (EdgeIndex(index), edge)
             );
+        
+        let mut closest_point = TangentialPoint{x: f64::MAX, y: f64::MAX, z: f64::MAX};
+        let mut closest_edge_index = None;
 
         for (edge_index, edge) in edges_and_indices {
 
@@ -52,9 +55,12 @@ impl Graph {
                 for _ in 0..steps as u32 {
                     
                     let temp_point = TangentialPoint{x, y, z};
+                    let temp_distance_to_robot = temp_point.distance(robot_loc);
                     
-                    if temp_point.distance(robot_loc) <= ROBOT_RADIUS {
-                        return self.connection_matrix_index_from(edge_index);
+                    if temp_distance_to_robot <= ROBOT_RADIUS && 
+                    temp_distance_to_robot < closest_point.distance(robot_loc) {
+                        closest_point = temp_point;
+                        closest_edge_index = Some(edge_index);
                     }
 
                     x += x_step;
@@ -64,7 +70,13 @@ impl Graph {
             }
         }
         
-        Err(Error::PathPlanningNotOnMap)
+        if closest_point == (TangentialPoint{x: f64::MAX, y: f64::MAX, z: f64::MAX}) {
+            return Err(Error::PathPlanningNotOnMap)
+        }
+        
+        // If the closest edge point got set to something other than f64::MAX then closest edge 
+        // is guaranteed to be set. Thus the use of unwrap()
+        self.connection_matrix_index_from(closest_edge_index.unwrap())
     }
 
     fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
