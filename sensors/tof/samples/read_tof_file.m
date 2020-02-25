@@ -14,7 +14,7 @@ function [depth_frames, ir_frames, constants] = read_tof_file(filename)
 %     Struct containing resolution, FOV, and FPS information for camera
 %     data
 
-filename = 'very_little_motion.tof';
+% filename = 'very_little_motion.tof';
 
 % Read contents of file
 fd = fopen(filename);

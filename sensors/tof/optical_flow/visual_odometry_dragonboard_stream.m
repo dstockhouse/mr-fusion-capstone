@@ -3,6 +3,15 @@
 
 clear; clc; close all;
 
+% Notes to complete before IDR:
+%
+% * Make slides for the visual odometry algorithm, as a flow chart, set of
+%   steps as in the paper, and talk about what we implement here
+% * Make this into a depth movie where the point cloud and depth/IR/points plot
+%   is combined with some representation of the velocity. Maybe plot a moving
+%   XYZ coordinate axis that shows where we believe the camera to be
+% * Discuss the pitfalls of the depth map output and discuss fusing it with IR
+
 %% Read image files
 
 % From video captured from dragonboard
