@@ -48,7 +48,7 @@ fps = constants.fps;
 
 
 % For now, only keep one second's worth of frames
-numSeconds = 30;
+numSeconds = 15;
 num_frames = numSeconds * fps;
 if num_frames < constants.num_frames
     
@@ -225,6 +225,9 @@ for frame_index = 2:num_frames
     fprintf('\tEstimated v = [%.3f %.3f %.3f] m/s, w = [%.3f %.3f %.3f] deg/s\n',...
         kai_est(1), kai_est(2), kai_est(3),...
         kai_est(4)*180/pi, kai_est(5)*180/pi, kai_est(6)*180/pi);
+    
+    
+    % Update pose?
 
 end % for frame_index
 
