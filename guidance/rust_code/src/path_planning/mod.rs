@@ -1,9 +1,10 @@
 use std::f64;
 
-use crate::graph::{Graph, TangentialPoint, MatrixIndex, EdgeIndex, VertexIndex, Vertex};
+use crate::graph::*;
 use crate::constants::ROBOT_RADIUS;
 use crate::error::Error;
 use crate::States;
+use crate::graph::conversions::IntoGeoJson;
 
 
 
@@ -16,7 +17,38 @@ fn plan_path() -> Result<States, Error> {
 
 }
 
-type Path = Vec<MatrixIndex>;
+pub struct Path {
+    pub indices: Vec<MatrixIndex>,
+}
+
+impl IntoGeoJson for Path {
+
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
+        self.indices.iter()
+        .map(|matrix_index| matrix_index.edge(graph))
+        .collect()
+    }
+
+    // TODO: Refactor this so the vertices are in the order needed for traversal
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
+        // Allocating Memory
+        let mut vertices = Vec::with_capacity(2 * self.indices.len());
+
+        let vertices_start_end = self.indices.iter()
+            .map(|matrix_index| matrix_index.vertices(graph));
+
+        for (vertex_1, vertex_2) in vertices_start_end {
+            vertices.push(vertex_1);
+            vertices.push(vertex_2);
+        }
+
+        // Return the vertex with repeated elements removed
+        vertices.dedup();
+
+        vertices
+
+    }
+}
 
 impl Graph {
     /// Returns an error if the robot is not on the edge. Otherwise,
@@ -83,7 +115,7 @@ impl Graph {
                 if Some(edge_index) == self.connection_matrix[(row, col)] {
                     return Ok(MatrixIndex{ 
                         ith: VertexIndex(row), 
-                        jth: VertexIndex(col)
+                        jth: VertexIndex(col),
                     })
                 }
             }
@@ -124,8 +156,6 @@ impl Graph {
                 // One to the currently visiting vertex and the other to the adjacent vertex.
                 unsafe {
                     if !(*adj_vertex).visited {
-                        // Using the unsafe keywords since more than one mutable reference is needed.
-                        // One to the currently visiting vertex and the other to the adjacent vertex.
                         let temp_distance = 
                         (*vertex).tentative_distance + connecting_edge.distance;
 
@@ -152,7 +182,7 @@ impl Graph {
         // After completing the while loop, we have either found the shortest path,
         // or one does not exist. If one exists, then a stack of matrix indices will be outputted
         // otherwise, an error message will be returned, indicating the path does not exist.
-        let mut dest_vertex = &self.vertices[end.0];
+        let dest_vertex = &self.vertices[end.0];
         if dest_vertex.tentative_distance == f64::MAX {
             return Err(Error::PathPlanningPathDoesNotExist);
         }
@@ -166,7 +196,7 @@ impl Graph {
             let parent_vertex_index = self.vertices[path_vertex_index.0].parent.unwrap();
             let matrix_index = MatrixIndex {
                 ith: path_vertex_index,
-                jth: parent_vertex_index
+                jth: parent_vertex_index,
             };
 
             connection_matrix_indices.push(matrix_index);
@@ -175,7 +205,7 @@ impl Graph {
 
         }
 
-        return Ok(connection_matrix_indices);
+        Ok(Path{indices: connection_matrix_indices})
     }
 
 }

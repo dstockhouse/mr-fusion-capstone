@@ -1,7 +1,8 @@
 use crate::graph;
 use crate::Error;
 use crate::graph::{MatrixIndex, EdgeIndex, VertexIndex};
-use crate::graph::conversions::IntoTangential;
+use crate::graph::conversions::{IntoTangential, IntoGeoJson};
+use std::fs;
 
 #[test]
 fn robot_on_graph_false_case() {
@@ -68,12 +69,12 @@ fn connection_matrix_index_from_edge_not_in_connection_matrix() {
 }
 
 #[test]
-fn shortest_path() {
+fn shortest_path_triangle() {
 
     // Preview this map to see how the names correspond to each vertex and edge
     let mut graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
 
-    // Indices of the vertices get set in the order in which they are read from the gps file.
+    // Indices of the vertices get set in the order in which they are read from the gpx file.
     let vertex_with_name_point_2 = VertexIndex(1);
     let vertex_with_name_point_3 = VertexIndex(2);
 
@@ -81,7 +82,7 @@ fn shortest_path() {
         vertex_with_name_point_2, 
         vertex_with_name_point_3
     ).unwrap();
-    let mut shortest_path = shortest_path.iter();
+    let mut shortest_path = shortest_path.indices.iter();
 
     let expected_matrix_index = &MatrixIndex {
         ith: VertexIndex(2),
@@ -101,3 +102,40 @@ fn shortest_path() {
     assert_eq!(expected_matrix_index, actual_matrix_index);
 }
 
+#[test]
+fn shortest_path_school_map() {
+
+    let mut graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
+
+    let king_front_entrance = graph.vertices.iter()
+        .enumerate()
+        .filter(|(_ ,vertex)| vertex.name.contains("King Engineering (Front Entrance)"))
+        .map(|(index, _)| VertexIndex(index))
+        .next().unwrap();
+
+    let library = graph.vertices.iter()
+        .enumerate()
+        .filter(|(_ ,vertex)| vertex.name.contains("Library"))
+        .map(|(index, _)| VertexIndex(index))
+        .next().unwrap();
+
+    let path = graph.shortest_path(king_front_entrance, library).unwrap();
+
+    let actaul_end_edge = path.indices[0].edge(&graph);
+    let actual_start_edge = path.indices.last().unwrap().edge(&graph);
+
+    // Look at map preview to verify names of expected edges
+    let expected_start_edge = graph.edges.iter()
+        .filter(|edge| edge.name.contains("Line 26"))
+        .next().unwrap();
+
+    let expected_end_edge = graph.edges.iter()
+        .filter(|edge| edge.name.contains("Line 17"))
+        .next().unwrap();
+    
+    assert_eq!(actual_start_edge, expected_start_edge);
+    assert_eq!(actaul_end_edge, expected_end_edge);
+
+    // Writing the path to GEOJson for visual Confirmation
+    fs::write("test_shortest_path_school.geojson", path.to_geo_json_string(&graph)).unwrap();
+}

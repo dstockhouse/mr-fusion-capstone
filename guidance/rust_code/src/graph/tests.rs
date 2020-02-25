@@ -1,7 +1,7 @@
 
 use crate::graph;
-use crate::graph::conversions::IntoTangential;
-use crate::graph::{TangentialPoint, Point, GPSPointDeg, Edge};
+use crate::graph::conversions::{IntoTangential, IntoGeoJson};
+use crate::graph::*;
 
 #[test]
 fn initialize_from_gpx_file_test_triangle() {
@@ -44,7 +44,7 @@ fn initialize_from_gpx_file_single_edge() {
 fn graph_to_geo_json_string() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
     
-    let json_string = graph::graph_to_geo_json_string(&graph);
+    let json_string = graph.to_geo_json_string(&graph);
     let expected_json_string = r#"{"features":[{"geometry":{"coordinates":[[-112.4484608,34.615871],[-112.4484635,34.6157165],[-112.4484742,34.6155377]],"type":"LineString"},"id":"Line 3","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484608,34.615871],"type":"Point"},"id":"Point 1","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484742,34.6155377],"type":"Point"},"id":"Point 2","properties":{},"type":"Feature"}],"type":"FeatureCollection"}"#;
 
     assert_eq!(json_string, expected_json_string);
@@ -162,3 +162,32 @@ fn edge_initialization() {
         }
     )
 }
+
+#[test]
+fn edge_from_connection_index() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+
+    let matrix_index = MatrixIndex {
+        ith: VertexIndex(0),
+        jth: VertexIndex(1),
+    };
+
+    assert_eq!(&graph.edges[0], matrix_index.edge(&graph));
+    
+}
+
+#[test]
+fn vertices_from_connection_matrix() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+
+    let matrix_index = MatrixIndex {
+        ith: VertexIndex(0),
+        jth: VertexIndex(1),
+    };
+
+    assert!(
+        matrix_index.vertices(&graph) == (&graph.vertices[0], &graph.vertices[1])
+            ||
+        matrix_index.vertices(&graph) == (&graph.vertices[1], &graph.vertices[0])
+    )
+}   

@@ -5,8 +5,7 @@ use std::ops::Sub;
 
 pub mod conversions;
 
-use conversions::IntoTangential;
-use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
+use conversions::{IntoTangential};
 use gpx;
 use nalgebra::DMatrix;
 
@@ -156,9 +155,25 @@ pub struct VertexIndex(pub usize);
 #[derive(Debug, PartialEq)]
 pub struct MatrixIndex {
     pub ith: VertexIndex,
-    pub jth: VertexIndex
+    pub jth: VertexIndex,
 }
 
+impl MatrixIndex {
+
+    pub fn edge<'a, 'b>(&'a self, graph: &'b Graph) -> &'b Edge {
+        let edge_index = graph.connection_matrix[(self.ith.0, self.jth.0)].unwrap();
+        &graph.edges[edge_index.0]
+    }
+
+    pub fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> (&'b Vertex, &'b Vertex) {
+        let (index_1, index_2) = (self.ith.0, self.jth.0);
+
+        (&graph.vertices[index_1], &graph.vertices[index_2])
+    }
+}
+
+
+#[derive(Debug)]
 pub struct Graph {
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
@@ -253,60 +268,7 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph {
 
 }
 
-pub fn graph_to_geo_json_string(graph: &Graph) -> String {
-    // Allocating Memory
-    let number_of_vertices_and_edges = graph.edges.len() + graph.vertices.len();
-    let mut features = Vec::with_capacity(number_of_vertices_and_edges);
 
-    for edge in graph.edges.iter() {
-        let edge_points = edge.points.iter()
-            .map(|point| vec![point.gps.long, point.gps.lat])
-            .collect();
-
-        let geometry = Geometry::new(
-            Value::LineString(edge_points)
-        );
-
-        let feature = Feature {
-            bbox: None,
-            geometry: Some(geometry),
-            id: Some(Id::String(edge.name.clone())),
-            properties: None,
-            foreign_members: None
-        };
-        
-        features.push(feature);
-    }
-
-    for vertex in graph.vertices.iter() {
-        let vertex_point = vec![
-            vertex.point.gps.long,
-            vertex.point.gps.lat
-        ];
-
-        let geometry = Geometry::new(
-            Value::Point(vertex_point)
-        );
-
-        let feature = Feature {
-            bbox: None,
-            geometry: Some(geometry),
-            id: Some(Id::String(vertex.name.clone())),
-            properties: None,
-            foreign_members:None
-        };
-
-        features.push(feature);
-    }
-
-    let feature_collection = FeatureCollection {
-        bbox: None,
-        features,
-        foreign_members: None
-    };
-
-    feature_collection.to_string()
-}
 
 #[cfg(test)]
 mod tests;
