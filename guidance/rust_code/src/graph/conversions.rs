@@ -92,6 +92,35 @@ impl IntoGeoJson for Graph {
     }
 }
 
+impl IntoGeoJson for Path {
+
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
+        self.indices.iter()
+        .map(|matrix_index| matrix_index.edge(graph))
+        .collect()
+    }
+
+    // TODO: Refactor this so the vertices are in the order needed for traversal
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
+        // Allocating Memory
+        let mut vertices = Vec::with_capacity(2 * self.indices.len());
+
+        let vertices_start_end = self.indices.iter()
+            .map(|matrix_index| matrix_index.vertices(graph));
+
+        for (vertex_1, vertex_2) in vertices_start_end {
+            vertices.push(vertex_1);
+            vertices.push(vertex_2);
+        }
+
+        // Return the vertex with repeated elements removed
+        vertices.dedup();
+
+        vertices
+
+    }
+}
+
 pub trait IntoTangential {
     type Output;
 

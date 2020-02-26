@@ -185,9 +185,8 @@ fn vertices_from_connection_matrix() {
         jth: VertexIndex(1),
     };
 
-    assert!(
-        matrix_index.vertices(&graph) == (&graph.vertices[0], &graph.vertices[1])
-            ||
-        matrix_index.vertices(&graph) == (&graph.vertices[1], &graph.vertices[0])
+    assert_eq!(
+        matrix_index.vertices(&graph),
+        (&graph.vertices[0], &graph.vertices[1])
     )
 }   

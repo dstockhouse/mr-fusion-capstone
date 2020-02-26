@@ -21,35 +21,6 @@ pub struct Path {
     pub indices: Vec<MatrixIndex>,
 }
 
-impl IntoGeoJson for Path {
-
-    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
-        self.indices.iter()
-        .map(|matrix_index| matrix_index.edge(graph))
-        .collect()
-    }
-
-    // TODO: Refactor this so the vertices are in the order needed for traversal
-    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
-        // Allocating Memory
-        let mut vertices = Vec::with_capacity(2 * self.indices.len());
-
-        let vertices_start_end = self.indices.iter()
-            .map(|matrix_index| matrix_index.vertices(graph));
-
-        for (vertex_1, vertex_2) in vertices_start_end {
-            vertices.push(vertex_1);
-            vertices.push(vertex_2);
-        }
-
-        // Return the vertex with repeated elements removed
-        vertices.dedup();
-
-        vertices
-
-    }
-}
-
 impl Graph {
     /// Returns an error if the robot is not on the edge. Otherwise,
     /// returns the Matrix index indicating the edge containing the robot.
@@ -195,8 +166,8 @@ impl Graph {
 
             let parent_vertex_index = self.vertices[path_vertex_index.0].parent.unwrap();
             let matrix_index = MatrixIndex {
-                ith: path_vertex_index,
-                jth: parent_vertex_index,
+                ith: parent_vertex_index,
+                jth: path_vertex_index
             };
 
             connection_matrix_indices.push(matrix_index);
@@ -204,6 +175,10 @@ impl Graph {
             path_vertex_index = parent_vertex_index;
 
         }
+
+        // Reversing the order of the connection matrix index so instructions are given from the
+        // start to the end and not end to start.
+        connection_matrix_indices = connection_matrix_indices.into_iter().rev().collect();
 
         Ok(Path{indices: connection_matrix_indices})
     }

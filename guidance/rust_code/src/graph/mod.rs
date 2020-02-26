@@ -98,7 +98,7 @@ impl Edge {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 // A is a lifetime
 pub struct Vertex {
     // Will be used to display key locations to UI
@@ -131,17 +131,6 @@ impl Vertex {
             tentative_distance: f64::MAX,
             visited: false
         }
-    }
-}
-
-impl PartialEq for Vertex {
-    fn eq(&self, other: &Vertex) -> bool {
-
-        if self.point.gps != other.point.gps {
-            return true;
-        }
-
-        false
     }
 }
 
