@@ -27,7 +27,7 @@ fprintf('Read camera data: captured at %d fps\n', constants.fps);
 hfig = figure(1);
 % set(hfig, 'position', [0 0 1 1], 'units', 'normalized');
 
-save_movie = false;
+save_movie = true;
 if save_movie
     v = VideoWriter(['animation.mp4'], 'MPEG-4');
     v.FrameRate = constants.fps;
