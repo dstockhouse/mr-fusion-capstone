@@ -3,11 +3,12 @@ use crate::Error;
 use crate::graph::{MatrixIndex, EdgeIndex, VertexIndex, Vertex};
 use crate::graph::conversions::{IntoTangential, IntoGeoJson};
 use crate::path_planning::*;
+use std::fs;
 
 #[test]
 fn robot_on_graph_false_case() {
 
-    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
 
     let middle_of_watson_lake = graph::GPSPointDeg {
         lat: 34.351398,
@@ -23,7 +24,7 @@ fn robot_on_graph_false_case() {
 #[test]
 fn robot_on_graph_true_case() {
 
-    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
     let king_front_entrance_edge_index = graph.edges.iter()
         .enumerate()
         .filter(|(_, edge)| edge.name.contains("Line 26"))
@@ -105,7 +106,7 @@ fn shortest_path_triangle() {
 #[test]
 fn shortest_path_school_map() {
 
-    let mut graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
+    let mut graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
 
     let king_front_entrance = graph.vertices.iter()
         .position(|vertex| vertex.name.contains("King Engineering (Front Entrance)"))
@@ -158,6 +159,62 @@ fn shortest_path_school_map() {
     assert!(vertices_chosen.next().unwrap().name.contains("Library"));
     assert_eq!(vertices_chosen.next(), None);
 
+}
+
+#[test]
+fn shortest_path_no_path() {
+
+    // Use map preview for visual verification of points chosen for test
+    let mut graph = graph::initialize_from_gpx_file("src/graph/Test Dijkstra.gpx");
+    let start = graph.vertices.iter()
+        .position(|vertex| vertex.name.contains("Point 12"))
+        .unwrap();
+    let end = graph.vertices.iter()
+        .position(|vertex| vertex.name.contains("Point 16"))
+        .unwrap();
+
+    let shortest_path = graph.shortest_path(
+        VertexIndex(start),
+        VertexIndex(end)
+    );
+
+    assert_eq!(shortest_path, Err(Error::PathPlanningPathDoesNotExist));
+}
+
+#[test]
+fn shortest_path_dijkstra_graph() {
+    // Use map preview for visual verification of points chosen for test
+    let mut graph = graph::initialize_from_gpx_file("src/graph/Test Dijkstra.gpx");
+    let start = graph.vertices.iter()
+        .position(|vertex| vertex.name.contains("Point 12"))
+        .unwrap();
+    let end = graph.vertices.iter()
+        .position(|vertex| vertex.name.contains("Point 5"))
+        .unwrap();
+
+    let shortest_path = graph.shortest_path(
+        VertexIndex(start),
+        VertexIndex(end)
+    ).unwrap();
+
+    let vertices_chosen = shortest_path.vertices(&graph);
+    let mut vertices_chosen = vertices_chosen.iter();
+
+    let edges_chosen = shortest_path.edges(&graph);
+    let mut edges_chosen = edges_chosen.iter();
+
+    assert!(vertices_chosen.next().unwrap().name.contains("Point 12"));
+    assert!(vertices_chosen.next().unwrap().name.contains("Point 1"));
+    assert!(vertices_chosen.next().unwrap().name.contains("Point 4"));
+    assert!(vertices_chosen.next().unwrap().name.contains("Point 5"));
+    assert_eq!(vertices_chosen.next(), None);
+
+    assert!(edges_chosen.next().unwrap().name.contains("Line 13"));
+    assert!(edges_chosen.next().unwrap().name.contains("Line 11"));
+    assert!(edges_chosen.next().unwrap().name.contains("Line 14"));
+
+    fs::write("test_shortest_path_dijkstra_graph.geojson", shortest_path.to_geo_json_string(&graph));
+    fs::write("dijkstra_graph.geojson", graph.to_geo_json_string(&graph));
 }
 
 #[test]

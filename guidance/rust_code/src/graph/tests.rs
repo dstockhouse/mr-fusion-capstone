@@ -99,7 +99,7 @@ fn tangential_sub() {
 
 #[test]
 fn graph_into_tangential() {
-    let graph = graph::initialize_from_gpx_file("src/graph/School Map.gpx");
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
 
     let origin = graph.vertices.iter()
         .filter(|vertex| 

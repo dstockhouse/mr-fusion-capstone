@@ -4,9 +4,6 @@ use crate::graph::*;
 use crate::constants::ROBOT_RADIUS;
 use crate::error::Error;
 use crate::States;
-use crate::graph::conversions::IntoGeoJson;
-
-
 
 fn plan_path() -> Result<States, Error> {
     // TODO: Send Message to UI
@@ -17,6 +14,7 @@ fn plan_path() -> Result<States, Error> {
 
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Path {
     pub indices: Vec<MatrixIndex>,
 }
