@@ -1,7 +1,7 @@
 use crate::graph;
 use crate::Error;
-use crate::graph::{MatrixIndex, EdgeIndex, VertexIndex, Vertex};
-use crate::graph::conversions::{IntoTangential, IntoGeoJson};
+use crate::graph::{MatrixIndex, EdgeIndex, VertexIndex, Vertex, Vertices, Edges};
+use crate::graph::conversions::{IntoTangential, geo_json_string};
 use crate::path_planning::*;
 use std::fs;
 
@@ -213,8 +213,8 @@ fn shortest_path_dijkstra_graph() {
     assert!(edges_chosen.next().unwrap().name.contains("Line 11"));
     assert!(edges_chosen.next().unwrap().name.contains("Line 14"));
 
-    fs::write("test_shortest_path_dijkstra_graph.geojson", shortest_path.to_geo_json_string(&graph));
-    fs::write("dijkstra_graph.geojson", graph.to_geo_json_string(&graph));
+    fs::write("test_shortest_path_dijkstra_graph.geojson", geo_json_string(&shortest_path, &graph));
+    fs::write("dijkstra_graph.geojson", geo_json_string(&graph, &graph));
 }
 
 #[test]

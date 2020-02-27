@@ -1,6 +1,6 @@
 
 use crate::graph;
-use crate::graph::conversions::{IntoTangential, IntoGeoJson};
+use crate::graph::conversions::{IntoTangential, geo_json_string};
 use crate::graph::*;
 
 #[test]
@@ -44,7 +44,7 @@ fn initialize_from_gpx_file_single_edge() {
 fn graph_to_geo_json_string() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
     
-    let json_string = graph.to_geo_json_string(&graph);
+    let json_string = geo_json_string(&graph, &graph);
     let expected_json_string = r#"{"features":[{"geometry":{"coordinates":[[-112.4484608,34.615871],[-112.4484635,34.6157165],[-112.4484742,34.6155377]],"type":"LineString"},"id":"Line 3","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484608,34.615871],"type":"Point"},"id":"Point 1","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484742,34.6155377],"type":"Point"},"id":"Point 2","properties":{},"type":"Feature"}],"type":"FeatureCollection"}"#;
 
     assert_eq!(json_string, expected_json_string);

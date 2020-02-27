@@ -8,7 +8,7 @@ use std::fs;
 
 use error::Error;
 use states::States;
-use graph::conversions::IntoGeoJson;
+use graph::conversions;
 
 
 
@@ -17,7 +17,7 @@ fn main() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
 
     // Writing the graph back to disk for visual confirmation
-    let geo_json_string = graph.to_geo_json_string(&graph);
+    let geo_json_string = conversions::geo_json_string(&graph, &graph);
 
     fs::write("school_map.geojson", geo_json_string).unwrap();
 

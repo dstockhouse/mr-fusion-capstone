@@ -16,7 +16,67 @@ fn plan_path() -> Result<States, Error> {
 
 #[derive(Debug, PartialEq)]
 pub struct Path {
-    pub indices: Vec<MatrixIndex>,
+    indices: Vec<MatrixIndex>,
+}
+
+impl Edges for Path {
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
+        self.indices.iter()
+        .map(|matrix_index| matrix_index.edge(graph))
+        .collect()
+    }
+}
+
+impl Edges for &Path {
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
+        self.indices.iter()
+        .map(|matrix_index| matrix_index.edge(graph))
+        .collect()
+    }
+}
+
+impl Vertices for Path {
+
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
+        // Allocating Memory
+        let mut vertices = Vec::with_capacity(2 * self.indices.len());
+
+        let vertices_start_end = self.indices.iter()
+            .map(|matrix_index| matrix_index.vertices(graph));
+
+        for (vertex_1, vertex_2) in vertices_start_end {
+            vertices.push(vertex_1);
+            vertices.push(vertex_2);
+        }
+
+        // Return the vertex with repeated elements removed
+        vertices.dedup();
+
+        vertices
+
+    }
+}
+
+impl Vertices for &Path {
+
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
+        // Allocating Memory
+        let mut vertices = Vec::with_capacity(2 * self.indices.len());
+
+        let vertices_start_end = self.indices.iter()
+            .map(|matrix_index| matrix_index.vertices(graph));
+
+        for (vertex_1, vertex_2) in vertices_start_end {
+            vertices.push(vertex_1);
+            vertices.push(vertex_2);
+        }
+
+        // Return the vertex with repeated elements removed
+        vertices.dedup();
+
+        vertices
+
+    }
 }
 
 impl Graph {

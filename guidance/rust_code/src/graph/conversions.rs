@@ -1,8 +1,7 @@
 
-use super::{GPSPointDeg, TangentialPoint, GPSPointRad, Edge, Vertex, Graph};
+use super::{GPSPointDeg, TangentialPoint, GPSPointRad, Edges, Vertices, Graph};
 use nalgebra::{Vector3, Matrix3};
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
-use crate::path_planning::Path;
 
 // Distance from the earth relative to the equator (m)
 const RO: f64 = 6378137.0;
@@ -17,108 +16,61 @@ const ORIGIN: GPSPointDeg = GPSPointDeg {
     height: 1582.3
 };
 
-pub trait IntoGeoJson {
+pub fn geo_json_string<T>(elements: T, graph: &Graph) -> String 
+where T: Edges + Vertices {
 
-    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge>;
+    // Allocating Memory
+    let number_of_vertices_and_edges = elements.edges(graph).len() + elements.vertices(graph).len();
+    let mut features = Vec::with_capacity(number_of_vertices_and_edges);
 
-    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex>;
+    for edge in elements.edges(graph).iter() {
+        let edge_points = edge.points.iter()
+            .map(|point| vec![point.gps.long, point.gps.lat])
+            .collect();
 
-    fn to_geo_json_string(&self, graph: &Graph) -> String {
+        let geometry = Geometry::new(
+            Value::LineString(edge_points)
+        );
 
-        // Allocating Memory
-        let number_of_vertices_and_edges = self.edges(graph).len() + self.vertices(graph).len();
-        let mut features = Vec::with_capacity(number_of_vertices_and_edges);
-    
-        for edge in self.edges(graph).iter() {
-            let edge_points = edge.points.iter()
-                .map(|point| vec![point.gps.long, point.gps.lat])
-                .collect();
-    
-            let geometry = Geometry::new(
-                Value::LineString(edge_points)
-            );
-    
-            let feature = Feature {
-                bbox: None,
-                geometry: Some(geometry),
-                id: Some(Id::String(edge.name.clone())),
-                properties: None,
-                foreign_members: None
-            };
-            
-            features.push(feature);
-        }
-    
-        for vertex in self.vertices(graph).iter() {
-            let vertex_point = vec![
-                vertex.point.gps.long,
-                vertex.point.gps.lat
-            ];
-    
-            let geometry = Geometry::new(
-                Value::Point(vertex_point)
-            );
-    
-            let feature = Feature {
-                bbox: None,
-                geometry: Some(geometry),
-                id: Some(Id::String(vertex.name.clone())),
-                properties: None,
-                foreign_members:None
-            };
-    
-            features.push(feature);
-        }
-    
-        let feature_collection = FeatureCollection {
+        let feature = Feature {
             bbox: None,
-            features,
+            geometry: Some(geometry),
+            id: Some(Id::String(edge.name.clone())),
+            properties: None,
             foreign_members: None
         };
-    
-        feature_collection.to_string()
+        
+        features.push(feature);
     }
 
-}
+    for vertex in elements.vertices(graph).iter() {
+        let vertex_point = vec![
+            vertex.point.gps.long,
+            vertex.point.gps.lat
+        ];
 
-impl IntoGeoJson for Graph {
+        let geometry = Geometry::new(
+            Value::Point(vertex_point)
+        );
 
-    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
-        graph.edges.iter().collect()
+        let feature = Feature {
+            bbox: None,
+            geometry: Some(geometry),
+            id: Some(Id::String(vertex.name.clone())),
+            properties: None,
+            foreign_members:None
+        };
+
+        features.push(feature);
     }
 
-    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
-        graph.vertices.iter().collect()
-    }
-}
+    let feature_collection = FeatureCollection {
+        bbox: None,
+        features,
+        foreign_members: None
+    };
 
-impl IntoGeoJson for Path {
-
-    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
-        self.indices.iter()
-        .map(|matrix_index| matrix_index.edge(graph))
-        .collect()
-    }
-
-    // TODO: Refactor this so the vertices are in the order needed for traversal
-    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
-        // Allocating Memory
-        let mut vertices = Vec::with_capacity(2 * self.indices.len());
-
-        let vertices_start_end = self.indices.iter()
-            .map(|matrix_index| matrix_index.vertices(graph));
-
-        for (vertex_1, vertex_2) in vertices_start_end {
-            vertices.push(vertex_1);
-            vertices.push(vertex_2);
-        }
-
-        // Return the vertex with repeated elements removed
-        vertices.dedup();
-
-        vertices
-
-    }
+    feature_collection.to_string()
 }
 
 pub trait IntoTangential {

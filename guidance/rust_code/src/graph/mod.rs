@@ -98,6 +98,10 @@ impl Edge {
     }
 }
 
+pub trait Edges {
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge>;
+}
+
 #[derive(Debug, PartialEq)]
 // A is a lifetime
 pub struct Vertex {
@@ -161,12 +165,27 @@ impl MatrixIndex {
     }
 }
 
+pub trait Vertices {
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex>;
+}
 
 #[derive(Debug)]
 pub struct Graph {
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
     pub connection_matrix: DMatrix<Option<EdgeIndex>> // D stands for dynamic
+}
+
+impl Vertices for &Graph {
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
+        graph.vertices.iter().collect()
+    }
+}
+
+impl Edges for &Graph {
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
+        graph.edges.iter().collect()
+    }
 }
 
 pub(self) fn connect_vertices_with_edges(
