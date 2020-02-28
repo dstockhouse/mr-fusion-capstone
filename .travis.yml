@@ -21,7 +21,6 @@ jobs:
       - cd ./guidance/rust_code
       - cargo build
       - cargo test
-      - cd .
 
     # Uploading the coverage report to codecov
     after_success: |
@@ -35,7 +34,7 @@ jobs:
       make install DESTDIR=../../kcov-build &&
       cd ../.. &&
       rm -rf kcov-master &&
-      for file in guidance/rust_code/target/debug/rust_code*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+      for file in target/debug/rust_code*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
       bash <(curl -s https://codecov.io/bash) &&
       echo "Uploaded code coverage"
 
