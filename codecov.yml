@@ -2,7 +2,7 @@ codecov:
   require_ci_to_pass: yes
 
 coverage:
-  precision: 5
+  precision: 2
   round: down
   range: "70...100"
 
@@ -20,4 +20,4 @@ comment:
   require_changes: no
 
 ignore:
-  - "test*.rs"
+  - "tests.rs"
