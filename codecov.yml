@@ -19,5 +19,6 @@ comment:
   behavior: default
   require_changes: no
 
-ignore:
-  - "tests.rs"
+tests:
+  paths:
+    - "*/tests.rs"
