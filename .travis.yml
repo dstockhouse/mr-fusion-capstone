@@ -21,6 +21,7 @@ jobs:
       - cd ./guidance/rust_code
       - cargo build
       - cargo test
+      - cd .
 
     # Uploading the coverage report to codecov
     after_success: |
