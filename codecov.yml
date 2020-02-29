@@ -21,5 +21,4 @@ comment:
   require_changes: no
 
 ignore:
-  - "guidance/rust_code/src/graph"
   - "tests.rs"
