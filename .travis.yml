@@ -4,6 +4,7 @@ jobs:
   
   - language: rust
     rust: 1.36.0
+    sudo: required
 
     # For test coverage
     addons:
