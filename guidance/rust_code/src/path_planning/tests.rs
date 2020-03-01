@@ -3,7 +3,6 @@ use crate::Error;
 use crate::graph::{MatrixIndex, EdgeIndex, VertexIndex, Vertex, Vertices, Edges};
 use crate::graph::conversions::{IntoTangential, geo_json_string};
 use crate::path_planning::*;
-use std::fs;
 
 #[test]
 fn robot_on_graph_false_case() {
@@ -42,6 +41,26 @@ fn robot_on_graph_true_case() {
 
     assert_eq!(expected_matrix_index, matrix_index);
     
+}
+
+#[test]
+fn robot_not_on_graph_within_radius() {
+
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
+
+    // Enter lat long in google maps if you wish to verify location of point with our school map
+    let close_point = GPSPointDeg {
+        lat: 34.6148261, 
+        long: -112.4508876,
+        height: 1582.0
+    }.into_tangential();
+
+    let expected_edge = graph.closest_edge_to(&close_point)
+        .unwrap()
+        .edge(&graph); // Taking the matrix index and returning a reference to the edge
+
+    assert!(expected_edge.name.contains("Line 28"));
+
 }
 
 #[test]
