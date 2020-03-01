@@ -205,16 +205,18 @@ fn shortest_path_dijkstra_graph() {
 
     assert!(vertices_chosen.next().unwrap().name.contains("Point 12"));
     assert!(vertices_chosen.next().unwrap().name.contains("Point 1"));
+    assert!(vertices_chosen.next().unwrap().name.contains("Point 17"));
+    assert!(vertices_chosen.next().unwrap().name.contains("Point 16"));
     assert!(vertices_chosen.next().unwrap().name.contains("Point 4"));
     assert!(vertices_chosen.next().unwrap().name.contains("Point 5"));
     assert_eq!(vertices_chosen.next(), None);
 
     assert!(edges_chosen.next().unwrap().name.contains("Line 13"));
-    assert!(edges_chosen.next().unwrap().name.contains("Line 11"));
+    assert!(edges_chosen.next().unwrap().name.contains("Line 18"));
+    assert!(edges_chosen.next().unwrap().name.contains("Line 19"));
+    assert!(edges_chosen.next().unwrap().name.contains("Line 20"));
     assert!(edges_chosen.next().unwrap().name.contains("Line 14"));
 
-    fs::write("test_shortest_path_dijkstra_graph.geojson", geo_json_string(&shortest_path, &graph));
-    fs::write("dijkstra_graph.geojson", geo_json_string(&graph, &graph));
 }
 
 #[test]
