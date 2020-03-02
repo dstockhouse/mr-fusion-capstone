@@ -26,7 +26,8 @@ jobs:
     after_success: 
       - cargo clean
       - cargo test --no-run
-      - wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+      - |
+        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
         tar xzf master.tar.gz &&
         cd kcov-master &&
         mkdir build &&
