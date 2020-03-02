@@ -76,6 +76,12 @@ for i = 0:time_step:5
     % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 1);
     
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
+    
 end % end of for() loop
 
 clear KinematicSim; clear ControlSim; clear PlotSim;
@@ -110,6 +116,12 @@ for i = 0:time_step:5
     
     % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 2);
+    
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
     
 end % end of for() loop
 
@@ -146,6 +158,12 @@ for i = 0:time_step:5
     % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 4);
     
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
+    
 end % end of for() loop
 
 clear KinematicSim; clear ControlSim; clear PlotSim;
@@ -180,6 +198,12 @@ for i = 0:time_step:5
     
     % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 5);
+    
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
     
 end % end of for() loop
 
@@ -216,6 +240,12 @@ for i = 0:time_step:5
     % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 6);
     
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
+    
 end % end of for() loop
 
 clear KinematicSim; clear ControlSim; clear PlotSim;
@@ -251,6 +281,12 @@ for i = 0:time_step:5
     % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 7);
     
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
+    
 end % end of for() loop
 
 clear KinematicSim; clear ControlSim; clear PlotSim;
@@ -259,7 +295,7 @@ pause(1)
 %--------------------------------------------------------------------------
 % Eighth Scenario
 %--------------------------------------------------------------------------
-scenario = 'Spot Spin';
+scenario = 'Turn on the Spot';
 
 heading_act = 0; % Set actual heading of the robot before simulation
 
@@ -290,16 +326,16 @@ for i = 0:time_step:5
     % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 8);
     
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
+    
 end % end of for() loop
 
 clear KinematicSim; clear ControlSim; clear PlotSim;
 pause(1)
-
-% Save captured animation
-if save_movie
-    frame = getframe(vfig);
-    writeVideo(v, frame);
-end
 
 % Close video writer at the end of simulation
 if save_movie
