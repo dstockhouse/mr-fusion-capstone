@@ -21,12 +21,12 @@ jobs:
       - cd ./guidance/rust_code
       - cargo build
       - cargo test
-      - cargo clean
-      - cargo test --no-run
 
     # Uploading the coverage report to codecov
-    after_success: |
-      wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+    after_success: 
+      - cargo clean
+      - cargo test --no-run
+      - wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
       tar xzf master.tar.gz &&
       cd kcov-master &&
       mkdir build &&
