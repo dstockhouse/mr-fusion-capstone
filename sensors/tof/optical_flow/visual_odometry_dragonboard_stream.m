@@ -83,6 +83,7 @@ depth_images = double(depth_images) / 1000;
 
 
 % Setup initial state
+camera_pose = eye(4);
     
 % First image is the "old" image
 gaussian_levels = 5;
@@ -217,6 +218,9 @@ for frame_index = 2:num_frames
         accumulatedTransformation = level_transformation * accumulatedTransformation;
         
     end % for image_level 
+    
+    % Update camera position
+    
     
     % Set up "old" state for next frame
     p_points_old = p_points_new;

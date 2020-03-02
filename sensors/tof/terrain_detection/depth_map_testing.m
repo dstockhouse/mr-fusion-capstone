@@ -21,23 +21,23 @@ n=0;
 [s1, s2] = size(A);
 % points = ones(s1*s2, 3);
 % pointcolor = ones(s1*s2, 3);
-for ii = 1:s1
-  for jj = 1:s2
-      if(A(ii,jj) > 0)
-          n = n+1;
-          points(n,1) = ii;
-          points(n,2) = s2 - jj;
-          points(n,3) = A(ii,jj);
-          
-%           pointcolor(n,1) = 
-      end
-  end
-end
-
-figure(1);
-pc = pointCloud(points);
-pcshow(pc);
-view(0,0);
+% for ii = 1:s1
+%   for jj = 1:s2
+%       if(A(ii,jj) > 0)
+%           n = n+1;
+%           points(n,1) = ii;
+%           points(n,2) = s2 - jj;
+%           points(n,3) = A(ii,jj);
+%           
+% %           pointcolor(n,1) = 
+%       end
+%   end
+% end
+% 
+% figure(1);
+% pc = pointCloud(points);
+% pcshow(pc);
+% view(0,0);
 
 
 % tic
