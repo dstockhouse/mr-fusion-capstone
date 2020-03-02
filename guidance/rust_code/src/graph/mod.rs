@@ -79,11 +79,13 @@ impl Edge {
         // Determining the distance of the edge for construction
         let mut distance = 0.0;
 
-        let poitns_n = points.iter().map(|point| &point.tangential);
+        let points_n = points.iter().map(|point| &point.tangential);
         let mut points_n_plus_1 = points.iter().map(|point| &point.tangential);
         points_n_plus_1.next();
 
-        let points_n_n_plus_1 = poitns_n.zip(points_n_plus_1);
+        // Combines the iterator of point_n and point_n_plus_one iterator into a single iterator so if may be consumed
+        // in the for loop.
+        let points_n_n_plus_1 = points_n.zip(points_n_plus_1);
 
         for (point_n, points_n_plus_1) in points_n_n_plus_1 {
             distance += point_n.distance(&points_n_plus_1);
@@ -201,7 +203,9 @@ pub(self) fn connect_vertices_with_edges(
         vec![None; vertices_len * vertices_len] // initializing the array to None
     );
     
-    for (edege_index, edge) in edges.iter().enumerate() {
+    // Iterating though all edges and vertices. When the first and last point of an edge match two vertices, then the 
+    // connection matrix at v_m v_n and v_n v_m gets populated with the index to the edges vector.
+    for (edge_index, edge) in edges.iter().enumerate() {
         let start_of_edge = edge.points.first().unwrap();
         let end_of_edge = edge.points.last().unwrap();
         let mut start_vertex_index = None;
@@ -219,8 +223,8 @@ pub(self) fn connect_vertices_with_edges(
         let start_vertex_index = start_vertex_index.unwrap();
         let end_vertex_index = end_vertex_index.unwrap();
 
-        connection_matrix[(start_vertex_index, end_vertex_index)] = Some(EdgeIndex(edege_index));
-        connection_matrix[(end_vertex_index, start_vertex_index)] = Some(EdgeIndex(edege_index));
+        connection_matrix[(start_vertex_index, end_vertex_index)] = Some(EdgeIndex(edge_index));
+        connection_matrix[(end_vertex_index, start_vertex_index)] = Some(EdgeIndex(edge_index));
     }
 
     Graph {
