@@ -1,6 +1,7 @@
 
-use super::{GPSPointDeg, TangentialPoint, GPSPointRad};
+use super::{GPSPointDeg, TangentialPoint, GPSPointRad, Edges, Vertices, Graph};
 use nalgebra::{Vector3, Matrix3};
+use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 
 // Distance from the earth relative to the equator (m)
 const RO: f64 = 6378137.0;
@@ -10,10 +11,67 @@ const E: f64 = 0.0818;
 
 // Front entrance of king
 const ORIGIN: GPSPointDeg = GPSPointDeg {
-    lat: 34.6147979_f64,
-    long: -112.4509615_f64,
+    lat: 34.6147979,
+    long: -112.4509615,
     height: 1582.3
 };
+
+pub fn geo_json_string<T>(elements: T, graph: &Graph) -> String 
+where T: Edges + Vertices {
+
+    // Allocating Memory
+    let number_of_vertices_and_edges = elements.edges(graph).len() + elements.vertices(graph).len();
+    let mut features = Vec::with_capacity(number_of_vertices_and_edges);
+
+    for edge in elements.edges(graph).iter() {
+        let edge_points = edge.points.iter()
+            .map(|point| vec![point.gps.long, point.gps.lat])
+            .collect();
+
+        let geometry = Geometry::new(
+            Value::LineString(edge_points)
+        );
+
+        let feature = Feature {
+            bbox: None,
+            geometry: Some(geometry),
+            id: Some(Id::String(edge.name.clone())),
+            properties: None,
+            foreign_members: None
+        };
+        
+        features.push(feature);
+    }
+
+    for vertex in elements.vertices(graph).iter() {
+        let vertex_point = vec![
+            vertex.point.gps.long,
+            vertex.point.gps.lat
+        ];
+
+        let geometry = Geometry::new(
+            Value::Point(vertex_point)
+        );
+
+        let feature = Feature {
+            bbox: None,
+            geometry: Some(geometry),
+            id: Some(Id::String(vertex.name.clone())),
+            properties: None,
+            foreign_members:None
+        };
+
+        features.push(feature);
+    }
+
+    let feature_collection = FeatureCollection {
+        bbox: None,
+        features,
+        foreign_members: None
+    };
+
+    feature_collection.to_string()
+}
 
 pub trait IntoTangential {
     type Output;
