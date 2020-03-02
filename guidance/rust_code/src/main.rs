@@ -10,8 +10,6 @@ use error::Error;
 use states::States;
 use graph::conversions;
 
-
-
 fn main() {
     
     let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
