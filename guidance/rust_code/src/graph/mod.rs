@@ -171,7 +171,6 @@ pub trait Vertices {
     fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex>;
 }
 
-#[derive(Debug)]
 pub struct Graph {
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
