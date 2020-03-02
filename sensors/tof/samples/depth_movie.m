@@ -4,15 +4,18 @@ clear; clc; close all;
 addpath('../optical_flow');
 
 % Ensure you downloaded one of the following video files from 
-% http://mercury.pr.erau.edu/~stockhod/samples/very_little_motion.tof
+% http://mercury.pr.erau.edu/~stockhod/samples/[filename]
 % and put it in this directory
 % filename = 'very_little_motion.tof';
 % filename = 'E:\med_rotate_left_then_right.tof';
-filename = 'C:\Users\stockhod\Downloads\far_rotate_left_then_right.tof';
-moviename = 'far_rotate_left_then_right';
-moviename = [moviename '.mp4'];
+% filename = 'C:\Users\stockhod\Downloads\far_rotate_right_then_left.tof';
+filename = 'C:\Users\stockhod\Downloads\medium_rotate_right_then_left.tof';
+% filename = 'C:\Users\stockhod\Downloads\near_rotate_right_then_left.tof';
 
-[depth_frames, ir_frames, constants] = read_tof_file(filename, 500000000);
+[path, fname, ext] = fileparts(filename);
+moviename = [fname '.mp4'];
+
+[depth_frames, ir_frames, constants] = read_tof_file(filename, 1000000000);
 rows = constants.rows;
 cols = constants.cols;
 
@@ -23,10 +26,14 @@ f_length = cols / (2 * tan(0.5 * fov_horizontal));
 
 fprintf('Read camera data: captured at %d fps\n', constants.fps);
 
-num_frames = 275;
+
+%% Limit number of frames
+num_frames = 235;
+% num_frames = constants.num_frames;
 fprintf('Processing %d of %d frames (%.1f/%.1f)\n', ...
     num_frames, constants.num_frames, ...
     num_frames/constants.fps, constants.num_frames/constants.fps);
+
 
 %% Display depth images in a movie
 
@@ -49,6 +56,9 @@ for ii = 1:num_frames
     ir = reshape(ir_frames(ii, :, :), rows, cols);
     points = depth2points(double(depth)/1000, f_length);
     
+    % Filter depth map
+    depth = imgaussfilt(depth, .5);
+    
     vfig = figure(1);
     
     % Top left plot
@@ -61,14 +71,21 @@ for ii = 1:num_frames
     
     % Top right plot
     subplot(2, 2, 2);
-    imshownorm(ir, [0 4095]);
+    imshownorm(ir);
 %     imshow(ir/max(max(max(ir_frames))));
 %     fprintf('frame %d IR max: %d\n', ii, max(max(ir)));
     xlabel('IR Intensity', 'Color', 'w', 'FontWeight', 'bold');
     
     % Bottom left plot
     subplot(2, 2, 3);
-    pcshow(points);
+%     pcshow(points);
+    cutoff_threshold = .7;
+    p_select = points(:,:,3) < (max(max(points(:,:,3)))*cutoff_threshold);
+    p_selected = points(reshape([p_select(:,:) p_select(:,:) p_select(:,:)], rows, cols, 3));
+    p_exclude = reshape(p_selected, length(p_selected)/3, 3);
+    fprintf('%d valid points\n', length(p_selected)/3);
+%     p_exclude = points;
+    pcshow(p_exclude);
     title('Point Cloud (front)');
     view([0 0 -1]);
     xlabel('x (m)');
@@ -76,9 +93,11 @@ for ii = 1:num_frames
     zlabel('z (m)');
     axis([ -4 4 -4 3 0 6]);
     
+    
     % Bottom right plot
     subplot(2, 2, 4);
-    pcshow(points);
+%     pcshow(points);
+    pcshow(p_exclude);
     title('Point Cloud (angled from above)');
     view([0 -1.8 -1]);
     xlabel('x (m)');
@@ -90,6 +109,7 @@ for ii = 1:num_frames
     sgtitle(['Frame ' num2str(ii) ' of ' num2str(num_frames) ...
         ' (' num2str(ii/constants.fps, '%.1f') '/' num2str(num_frames/constants.fps, '%.1f') ' s)'],...
         'Color', 'w');
+    
     
     if save_movie
         frame = getframe(vfig);
