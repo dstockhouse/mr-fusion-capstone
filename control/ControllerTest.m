@@ -15,7 +15,7 @@ close; clc; clear KinematicSim; clear ControlSim; clear PlotSim
 %--------------------------------------------------------------------------
 % Determine whether or not to save as an animation
 %--------------------------------------------------------------------------
-save_movie = true;
+save_movie = false;
 
 %--------------------------------------------------------------------------
 % Define robot characteristics
