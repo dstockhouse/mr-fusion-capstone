@@ -20,13 +20,17 @@ fn main() {
     fs::write("school_map.geojson", geo_json_string).unwrap();
 
     // TODO: Communication here
-
     let mut current_state: Result<States, Error> = Ok(States::Wait);
 
-    while current_state != Ok(States::Shutdown) {
+    loop {
         match current_state {
-            Err(err) => current_state = err.handle(),
-            Ok(_) => ()
+            Err(err) => unimplemented!(),
+            Ok(state) => match state {
+                States::PlanPath => unimplemented!(),
+                States::Wait => unimplemented!(),
+                States::Traverse => unimplemented!(),
+                States::Shutdown => break
+            }
         }
     }
 }
