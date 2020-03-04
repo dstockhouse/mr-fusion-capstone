@@ -1,161 +1,192 @@
 
 use crate::graph;
-use crate::graph::{Vertex, Edge};
-use std::fs::File;
-use std::io::{prelude::*, BufReader, SeekFrom};
-
-
-pub(self) fn set_up_empty_graph_with_file_name(file_name_with_path: &str) -> 
-(BufReader<File>, Vec<Edge>, Vec<Vertex>) {
-    let file = File::open(file_name_with_path).unwrap();
-    let mut reader = BufReader::new(file);
-
-    let (number_of_edges, number_of_vertices) = 
-        graph::number_of_edges_and_vertices_from_buffer(&mut reader);
-
-    let (edges,
-         vertices) = (
-                        Vec::with_capacity(number_of_edges as usize),
-                        Vec::with_capacity(number_of_vertices as usize)
-                    );
-    
-    reader.seek(SeekFrom::Start(0)).unwrap();
-    
-    (reader, edges, vertices)
-}
-
-pub(self) fn set_up_unconnected_graph_with_file_name(file_name_with_path: &str) ->
-(Vec<Edge>, Vec<Vertex>) {
-
-    let file = File::open(file_name_with_path).unwrap();
-    // Open the file and store its contents to a buffer in RAM
-    let mut reader = BufReader::new(file);
-
-    let (number_of_edges, number_of_vertices) =
-        graph::number_of_edges_and_vertices_from_buffer(&mut reader);
-
-    let (mut edges, mut vertices) = (
-        Vec::with_capacity(number_of_edges as usize),
-        Vec::with_capacity(number_of_vertices as usize),
-    );
-
-    graph::add_gps_points_to_edges(&mut reader, &mut edges);
-    graph::add_gps_points_to_vertices(&mut reader, &mut vertices);
-
-    (edges, vertices)
-}
-#[test]
-fn add_gps_points_to_edges() {
-    let (mut reader, mut edges, _) = 
-        set_up_empty_graph_with_file_name("src/graph/Test Single Edge.kml");
-
-    graph::add_gps_points_to_edges(&mut reader, &mut edges);
-
-    let edge = &edges[0];
-
-    assert_eq!(edges.len(), 1);
-    assert_eq!(edge.gps_points.len(), 3);
-    assert_eq!(edge.gps_points[0].latitude, -112.4484608);
-    assert_eq!(edge.gps_points[0].longitude, 34.615871);
-    assert_eq!(edge.gps_points[1].latitude, -112.4484635);
-    assert_eq!(edge.gps_points[1].longitude, 34.6157165);
-    assert_eq!(edge.gps_points[2].latitude, -112.4484742);
-    assert_eq!(edge.gps_points[2].longitude, 34.6155377);
-
-}
-#[test]
-fn add_gps_points_to_vertices() {
-    let (mut reader, _, mut vertices) = 
-        set_up_empty_graph_with_file_name("src/graph/Test Triangle.kml");
-
-    graph::add_gps_points_to_vertices(&mut reader, &mut vertices);
-
-    assert_eq!(vertices.len(), 3);
-    
-}
+use crate::graph::conversions::{IntoTangential, geo_json_string};
+use crate::graph::*;
 
 #[test]
-fn number_of_edges_and_vertices_from_buffer() {
-    let (mut reader, _, _) = set_up_empty_graph_with_file_name("src/graph/Test Triangle.kml");
+fn initialize_from_gpx_file_test_triangle() {
 
-    let (number_of_edges, number_of_vertices) = 
-        graph::number_of_edges_and_vertices_from_buffer(&mut reader);
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
 
-    assert_eq!(number_of_edges, 3);
-    assert_eq!(number_of_vertices, 3);
-}
-
-#[test]
-fn parse_gps_string() {
-    let gps_string = 
-        String::from("          -112.4484635,34.6157165,0");
-    
-    let (lat, long) = graph::parse_gps_string(&gps_string);
-
-    assert_eq!(lat, -112.4484635);
-    assert_eq!(long, 34.6157165);
-}
-
-#[test]
-fn number_of_gps_points_for_edge() {
-    // setup
-    let (mut reader, _edges, _vertices) = 
-        set_up_empty_graph_with_file_name("src/graph/Test Single Edge.kml");
-    
-    let mut lines = reader.by_ref().lines();
-    let mut line = lines.next().unwrap().unwrap();
-
-    // Explicate setup of the function precondition
-    while !line.contains("<name>Line"){
-        line = lines.next().unwrap().unwrap();
-    }
-
-    let gps_points_for_edge = graph::number_of_gps_points_for_edge(&mut reader);
-    let next_line = reader.lines().next().unwrap().unwrap();
-    assert_eq!(gps_points_for_edge, 3);
-    assert_eq!(next_line, 
-        "      <styleUrl>#line-000000-1200-nodesc</styleUrl>");
-    
-}
-
-#[test]
-fn connect_vertices_with_edges() {
-    let (edges, vertices) = 
-        set_up_unconnected_graph_with_file_name("src/graph/Test Single Edge.kml");
-
-    let graph = graph::connect_vertices_with_edges(edges, vertices);
-
-    let row1 = &graph.connection_matrix[0];
-    let row2 = &graph.connection_matrix[1];
-
-    assert_eq!(row1, &vec![None, Some(0)]);
-    assert_eq!(row2, &vec![Some(0), None]);
-}
-
-#[test]
-fn initialize_from_kml_file() {
-
-    let graph = graph::initialize_from_kml_file("src/graph/Test Triangle.kml");
-
-    for row in 0..graph.connection_matrix.len() {
-        for column in 0..graph.connection_matrix[0].len() {
+    // Asserting the the diagonal of the matrix is none, meaning that no vertex has an edge that
+    // connects to itself. Anything not along the diagonal of the matrix should be populated with a 
+    // value in this specific case.
+    for row in 0..graph.connection_matrix.nrows() {
+        for column in 0..graph.connection_matrix.ncols() {
             if row == column {
-                assert_eq!(graph.connection_matrix[row][column], None);
+                assert_eq!(graph.connection_matrix[(row, column)], None);
             }
             else {
-                assert_ne!(graph.connection_matrix[row][column], None);
+                assert_ne!(graph.connection_matrix[(row, column)], None);
             }
         }
     }
 }
 
 #[test]
+fn initialize_from_gpx_file_single_edge() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+
+    let edges = &graph.edges;
+    let edge = &edges[0];
+
+    assert_eq!(edges.len(), 1);
+    assert_eq!(edge.points.len(), 3);
+    assert_eq!(edge.points[0].gps.long, -112.4484608);
+    assert_eq!(edge.points[0].gps.lat, 34.615871);
+    assert_eq!(edge.points[1].gps.long, -112.4484635);
+    assert_eq!(edge.points[1].gps.lat, 34.6157165);
+    assert_eq!(edge.points[2].gps.long, -112.4484742);
+    assert_eq!(edge.points[2].gps.lat, 34.6155377);
+}
+
+#[test]
 fn graph_to_geo_json_string() {
-    let graph = graph::initialize_from_kml_file("src/graph/Test Single Edge.kml");
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
     
-    let json_string = graph::graph_to_geo_json_string(&graph);
+    let json_string = geo_json_string(&graph, &graph);
     let expected_json_string = r#"{"features":[{"geometry":{"coordinates":[[-112.4484608,34.615871],[-112.4484635,34.6157165],[-112.4484742,34.6155377]],"type":"LineString"},"id":"Line 3","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484608,34.615871],"type":"Point"},"id":"Point 1","properties":{},"type":"Feature"},{"geometry":{"coordinates":[-112.4484742,34.6155377],"type":"Point"},"id":"Point 2","properties":{},"type":"Feature"}],"type":"FeatureCollection"}"#;
 
     assert_eq!(json_string, expected_json_string);
 
 }
+
+#[test]
+fn distance() {
+    
+    let origin = graph::TangentialPoint {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0
+    };
+
+    let point = graph::TangentialPoint {
+        x: 1.0,
+        y: 1.0,
+        z: 1.0
+    };
+
+    let distance = origin.distance(&point);
+
+    assert_eq!(distance, 3.0_f64.sqrt());
+    
+}
+
+#[test]
+fn into_tangential() {
+
+    let king_front_entrance = graph::GPSPointDeg {
+        lat: 34.6147979,
+        long: -112.4509615,
+        height: 1582.3
+    };
+
+    assert_eq!(king_front_entrance.into_tangential(),
+        graph::TangentialPoint{x: 0.0, y: 0.0, z: 0.0}
+    )
+
+}
+
+#[test]
+fn tangential_sub() {
+    let origin = &graph::TangentialPoint{x: 0.0, y: 0.0, z: 0.0};
+    let point = &graph::TangentialPoint{x: 1.0, y: 2.0, z: 3.0};
+
+    assert_eq!(point - origin,
+        (1.0, 2.0, 3.0)
+    )
+}   
+
+#[test]
+fn graph_into_tangential() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
+
+    let origin = graph.vertices.iter()
+        .filter(|vertex| 
+                    vertex.name.contains("King Engineering (Front Entrance)")
+        ).next().unwrap();
+
+    
+    assert_eq!(origin.point.tangential, 
+        TangentialPoint{x: 0.0, y: 0.0, z: 0.0}
+    );
+
+}
+
+#[test]
+fn into_tangential_correct_distances() {
+
+    let king_start_edge = graph::GPSPointDeg {
+        lat: 34.6147979,
+        long: -112.4509615,
+        height: 1582.341
+    }.into_tangential();
+
+    let king_end_edge = graph::GPSPointDeg {
+        lat: 34.6148752,
+        long: -112.4509389,
+        height: 1581.907
+    }.into_tangential();
+
+    // Expected distance is about 8.8382m
+    let distance_between_points = king_end_edge.distance(&king_start_edge);
+
+    assert!(
+        distance_between_points > 8.0
+            &&
+        distance_between_points < 9.0
+    );
+    
+}
+
+#[test]
+fn edge_initialization() {
+    let points = vec![
+        Point {
+            tangential: TangentialPoint{x: 0.0, y: 0.0, z: 0.0},
+            gps: GPSPointDeg{lat: -1.0, long: -1.0, height: -1.0} // Unimportant for this test
+        } ,
+        Point {
+            tangential: TangentialPoint{x: 1.0, y: 1.0, z: 1.0},
+            gps: GPSPointDeg{lat: -1.0, long: -1.0, height: -1.0} // Unimportant for this test
+        }
+    ];
+    
+    let name = String::from("the slight");
+
+    assert_eq!(Edge::new(name.clone(), points.clone()),
+        Edge {
+            name,
+            points,
+            distance: 3.0_f64.sqrt()
+        }
+    )
+}
+
+#[test]
+fn edge_from_connection_index() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+
+    let matrix_index = MatrixIndex {
+        ith: VertexIndex(0),
+        jth: VertexIndex(1),
+    };
+
+    assert_eq!(&graph.edges[0], matrix_index.edge(&graph));
+    
+}
+
+#[test]
+fn vertices_from_connection_matrix() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+
+    let matrix_index = MatrixIndex {
+        ith: VertexIndex(0),
+        jth: VertexIndex(1),
+    };
+
+    assert_eq!(
+        matrix_index.vertices(&graph),
+        (&graph.vertices[0], &graph.vertices[1])
+    )
+}   

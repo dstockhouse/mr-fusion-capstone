@@ -9,9 +9,12 @@
 *.avi
 *.mp4
 school_map.geojson
+navigation/bld/
+*.so
 a.out
 bld/
 target/
 log/
 SampleData/
 cgreen_1.2.0_amd64.deb
+*.geojson

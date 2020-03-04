@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<gpx version="1.1" creator="GPS Visualizer https://www.gpsvisualizer.com/" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<wpt lat="34.615871" lon="-112.4484608">
+  <ele>1575.9</ele>
+  <name>Point 1</name>
+  <sym>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6155377" lon="-112.4484742">
+  <ele>1577.8</ele>
+  <name>Point 2</name>
+  <sym>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<trk>
+  <name>Line 3</name>
+  <trkseg>
+    <trkpt lat="34.615871" lon="-112.4484608">
+      <ele>1575.914</ele>
+    </trkpt>
+    <trkpt lat="34.6157165" lon="-112.4484635">
+      <ele>1576.756</ele>
+    </trkpt>
+    <trkpt lat="34.6155377" lon="-112.4484742">
+      <ele>1577.808</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+</gpx>

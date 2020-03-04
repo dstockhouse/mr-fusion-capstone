@@ -8,6 +8,28 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Test into_tangential",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["into_tangential"],
+            "cwd": "${workspaceFolder}"
+        },
+
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Test add_gps_points_to_vertices",
             "cargo": {
                 "args": [
@@ -27,6 +49,28 @@
             "cwd": "${workspaceFolder}"
         },
         
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test intialize_from_gpx_file_single_edge",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust_code",
+                    "--package=rust_code",
+                    "--",
+                    "--test-threads=1"
+                ],
+                "filter": {
+                    "name": "rust_code",
+                    "kind": "bin"
+                }
+            },
+            "args": ["initialize_from_kml_file_single_edge"],
+            "cwd": "${workspaceFolder}"
+        },
+
         {
             "type": "lldb",
             "request": "launch",
@@ -121,6 +165,7 @@
                         "--package=rust_code",
                         "--",
                         "--test-threads=1"
+                        "--nocapture"
                     ],
                     "filter": {
                         "name": "rust_code",
