@@ -14,7 +14,7 @@ use graph::conversions;
 
 fn main() {
 
-    let loopback = Ipv4Addr::new(127, 30, 155, 168);
+    let loopback = Ipv4Addr::new(169, 254, 243, 252);
     let socket = SocketAddrV4::new(loopback, 0);
     let listener = TcpListener::bind(socket).unwrap();
     let port = listener.local_addr().unwrap();
