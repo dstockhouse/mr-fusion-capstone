@@ -13,11 +13,11 @@ clear; clc; close all;
 % * Discuss the pitfalls of the depth map output and discuss fusing it with IR
 
 %% Read image files
-
+addpath('../samples');
 % From video captured from dragonboard
-samples_path = '../samples';
+samples_path = './samples';
 addpath(samples_path);
-filename = [samples_path '/very_little_motion.tof'];
+filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 
 % Ensure file exists where expected
 if ~isfile(filename)
@@ -55,11 +55,12 @@ if num_frames < constants.num_frames
     % Update constants
     constants.num_frames = num_frames;
     constants.duration = constants.num_frames / constants.fps;
-    
-    % Restrict image streams
-    depth_images = depth_images(1:num_frames, :, :);
-    ir_images = ir_images(1:num_frames, :, :);
+
 end
+
+% Restrict image streams
+depth_images = depth_images(1:constants.num_frames, :, :);
+ir_images = ir_images(1:constants.num_frames, :, :);
 
 % Reduce integer (mm) measurements to double (m) measurements
 depth_images = double(depth_images) / 1000;
@@ -86,18 +87,20 @@ depth_images = double(depth_images) / 1000;
 camera_pose = eye(4);
     
 % First image is the "old" image
-gaussian_levels = 5;
+gaussian_levels = 6;
 start_depth = reshape(depth_images(1, :, :), constants.rows, constants.cols);
+start_depth = fuse_ir_depth(start_depth,reshape(ir_images(1, :, :), constants.rows, constants.cols),60);
 [p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
 
-for frame_index = 2:num_frames
+for frame_index = 2:constants.num_frames
     
-    fprintf('Computing visual odometry on frame %d of %d\n', frame_index, num_frames);
+    fprintf('Computing visual odometry on frame %d of %d\n', frame_index, constants.num_frames);
     
     %% Gaussian pyramid
     
     % Fetch next frame from camera and construct pyramid
     new_depth = reshape(depth_images(frame_index, :, :), constants.rows, constants.cols);
+    new_depth = fuse_ir_depth(new_depth,reshape(ir_images(frame_index, :, :), constants.rows, constants.cols),60);
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
@@ -149,6 +152,7 @@ for frame_index = 2:num_frames
     p_kai = zeros(gaussian_levels, 6);
     p_transformations = zeros(gaussian_levels, 4, 4);
     kai_est = zeros(6, 1);
+    kai_est_old = zeros(6,1);
     accumulatedTransformation = eye(4);
 
     % Iterate through the gaussian pyramid
@@ -207,11 +211,13 @@ for frame_index = 2:num_frames
             du, dv, dt,...
             num_points,...
             constants);
+        kai_est = reshape(p_kai(image_level,:),6,1);
         
         %% Filter velocity
         %     p_kai(image_level, :) = filter_velocity();
-        p_transformations(image_level,:,:) = kai2trans(p_kai(image_level, :)');
+%         p_transformations(image_level,:,:) = kai2trans(p_kai(image_level, :)');
         %     p_transformations(image_level,:,:) = eye(4);
+        [p_kai(image_level,:), p_transformations(image_level,:,:)] = filter_velocity(constants,kai_est_old,est_cov,kai_est,image_level,accumulatedTransformation);
         
         %% Update state for next loop
         level_transformation = reshape(p_transformations(image_level,:,:),4,4);
@@ -226,11 +232,43 @@ for frame_index = 2:num_frames
     p_points_old = p_points_new;
     p_depth_old = p_depth_new;
     kai_est = trans2kai(accumulatedTransformation);
-    fprintf('\tEstimated v = [%.3f %.3f %.3f] m/s, w = [%.3f %.3f %.3f] deg/s\n',...
-        kai_est(1), kai_est(2), kai_est(3),...
-        kai_est(4)*180/pi, kai_est(5)*180/pi, kai_est(6)*180/pi);
-    
-    
+    kai_est_old = kai_est;
+%     fprintf('\tEstimated v = [%.3f %.3f %.3f] m/s, w = [%.3f %.3f %.3f] deg/s\n',...
+%         kai_est(1), kai_est(2), kai_est(3),...
+%         kai_est(4)*180/pi, kai_est(5)*180/pi, kai_est(6)*180/pi);
+    % Estimated velocity graph
+    figure(1);
+    subplot(3,2,1);
+    plot(frame_index,kai_est(1),'*');
+    title('V_x estimate');
+    hold on;
+    grid on;
+    subplot(3,2,3);
+    plot(frame_index,kai_est(2),'*');
+    title('V_y estimate');
+    hold on;
+    grid on;
+    subplot(3,2,5);
+    plot(frame_index,kai_est(3),'*');
+    title('V_z estimate');
+    hold on;
+    grid on;
+    subplot(3,2,2);
+    plot(frame_index,kai_est(4)*180/pi,'*');
+    title('\omega_x estimate');
+    hold on;
+    grid on;
+    subplot(3,2,4);
+    plot(frame_index,kai_est(5)*180/pi,'*');
+    title('\omega_y estimate');
+    hold on;
+    grid on;
+    subplot(3,2,6);
+    plot(frame_index,kai_est(6)*180/pi,'*');
+    title('\omega_z estimate');
+    hold on;
+    grid on;
+    pause(1e-3);
     % Update pose?
 
 end % for frame_index
