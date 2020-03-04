@@ -1,6 +1,12 @@
 Samples are too large to include in the git repo, but they can be found online at:
 
-#### Best samples (potentially some problems)
+#### Best samples
+http://mercury.pr.erau.edu/~stockhod/samples/medium_noise_reduce_60_rotate.tof
+http://mercury.pr.erau.edu/~stockhod/samples/medium_noise_reduce_60_linear_move.tof
+http://mercury.pr.erau.edu/~stockhod/samples/far_noise_reduce_60_rotate.tof
+http://mercury.pr.erau.edu/~stockhod/samples/far_noise_reduce_60_linear_move.tof
+
+#### Samples with potentially some problems
 http://mercury.pr.erau.edu/~stockhod/samples/medium_move_forward_then_back.tof
 http://mercury.pr.erau.edu/~stockhod/samples/far_move_forward_then_back.tof
 http://mercury.pr.erau.edu/~stockhod/samples/near_rotate_right_then_left.tof
