@@ -16,12 +16,16 @@ for u = 1:cols
         
         z = depth(v, u);
         
-        % X, Y, and Z points
-        points(v, u, 1) = (u - u_center) * z / focal_length;
-        points(v, u, 2) = (v - v_center) * z / focal_length;
-        
-        % Can just be done as a vector above
-        points(v, u, 3) = z;
+        if z > 0
+            
+            % X, Y, and Z points
+            points(v, u, 1) = (u - u_center) * z / focal_length;
+            points(v, u, 2) = (v - v_center) * z / focal_length;
+            
+            % Can just be done as a vector above
+            points(v, u, 3) = z;
+            
+        end
         
     end % for jj
 end % for ii

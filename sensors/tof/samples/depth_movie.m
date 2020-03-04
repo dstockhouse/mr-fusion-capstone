@@ -9,8 +9,13 @@ addpath('../optical_flow');
 % filename = 'very_little_motion.tof';
 % filename = 'E:\med_rotate_left_then_right.tof';
 % filename = 'C:\Users\stockhod\Downloads\far_rotate_right_then_left.tof';
-filename = 'C:\Users\stockhod\Downloads\medium_rotate_right_then_left.tof';
+% filename = 'C:\Users\stockhod\Downloads\medium_rotate_right_then_left.tof';
 % filename = 'C:\Users\stockhod\Downloads\near_rotate_right_then_left.tof';
+% filename = 'C:\Users\stockhod\Downloads\medium_noise_reduce_60_linear_move.tof';
+% filename = 'C:\Users\stockhod\Downloads\medium_noise_reduce_60_rotate.tof';
+% filename = 'C:\Users\stockhod\Downloads\far_noise_reduce_60_linear_move.tof';
+filename = 'C:\Users\stockhod\Downloads\far_noise_reduce_60_rotate.tof';
+
 
 [path, fname, ext] = fileparts(filename);
 moviename = [fname '.mp4'];
@@ -30,6 +35,9 @@ fprintf('Read camera data: captured at %d fps\n', constants.fps);
 %% Limit number of frames
 num_frames = 235;
 % num_frames = constants.num_frames;
+if num_frames > constants.num_frames
+    num_frames = constants.num_frames;
+end
 fprintf('Processing %d of %d frames (%.1f/%.1f)\n', ...
     num_frames, constants.num_frames, ...
     num_frames/constants.fps, constants.num_frames/constants.fps);
@@ -52,12 +60,17 @@ end
 fast_movie = true;
 for ii = 1:num_frames
     
+    fprintf('Frame %d of %d\n', ii, num_frames);
+    
     depth = reshape(depth_frames(ii, :, :), rows, cols);
     ir = reshape(ir_frames(ii, :, :), rows, cols);
-    points = depth2points(double(depth)/1000, f_length);
     
     % Filter depth map
-    depth = imgaussfilt(depth, .5);
+%     depth = imgaussfilt(depth, .5);
+    depth = fuse_ir_depth(depth, ir, 100);
+    
+    % Generate point cloud from depth data
+    points = depth2points(double(depth)/1000, f_length);
     
     vfig = figure(1);
     
@@ -80,11 +93,15 @@ for ii = 1:num_frames
     subplot(2, 2, 3);
 %     pcshow(points);
     cutoff_threshold = .7;
-    p_select = points(:,:,3) < (max(max(points(:,:,3)))*cutoff_threshold);
-    p_selected = points(reshape([p_select(:,:) p_select(:,:) p_select(:,:)], rows, cols, 3));
-    p_exclude = reshape(p_selected, length(p_selected)/3, 3);
-    fprintf('%d valid points\n', length(p_selected)/3);
+%     p_select = points(:,:,3) < (max(max(points(:,:,3)))*cutoff_threshold);
+%     p_selected = points(reshape([p_select(:,:) p_select(:,:) p_select(:,:)], rows, cols, 3));
+%     p_exclude = reshape(p_selected, length(p_selected)/3, 3);
+%     fprintf('%d valid points\n', length(p_selected)/3);
 %     p_exclude = points;
+%     p_colors = zeros(size(points));
+%     p_colors = reshape([depth.*(depth>0) depth.*(depth>0) depth.*(depth>0)], rows, cols, 3);
+    p_exclude = points;
+%     p_colors = reshape(depth.*(depth>0), rows*cols, 1)/4096;
     pcshow(p_exclude);
     title('Point Cloud (front)');
     view([0 0 -1]);
@@ -105,10 +122,12 @@ for ii = 1:num_frames
     zlabel('z (m)');
     axis([ -4 4 -4 3 0 6]);
     
-    % Figure title
-    sgtitle(['Frame ' num2str(ii) ' of ' num2str(num_frames) ...
-        ' (' num2str(ii/constants.fps, '%.1f') '/' num2str(num_frames/constants.fps, '%.1f') ' s)'],...
-        'Color', 'w');
+    if exist('sgtitle', 'builtin')
+        % Figure title
+        sgtitle(['Frame ' num2str(ii) ' of ' num2str(num_frames) ...
+            ' (' num2str(ii/constants.fps, '%.1f') '/' num2str(num_frames/constants.fps, '%.1f') ' s)'],...
+            'Color', 'w');
+    end
     
     
     if save_movie
