@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<gpx version="1.1" creator="GPS Visualizer https://www.gpsvisualizer.com/" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<wpt lat="34.6162565" lon="-112.4494117">
+  <ele>1573.8</ele>
+  <name>Point 1</name>
+  <sym>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6158271" lon="-112.4494425">
+  <ele>1576.1</ele>
+  <name>Point 2</name>
+  <sym>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.616007" lon="-112.4491032">
+  <ele>1575.4</ele>
+  <name>Point 3</name>
+  <sym>http://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<trk>
+  <name>Line 4</name>
+  <trkseg>
+    <trkpt lat="34.6162565" lon="-112.4494117">
+      <ele>1573.841</ele>
+    </trkpt>
+    <trkpt lat="34.6161858" lon="-112.449401">
+      <ele>1574.156</ele>
+    </trkpt>
+    <trkpt lat="34.6161582" lon="-112.4493996">
+      <ele>1574.284</ele>
+    </trkpt>
+    <trkpt lat="34.6161207" lon="-112.4493996">
+      <ele>1574.455</ele>
+    </trkpt>
+    <trkpt lat="34.6160777" lon="-112.4493996">
+      <ele>1574.651</ele>
+    </trkpt>
+    <trkpt lat="34.6159839" lon="-112.449401">
+      <ele>1575.078</ele>
+    </trkpt>
+    <trkpt lat="34.6158271" lon="-112.4494425">
+      <ele>1576.12</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 5</name>
+  <trkseg>
+    <trkpt lat="34.6158271" lon="-112.4494425">
+      <ele>1576.12</ele>
+    </trkpt>
+    <trkpt lat="34.6158658" lon="-112.4493379">
+      <ele>1575.909</ele>
+    </trkpt>
+    <trkpt lat="34.6158912" lon="-112.4492856">
+      <ele>1575.779</ele>
+    </trkpt>
+    <trkpt lat="34.6159375" lon="-112.4492239">
+      <ele>1575.548</ele>
+    </trkpt>
+    <trkpt lat="34.6159717" lon="-112.4491703">
+      <ele>1575.398</ele>
+    </trkpt>
+    <trkpt lat="34.616007" lon="-112.4491032">
+      <ele>1575.369</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 6</name>
+  <trkseg>
+    <trkpt lat="34.6162565" lon="-112.4494117">
+      <ele>1573.841</ele>
+    </trkpt>
+    <trkpt lat="34.6162112" lon="-112.4493406">
+      <ele>1574.121</ele>
+    </trkpt>
+    <trkpt lat="34.6161715" lon="-112.449299">
+      <ele>1574.354</ele>
+    </trkpt>
+    <trkpt lat="34.6161174" lon="-112.4492441">
+      <ele>1574.696</ele>
+    </trkpt>
+    <trkpt lat="34.6160633" lon="-112.4491797">
+      <ele>1575.032</ele>
+    </trkpt>
+    <trkpt lat="34.616007" lon="-112.4491032">
+      <ele>1575.369</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+</gpx>
