@@ -66,13 +66,13 @@ int UARTInit(char *devName, int baud) {
     int uart_fd, rc;
 
     // Exit on error if invalid pointer
-    if(devName == NULL) {
+    if (devName == NULL) {
         return -1;
     }
 
     // Ensure user has permissions to access UART file
     rc = access(devName, R_OK | W_OK);
-    if(rc) {
+    if (rc == -1) {
         logDebug(L_INFO, "%s: Cannot access UART device (try as sudo?)\n", strerror(errno));
         return rc;
     }
@@ -80,7 +80,7 @@ int UARTInit(char *devName, int baud) {
     // Open UART file
     // uart_fd = open(devName, O_RDWR | O_NOCTTY | O_NDELAY);
     uart_fd = open(devName, O_RDWR | O_NOCTTY);
-    if(uart_fd < 0) {
+    if (uart_fd < 0) {
         logDebug(L_INFO, "%s: UARTInit open() failed for UART device\n", strerror(errno));
         return uart_fd;
     }
@@ -111,20 +111,20 @@ int UARTInitReadOnly(char *devName, int baud) {
     int uart_fd, rc;
 
     // Exit on error if invalid pointer
-    if(devName == NULL) {
+    if (devName == NULL) {
         return -1;
     }
 
     // Ensure user has permissions to access UART file
     rc = access(devName, R_OK);
-    if(rc) {
+    if (rc == -1) {
         logDebug(L_INFO, "%s: Cannot access UART device (try as sudo?)\n", strerror(errno));
         return rc;
     }
 
     // Open UART file
     uart_fd = open(devName, O_RDONLY | O_NOCTTY);
-    if(uart_fd < 0) {
+    if (uart_fd < 0) {
         logDebug(L_INFO, "%s: UARTInit open() failed for UART device\n", strerror(errno));
         return uart_fd;
     }
@@ -145,7 +145,7 @@ int UARTSetBaud(int fd, int baud) {
 
     // Get existing device attributes
     rc = tcgetattr(fd, &uartOptions);
-    if(rc) {
+    if (rc == -1) {
         logDebug(L_INFO, "%s: UARTSetBaud tcgetattr() failed for UART device\n", strerror(errno));
         return rc;
     }
@@ -187,13 +187,13 @@ int UARTSetBaud(int fd, int baud) {
 
     // Push changed options to device (after flushing input and output)
     rc = tcflush(fd, TCIOFLUSH);
-    if(rc) {
+    if (rc == -1) {
         logDebug(L_INFO, "%s: UARTSetBaud tcflush() failed for UART device\n", strerror(errno));
         return rc;
     }
 
     rc = tcsetattr(fd, TCSANOW, &uartOptions);
-    if(rc) {
+    if (rc == -1) {
         logDebug(L_INFO, "%s: UARTSetBaud tcsetattr() failed for UART device\n", strerror(errno));
         return rc;
     }
@@ -220,21 +220,20 @@ int UARTRead(int uart_fd, unsigned char *buf, int length) {
     int numRead;
 
     // Exit on error if invalid pointer
-    if(buf == NULL) {
+    if (buf == NULL) {
         return -1;
     }
 
     // Ensure non-blocking read
-    // if(!(fcntl(uart_fd, F_GETFL) & O_NONBLOCK)) {
+    // if (!(fcntl(uart_fd, F_GETFL) & O_NONBLOCK)) {
     // 	fcntl(uart_fd, F_SETFL, O_NONBLOCK);
     // }
 
     // Attempt to read from UART device at most length bytes
     numRead = read(uart_fd, buf, length);
     // printf("UARTRead: read %d chars\n", numRead);
-    if(numRead < 0) {
+    if (numRead < 0) {
         logDebug(L_INFO, "%s: UARTread read() failed for UART device\n", strerror(errno));
-        return numRead;
     }
 
     // Return number of bytes successfully read into buffer
@@ -262,15 +261,14 @@ int UARTWrite(int uart_fd, unsigned char *buf, int length) {
     int numWritten;
 
     // Exit on error if invalid pointer
-    if(buf == NULL) {
+    if (buf == NULL) {
         return -1;
     }
 
     // Attempt to write to UART device length bytes
     numWritten = write(uart_fd, buf, length);
-    if(numWritten < 0) {
+    if (numWritten < 0) {
         logDebug(L_INFO, "%s: UARTWrite write() failed for UART device\n", strerror(errno));
-        return numWritten;
     }
 
     // Return number of bytes successfully read into buffer
@@ -295,9 +293,8 @@ int UARTClose(int uart_fd) {
     int rc;
 
     rc = close(uart_fd);
-    if(rc) {
+    if (rc == -1) {
         logDebug(L_INFO, "%s: UARTClose Couldn't close UART file\n", strerror(errno));
-        return rc;
     }
 
     return 0;
