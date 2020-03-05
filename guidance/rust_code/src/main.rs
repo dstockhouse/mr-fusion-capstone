@@ -3,6 +3,7 @@ mod error;
 mod states;
 mod path_planning;
 mod constants;
+mod network;
 
 use std::fs;
 use std::net::{SocketAddrV4, Ipv4Addr, TcpListener};
