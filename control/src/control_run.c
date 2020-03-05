@@ -1,4 +1,18 @@
-/* control_run.c */
+/****************************************************************************
+ *
+ * File:
+ * 	control_run.c
+ *
+ * Description:
+ * 	Implementation of the control subsystem software control flow
+ *
+ * Author:
+ * 	Connor Rockwell & Duncan Patel
+ *
+ * Revision 0.1
+ * 	Last edited 03/05/2020
+ *
+ ***************************************************************************/
 
 int control_run(int arg) {
 
