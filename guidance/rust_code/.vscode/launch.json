@@ -164,7 +164,7 @@
                         "--bin=rust_code",
                         "--package=rust_code",
                         "--",
-                        "--test-threads=1"
+                        "--test-threads=1",
                         "--nocapture"
                     ],
                     "filter": {

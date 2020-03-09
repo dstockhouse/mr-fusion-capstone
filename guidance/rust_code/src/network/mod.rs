@@ -5,7 +5,6 @@ use std::io::Write;
 use cfg_if::cfg_if;
 use crate::ui::TO_UI;
 
-
 cfg_if! {
 
     // This can be thought of as a #ifdef in c. In this case, if cargo test is run, then compile the 
@@ -43,7 +42,6 @@ cfg_if! {
 const GUIDANCE_IP: Ipv4Addr = Ipv4Addr::new(192, 168, 1, 1);
 const CONTROL_PORT: u16 = 31401;
 
-// This function is not finished yet
 pub(self) fn establish_connection(address: Ipv4Addr, port: u16) -> io::Result<(TcpStream, SocketAddr)> {
     let socket = SocketAddrV4::new(address, port);
     let tcp_listener = match TcpListener::bind(socket) {
@@ -52,22 +50,23 @@ pub(self) fn establish_connection(address: Ipv4Addr, port: u16) -> io::Result<(T
 
             let message = format!("Unable to bind to socket: {}", error);
 
-            cfg_if! {
-                if #[cfg(any(not(test)))] {
-                    // Using unwrap since we are guaranteed to get the mutex
-                    TO_UI.lock().unwrap().write(message.as_bytes())
-                        .unwrap(); // Second unwrap because I am unsure of how to hand error if We
-                                   // cannot send information to the pipe.
-                }
-            }
+            // Using unwrap since we are guaranteed to get the mutex
+            TO_UI.lock().unwrap().write(message.as_bytes())
+                .unwrap(); // Second unwrap because I am unsure of how to hand error if We
+                            // cannot send information to the pipe.
+
             panic!("{}", message)
         }
     };
 
     match tcp_listener.set_nonblocking(true) {
         Ok(_) => (),
-        // TODO: Send message to UI we were not able to set nonblocking
-        Err(error) => unimplemented!() 
+        Err(error) => {
+            let message = format!("tcp-accept - unable to set non-blocking: {}", error);
+            
+            TO_UI.lock().unwrap()
+                .write(message.as_bytes()).unwrap();
+        }
     }
 
     tcp_listener.accept()
