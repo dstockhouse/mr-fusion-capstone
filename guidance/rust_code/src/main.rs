@@ -4,17 +4,24 @@ mod states;
 mod path_planning;
 mod constants;
 mod network;
+mod ui;
 
 use std::fs;
+use std::io::Write;
 use std::net::{SocketAddrV4, Ipv4Addr, TcpListener};
 use std::io::Read;
+use std::thread;
+use std::time::Duration;
 
 use error::Error;
 use states::States;
 use graph::conversions;
+use ui::TO_UI;
 
 fn main() {
-
+    
+    TO_UI.lock().unwrap().write("hello".as_bytes()).unwrap();
+    /*
     let loopback = Ipv4Addr::new(192, 168, 0, 2);
     let socket = SocketAddrV4::new(loopback, 0);
     let listener = TcpListener::bind(socket).unwrap();
@@ -25,6 +32,7 @@ fn main() {
     let mut input = String::new();
     let _ = tcp_stream.read_to_string(&mut input).unwrap();
     println!("{:?} says {}", addr, input);
+    */
     
     let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
 

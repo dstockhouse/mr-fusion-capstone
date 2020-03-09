@@ -1,9 +1,16 @@
 use std::net::{Ipv4Addr, SocketAddrV4, SocketAddr};
 use std::io;
+use std::io::Write;
+
 use cfg_if::cfg_if;
+use crate::ui::TO_UI;
+
 
 cfg_if! {
 
+    // This can be thought of as a #ifdef in c. In this case, if cargo test is run, then compile the 
+    // following code contained within the if statement. This mocks networking code reliant on 
+    // hardware.
     if #[cfg(test)] {
 
         use mockall::*;
@@ -28,6 +35,7 @@ cfg_if! {
     }
 
     else {
+        // cargo run or cargo build was supplied to the terminal. Compile the real code.
         use std::net::{TcpListener, TcpStream};
     }
 }
@@ -40,13 +48,26 @@ pub(self) fn establish_connection(address: Ipv4Addr, port: u16) -> io::Result<(T
     let socket = SocketAddrV4::new(address, port);
     let tcp_listener = match TcpListener::bind(socket) {
         Ok(tcp_listener) => tcp_listener,
-        Err(error) => panic!("unable to bind {:?}", error)
-        // TODO: Send message to UI
+        Err(error) => {
+
+            let message = format!("Unable to bind to socket: {}", error);
+
+            cfg_if! {
+                if #[cfg(any(not(test)))] {
+                    // Using unwrap since we are guaranteed to get the mutex
+                    TO_UI.lock().unwrap().write(message.as_bytes())
+                        .unwrap(); // Second unwrap because I am unsure of how to hand error if We
+                                   // cannot send information to the pipe.
+                }
+            }
+            panic!("{}", message)
+        }
     };
 
     match tcp_listener.set_nonblocking(true) {
         Ok(_) => (),
-        Err(error) => unimplemented!() // TODO: Send message to UI we were not able 
+        // TODO: Send message to UI we were not able to set nonblocking
+        Err(error) => unimplemented!() 
     }
 
     tcp_listener.accept()
