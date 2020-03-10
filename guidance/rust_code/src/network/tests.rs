@@ -51,12 +51,19 @@ fn establish_connection_able_to_bind_non_blocking() {
 }
 
 #[test]
+#[ignore]
 fn establish_connection_able_to_bind_blocking() {
-
-    let mut mock_open_options = MockOpenOptions::new();
+    // Setting up mocks for UI
+    let mut mock_open_options = MockOpenOptions::default();
     mock_open_options.expect_append()
         .return_var(MockOpenOptions::default());
+    mock_open_options.expect_create_new()
+        .return_var(MockOpenOptions::default());
 
+    let mock_open_options_new = MockOpenOptions::new_context();
+    mock_open_options_new.expect().return_once(|| mock_open_options);
+
+    // Mocking network connections
     let mock_bind = MockTcpListener::bind_context();
     mock_bind.expect()
         // Please ignore the type parameter to the input of returning since it is unused to set the

@@ -20,6 +20,7 @@ cfg_if! {
                 fn append(&mut self, append: bool) -> &mut OpenOptions;
                 fn create_new(&mut self, create_new: bool) -> &mut OpenOptions;
                 fn read(&mut self, read: bool) -> &mut OpenOptions;
+                fn new() -> OpenOptions;
             }
         }
 
