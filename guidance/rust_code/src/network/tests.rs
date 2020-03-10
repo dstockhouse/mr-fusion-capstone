@@ -14,6 +14,11 @@ use std::net::IpAddr;
 #[should_panic]
 #[ignore]
 fn establish_connection_unable_to_bind() {
+    let mut mock_open_options = MockOpenOptions::default();
+    mock_open_options.expect_append()
+        .return_var(MockOpenOptions::default());
+    mock_open_options.expect_create_new()
+        .return_var(MockOpenOptions::default());
 
     let mock_bind = MockTcpListener::bind_context();
     mock_bind.expect()
@@ -59,6 +64,8 @@ fn establish_connection_able_to_bind_blocking() {
         .return_var(MockOpenOptions::default());
     mock_open_options.expect_create_new()
         .return_var(MockOpenOptions::default());
+    mock_open_options.expect_open()
+        .returning(|_: &str| Ok(MockFile::new()));
 
     let mock_open_options_new = MockOpenOptions::new_context();
     mock_open_options_new.expect().return_once(|| mock_open_options);
