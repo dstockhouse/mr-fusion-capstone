@@ -14,11 +14,10 @@ use std::net::IpAddr;
 #[should_panic]
 #[ignore]
 fn establish_connection_unable_to_bind() {
-    let mut mock_open_options = MockOpenOptions::default();
-    mock_open_options.expect_append()
-        .return_var(MockOpenOptions::default());
-    mock_open_options.expect_create_new()
-        .return_var(MockOpenOptions::default());
+
+    TO_UI.lock().unwrap().expect_write()
+        .times(1) // An assertion that the write method to UI was called 1 time.
+        .returning(|_| Ok(0));
 
     let mock_bind = MockTcpListener::bind_context();
     mock_bind.expect()
@@ -58,17 +57,10 @@ fn establish_connection_able_to_bind_non_blocking() {
 #[test]
 #[ignore]
 fn establish_connection_able_to_bind_blocking() {
-    // Setting up mocks for UI
-    let mut mock_open_options = MockOpenOptions::default();
-    mock_open_options.expect_append()
-        .return_var(MockOpenOptions::default());
-    mock_open_options.expect_create_new()
-        .return_var(MockOpenOptions::default());
-    mock_open_options.expect_open()
-        .returning(|_: &str| Ok(MockFile::new()));
 
-    let mock_open_options_new = MockOpenOptions::new_context();
-    mock_open_options_new.expect().return_once(|| mock_open_options);
+    TO_UI.lock().unwrap().expect_write()
+        .times(1) // An assertion that the write method to UI was called 1 time.
+        .returning(|_| Ok(0));
 
     // Mocking network connections
     let mock_bind = MockTcpListener::bind_context();
