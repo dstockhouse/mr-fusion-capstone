@@ -20,7 +20,7 @@ jobs:
     script:
       - cd ./guidance/rust_code
       - cargo build
-      - cargo test --test-threads=1
+      - cargo test -- --test-threads=1
 
     # Uploading the coverage report to codecov
     after_success: 
