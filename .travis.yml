@@ -27,6 +27,7 @@ jobs:
     after_success: 
       - cargo clean
       - RUSTFLAGS='-C link-dead-code' cargo test --no-run
+      - RUSTFLAGS='-C link-dead-code' cargo test --no-run -- --ignored --test-threads=1
       - |
         wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
         tar xzf master.tar.gz &&
