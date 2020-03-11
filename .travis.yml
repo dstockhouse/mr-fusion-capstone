@@ -20,14 +20,12 @@ jobs:
     script:
       - cd ./guidance/rust_code
       - cargo build
-      - cargo test
-      - cargo test -- --ignored --test-threads=1
+      - cargo test --test-threads=1
 
     # Uploading the coverage report to codecov
     after_success: 
       - cargo clean
       - RUSTFLAGS='-C link-dead-code' cargo test --no-run
-      - RUSTFLAGS='-C link-dead-code' cargo test --no-run -- --ignored --test-threads=1
       - |
         wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
         tar xzf master.tar.gz &&
@@ -39,7 +37,7 @@ jobs:
         make install DESTDIR=../../kcov-build &&
         cd ../.. &&
         rm -rf kcov-master &&
-        for file in target/debug/rust_code*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+        for file in target/debug/rust_code*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file" --test-threads=1; done &&
         bash <(curl -s https://codecov.io/bash) &&
         echo "Uploaded code coverage"
 

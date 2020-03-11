@@ -3,16 +3,14 @@ use crate::ui::*;
 use std::net::IpAddr;
 
 
-// Tests that are ignored are subject to race conditions this is due to the mockall library and
-// have opened an issue here https://github.com/asomers/mockall/issues/105 
-// We will explicitly run tests marked as #[ignore] using only one thread.
-// To run these tests in a single thread execute the following command.
+// Some of the mocks are subject to race conditions :( to remedy this, let only run our tests in 1 thread. 
+// See following command.
 //
 // cargo test -- --ignored --test-threads=1
 //
+// Note: this has a negligible affect on runtime when compared to the time to compile tests.
 #[test]
 #[should_panic]
-#[ignore]
 fn establish_connection_unable_to_bind() {
 
     TO_UI.lock().unwrap().expect_write()
@@ -29,7 +27,6 @@ fn establish_connection_unable_to_bind() {
 }
 
 #[test]
-#[ignore]
 fn establish_connection_able_to_bind_non_blocking() {
 
     let mock_bind = MockTcpListener::bind_context();
@@ -55,7 +52,6 @@ fn establish_connection_able_to_bind_non_blocking() {
 }
 
 #[test]
-#[ignore]
 fn establish_connection_able_to_bind_blocking() {
 
     TO_UI.lock().unwrap().expect_write()
