@@ -41,16 +41,34 @@ cfg_if! {
 
 const GUIDANCE_IP: Ipv4Addr = Ipv4Addr::new(192, 168, 1, 1);
 const CONTROL_PORT: u16 = 31401;
+const NAV_PORT: u16 = 31402;
+const IMAG_PROC_PORT: u16 = 31403;
 
-pub(self) fn establish_connection(address: Ipv4Addr, port: u16) -> io::Result<(TcpStream, SocketAddr)> {
-    let socket = SocketAddrV4::new(address, port);
+struct TcpStreams {
+    nav: TcpStream,
+    control: TcpStream,
+    imag_proc: TcpStream
+}
+
+impl TcpStreams {
+    pub fn setup() -> Self {
+        TcpStreams {
+            nav: establish_connection(SocketAddrV4::new(GUIDANCE_IP, NAV_PORT)),
+            control: establish_connection(SocketAddrV4::new(GUIDANCE_IP, CONTROL_PORT)),
+            imag_proc: establish_connection(SocketAddrV4::new(GUIDANCE_IP, IMAG_PROC_PORT))
+        }
+    }
+}
+
+pub(self) fn establish_connection(socket: SocketAddrV4) -> TcpStream {
+    
     let tcp_listener = match TcpListener::bind(socket) {
         Ok(tcp_listener) => tcp_listener,
         Err(error) => {
 
             let message = format!("Unable to bind to socket: {}", error);
 
-            // Using unwrap since we are guaranteed to get the mutex
+            // Using unwrap since we are guaranteed to get the mutex. Since we only have one thread.
             TO_UI.lock().unwrap().write(message.as_bytes())
                 .unwrap(); // Second unwrap because I am unsure of how to hand error if We
                             // cannot send information to the pipe.
@@ -59,17 +77,18 @@ pub(self) fn establish_connection(address: Ipv4Addr, port: u16) -> io::Result<(T
         }
     };
 
-    match tcp_listener.set_nonblocking(true) {
-        Ok(_) => (),
+    match tcp_listener.accept() {
+        Ok((tcp_stream, _socket_addr)) => tcp_stream,
         Err(error) => {
-            let message = format!("tcp-accept - unable to set non-blocking: {}", error);
+
+            let message = format!("Guidance unable to accept: {}", error);
             
-            TO_UI.lock().unwrap()
-                .write(message.as_bytes()).unwrap();
+            TO_UI.lock().unwrap() // Acquired mutex
+                .write(message.as_bytes()).unwrap(); // Sending message to UI
+
+            panic!(message);
         }
     }
-
-    tcp_listener.accept()
     
 }
 
