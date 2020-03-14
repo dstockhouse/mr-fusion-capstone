@@ -1,6 +1,6 @@
 use super::*;
 use crate::ui::*;
-use mockall::predicate::*;
+use std::io;
 use std::net::IpAddr;
 
 
@@ -51,7 +51,6 @@ fn establish_connection_able_to_bind_and_accept() {
     let socket = SocketAddrV4::new(GUIDANCE_IP, CONTROL_PORT);
     
     establish_connection(socket);
-    drop(mock_bind)
     // Assertion is this path does not panic
     
 }

@@ -19,22 +19,16 @@ use graph::conversions;
 use ui::TO_UI;
 
 fn main() {
-    
-    TO_UI.lock().unwrap().write("hello".as_bytes()).unwrap();
-    /*
-    let loopback = Ipv4Addr::new(192, 168, 0, 2);
-    let socket = SocketAddrV4::new(loopback, 0);
-    let listener = TcpListener::bind(socket).unwrap();
-    let port = listener.local_addr().unwrap();
-    println!("Listening on {}, access this port to end the program", port);
-    let (mut tcp_stream, addr) = listener.accept().unwrap(); //block  until requested
-    println!("Connection received! {:?} is sending data.", addr);
-    let mut input = String::new();
-    let _ = tcp_stream.read_to_string(&mut input).unwrap();
-    println!("{:?} says {}", addr, input);
-    */
-    
+
     let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
+
+    {
+        TO_UI.lock().unwrap().write("hello".as_bytes()).unwrap();
+    } // Curly braces are here to drop the lock to the UI
+    
+    // This function will block waiting for nav, control, and image processing.
+    // Blocking will occur in the order listed.
+    let tcp_streams = network::TcpStreams::setup();
 
     // Writing the graph back to disk for visual confirmation
     let geo_json_string = conversions::geo_json_string(&graph, &graph);

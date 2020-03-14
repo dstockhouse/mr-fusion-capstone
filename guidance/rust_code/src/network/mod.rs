@@ -1,5 +1,4 @@
-use std::net::{Ipv4Addr, SocketAddrV4, SocketAddr};
-use std::io;
+use std::net::{Ipv4Addr, SocketAddrV4};
 use std::io::Write;
 
 use cfg_if::cfg_if;
@@ -14,7 +13,7 @@ cfg_if! {
 
         use mockall::*;
         use std::io::Result;
-        use std::net::ToSocketAddrs;
+        use std::net::{ToSocketAddrs, SocketAddr};
 
         mock! {
             pub TcpStream {}
@@ -44,7 +43,7 @@ const CONTROL_PORT: u16 = 31401;
 const NAV_PORT: u16 = 31402;
 const IMAG_PROC_PORT: u16 = 31403;
 
-struct TcpStreams {
+pub struct TcpStreams {
     nav: TcpStream,
     control: TcpStream,
     imag_proc: TcpStream
@@ -89,7 +88,6 @@ pub(self) fn establish_connection(socket: SocketAddrV4) -> TcpStream {
             panic!(message);
         }
     }
-    
 }
 
 #[cfg(test)]
