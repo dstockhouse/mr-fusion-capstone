@@ -35,9 +35,21 @@
  */
 int ControllerCalculateActuation(float relativeHeading, float *leftVelocity, float *rightVelocity) {
 
+    // If no values are received, return as failure
     if (leftVelocity == NULL || rightVelocity == NULL) {
         return -1;
     }
+
+    float omega = relative_heading * CONTROLLER_KP; // rate of angular change of robot
+
+    float linVelocL = *leftVelocity * RADIUS;  // desired speed change for left motor (meters/second)
+    float linVelocR = *rightVelocity * RADIUS; // desired speed change for right motor (meters/second)
+
+    float vL = linVelocL - (HALF_DRIVE_TRAIN * omega)  // speed command for left motor (meters/sec)
+    float vR = linVelocR + (HALF_DRIVE_TRAIN * omega)  // speed command for right motor (meters/sec)
+
+    theta_L = vL / RADIUS; // speed command for left motor (radians/second)
+    theta_R = vR / RADIUS; // speed command for right motor (radians/second)
 
     return 0;
 

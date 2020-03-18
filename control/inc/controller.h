@@ -18,6 +18,8 @@
 #define __CONTROLLER_H
 
 #define CONTROLLER_KP 0.5
+#define RADIUS 0.5524
+#define HALF_DRIVE_TRAIN 0.1524
 
 int ControllerCalculateActuation(float relativeHeading, float *leftVelocity, float *rightVelocity);
 
