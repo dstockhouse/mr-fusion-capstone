@@ -14,7 +14,7 @@ BASENAME = $(shell basename $(lastword $(DIRNAME)))
 MAINDIR = main
 TESTDIR = test
 SRCDIR = src
-INCDIR = inc ../framework
+INCDIR = inc
 
 # bld and subdirectories
 BLDDIR = bld
@@ -56,9 +56,9 @@ vpath %.c $(SRCPATH)
 vpath %.o $(OBJDIR)
 
 # Useful debug print for make variables
-$(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} TESTOBJ ${TESTOBJ})
-$(info DEPS ${DEPS} ${TESTDEP} DEPFLAGS ${DEPFLAGS})
-$(info TESTSRC=$(TESTSRC) TESTBASE=$(TESTBASE) TESTBIN=$(TESTBIN) TESTOBJ=$(TESTOBJ) TESTDEP=$(TESTDEP) OBJDIR=$(OBJDIR) )
+# $(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} TESTOBJ ${TESTOBJ})
+# $(info DEPS ${DEPS} ${TESTDEP} DEPFLAGS ${DEPFLAGS})
+# $(info TESTSRC=$(TESTSRC) TESTBASE=$(TESTBASE) TESTBIN=$(TESTBIN) TESTOBJ=$(TESTOBJ) TESTDEP=$(TESTDEP) OBJDIR=$(OBJDIR) )
 
 
 ### Start rules
@@ -72,7 +72,7 @@ main: $(MAINBIN)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
 test: LIBS += cgreen
-test: CFLAGS += -shared -fPIC
+test: CFLAGS += -shared -fPIC -L/usr/local/lib
 # Copy and execute test script
 test: $(TESTBIN)
 	cp $(TESTBIN) .
