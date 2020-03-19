@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<gpx version="1.1" creator="GPS Visualizer https://www.gpsvisualizer.com/" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<wpt lat="34.6191381" lon="-112.4370767">
+  <ele>1565.6</ele>
+  <name>Point 1</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6209039" lon="-112.4359394">
+  <ele>1571.7</ele>
+  <name>Point 2</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6192882" lon="-112.4346841">
+  <ele>1619.7</ele>
+  <name>Point 3</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.620436" lon="-112.4338044">
+  <ele>1582.4</ele>
+  <name>Point 4</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6219369" lon="-112.432989">
+  <ele>1575.0</ele>
+  <name>Point 5</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6186348" lon="-112.437538">
+  <ele>1574.7</ele>
+  <name>Point 12</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6219193" lon="-112.4314977">
+  <ele>1552.9</ele>
+  <name>Point 16</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6206214" lon="-112.4315513">
+  <ele>1555.7</ele>
+  <name>Point 17</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6200055" lon="-112.4353923">
+  <ele>1587.7</ele>
+  <name>Point 16</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<wpt lat="34.6196612" lon="-112.4361647">
+  <ele>1588.3</ele>
+  <name>Point 17</name>
+  <sym>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</sym>
+</wpt>
+<trk>
+  <name>Line 6</name>
+  <trkseg>
+    <trkpt lat="34.6209039" lon="-112.4359394">
+      <ele>1571.72</ele>
+    </trkpt>
+    <trkpt lat="34.6191381" lon="-112.4370767">
+      <ele>1565.585</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 7</name>
+  <trkseg>
+    <trkpt lat="34.6191381" lon="-112.4370767">
+      <ele>1565.585</ele>
+    </trkpt>
+    <trkpt lat="34.6192882" lon="-112.4346841">
+      <ele>1619.735</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 9</name>
+  <trkseg>
+    <trkpt lat="34.6209039" lon="-112.4359394">
+      <ele>1571.72</ele>
+    </trkpt>
+    <trkpt lat="34.620436" lon="-112.4338044">
+      <ele>1582.412</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 10</name>
+  <trkseg>
+    <trkpt lat="34.620436" lon="-112.4338044">
+      <ele>1582.412</ele>
+    </trkpt>
+    <trkpt lat="34.6192882" lon="-112.4346841">
+      <ele>1619.735</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 13</name>
+  <trkseg>
+    <trkpt lat="34.6186348" lon="-112.437538">
+      <ele>1574.724</ele>
+    </trkpt>
+    <trkpt lat="34.6191381" lon="-112.4370767">
+      <ele>1565.585</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 14</name>
+  <trkseg>
+    <trkpt lat="34.6219369" lon="-112.432989">
+      <ele>1575.015</ele>
+    </trkpt>
+    <trkpt lat="34.620436" lon="-112.4338044">
+      <ele>1582.412</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 18</name>
+  <trkseg>
+    <trkpt lat="34.6219193" lon="-112.4314977">
+      <ele>1552.888</ele>
+    </trkpt>
+    <trkpt lat="34.6206214" lon="-112.4315513">
+      <ele>1555.673</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 18</name>
+  <trkseg>
+    <trkpt lat="34.6191381" lon="-112.4370767">
+      <ele>1565.585</ele>
+    </trkpt>
+    <trkpt lat="34.6192727" lon="-112.4368514">
+      <ele>1569.226</ele>
+    </trkpt>
+    <trkpt lat="34.619361" lon="-112.4367119">
+      <ele>1570.512</ele>
+    </trkpt>
+    <trkpt lat="34.619467" lon="-112.4365456">
+      <ele>1573.732</ele>
+    </trkpt>
+    <trkpt lat="34.6195641" lon="-112.4363578">
+      <ele>1581.407</ele>
+    </trkpt>
+    <trkpt lat="34.6196612" lon="-112.4361647">
+      <ele>1588.284</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 19</name>
+  <trkseg>
+    <trkpt lat="34.6196612" lon="-112.4361647">
+      <ele>1588.284</ele>
+    </trkpt>
+    <trkpt lat="34.6197627" lon="-112.4359501">
+      <ele>1587.707</ele>
+    </trkpt>
+    <trkpt lat="34.6198422" lon="-112.4357517">
+      <ele>1587.743</ele>
+    </trkpt>
+    <trkpt lat="34.6200055" lon="-112.4353923">
+      <ele>1587.7</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 20</name>
+  <trkseg>
+    <trkpt lat="34.6200055" lon="-112.4353923">
+      <ele>1587.7</ele>
+    </trkpt>
+    <trkpt lat="34.620138" lon="-112.4350006">
+      <ele>1592.862</ele>
+    </trkpt>
+    <trkpt lat="34.6201954" lon="-112.4347378">
+      <ele>1598.734</ele>
+    </trkpt>
+    <trkpt lat="34.620436" lon="-112.4338044">
+      <ele>1582.412</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 21</name>
+  <trkseg>
+    <trkpt lat="34.6192882" lon="-112.4346841">
+      <ele>1619.735</ele>
+    </trkpt>
+    <trkpt lat="34.6200055" lon="-112.4353923">
+      <ele>1587.7</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+<trk>
+  <name>Line 22</name>
+  <trkseg>
+    <trkpt lat="34.6209039" lon="-112.4359394">
+      <ele>1571.72</ele>
+    </trkpt>
+    <trkpt lat="34.6200055" lon="-112.4353923">
+      <ele>1587.7</ele>
+    </trkpt>
+  </trkseg>
+</trk>
+</gpx>

@@ -4,13 +4,47 @@ jobs:
   
   - language: rust
     rust: 1.36.0
+
+    # For test coverage
+    addons:
+      apt:
+        packages:
+          - libcurl4-openssl-dev
+          - libelf-dev
+          - libdw-dev
+          - cmake
+          - gcc
+          - binutils-dev
+          - libiberty-dev
+    
     script:
       - cd ./guidance/rust_code
       - cargo build
       - cargo test
 
+    # Uploading the coverage report to codecov
+    after_success: 
+      - cargo clean
+      - RUSTFLAGS='-C link-dead-code' cargo test --no-run
+      - |
+        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+        tar xzf master.tar.gz &&
+        cd kcov-master &&
+        mkdir build &&
+        cd build &&
+        cmake .. &&
+        make &&
+        make install DESTDIR=../../kcov-build &&
+        cd ../.. &&
+        rm -rf kcov-master &&
+        for file in target/debug/rust_code*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+        bash <(curl -s https://codecov.io/bash) &&
+        echo "Uploaded code coverage"
+
   - language: c
-    install: ./install_dev_dependencies.sh
+    install: 
+      - wget https://github.com/cgreen-devs/cgreen/releases/download/1.2.0/cgreen_1.2.0_amd64.deb -P ~/Downloads
+      - sudo dpkg -i ~/Downloads/cgreen_1.2.0_amd64.deb
     compiler: gcc
     script: 
       - cd ./control

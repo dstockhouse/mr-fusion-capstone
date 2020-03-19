@@ -1,402 +1,285 @@
 use std::fs::File;
-use std::io::{prelude::*, BufReader, Seek, SeekFrom};
-use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
+use std::io::BufReader;
+use std::f64;
+use std::ops::Sub;
 
-#[derive(PartialEq, Debug)]
-pub(self) struct GPSPoint {
-    latitude: f64,
-    longitude: f64,
+pub mod conversions;
+
+use conversions::{IntoTangential};
+use gpx;
+use nalgebra::DMatrix;
+
+// Clone trait only for unit testing
+#[derive(Debug, Clone, PartialEq)]
+pub struct Point {
+    pub gps: GPSPointDeg,
+    pub tangential: TangentialPoint
 }
 
-#[derive(Debug)]
+// Clone Trait only for unit testing
+#[derive(Debug, PartialEq, Clone)]
+pub struct TangentialPoint {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64
+}
+
+impl Sub for &TangentialPoint {
+    type Output = (f64, f64, f64);
+
+    fn sub(self, other: Self) -> (f64, f64, f64) {
+        (self.x-other.x, self.y-other.y, self.z-other.z)
+    }
+}
+
+impl TangentialPoint {
+    pub fn distance(&self, other: &Self) -> f64 {
+        let (x, y, z) = other - self;
+
+        (x.powi(2) + y.powi(2) + z.powi(2)).sqrt()
+    }
+}
+
+// Clone trait only for unit testing
+#[derive(Debug, Clone)]
+pub struct GPSPointDeg {
+    pub lat: f64,
+    pub long: f64,
+    pub height: f64
+}
+
+impl PartialEq for GPSPointDeg {
+    fn eq(&self, other: &Self) -> bool {
+        self.lat == other.lat 
+            &&
+        self.long == other.long
+    }
+}
+
+pub(self) struct GPSPointRad {
+    pub(self) lat: f64,
+    pub(self) long: f64,
+    pub(self) height: f64
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Edge {
     // For debugging, finding out what line we are looking at on the map
-    name: String,
-    gps_points: Vec<GPSPoint>,
+    pub name: String,
+
+    // T, in this case, can be a point relative to our tangential frame, or the gps frame
+    pub points: Vec<Point>,
+
+    pub distance: f64,
 }
 
-#[derive(Debug)]
+impl Edge {
+    fn new(name: String, points: Vec<Point>) -> Self {
+
+        // Determining the distance of the edge for construction
+        let mut distance = 0.0;
+
+        let points_n = points.iter().map(|point| &point.tangential);
+        let mut points_n_plus_1 = points.iter().map(|point| &point.tangential);
+        points_n_plus_1.next();
+
+        // Combines the iterator of point_n and point_n_plus_one iterator into a single iterator so if may be consumed
+        // in the for loop.
+        let points_n_n_plus_1 = points_n.zip(points_n_plus_1);
+
+        for (point_n, points_n_plus_1) in points_n_n_plus_1 {
+            distance += point_n.distance(&points_n_plus_1);
+        }
+
+        Edge {
+            name,
+            points,
+            distance
+        }
+
+    }
+}
+
+pub trait Edges {
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge>;
+}
+
+#[derive(Debug, PartialEq)]
+// A is a lifetime
 pub struct Vertex {
     // Will be used to display key locations to UI
-    name: String,
+    pub name: String,
 
-    // Will be used to identify adjacent nodes and edges
-    pub(self) gps_point: GPSPoint,
+    // Will be used to identify adjacent nodes and edges. T will be either a GPSPoint or a point
+    // in our tangential frame.
+    pub(self) point: Point,
 
     // Key data to determine the shortest path using Dijkstra's Algorithm
-    parent_vertex: Option<&'static Vertex>,
-    tentative_distance: Option<f64>,
+    pub parent: Option<VertexIndex>,
+    pub tentative_distance: f64,
+    pub visited: bool
+}
+
+impl Vertex {
+    fn new(name: String, gps: GPSPointDeg) -> Vertex {
+
+        let tangential = gps.into_tangential();
+
+        let point = Point {
+            gps,
+            tangential
+        };
+
+        Vertex {
+            name,
+            point,
+            parent: None,
+            tentative_distance: f64::MAX,
+            visited: false
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct EdgeIndex(pub usize);
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct VertexIndex(pub usize);
+
+// Element at a matrix_index[i][j] indicates an Edge Index
+#[derive(Debug, PartialEq)]
+pub struct MatrixIndex {
+    pub ith: VertexIndex,
+    pub jth: VertexIndex,
+}
+
+impl MatrixIndex {
+
+    pub fn edge<'a, 'b>(&'a self, graph: &'b Graph) -> &'b Edge {
+        let edge_index = graph.connection_matrix[(self.ith.0, self.jth.0)].unwrap();
+        &graph.edges[edge_index.0]
+    }
+
+    pub fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> (&'b Vertex, &'b Vertex) {
+        let (index_1, index_2) = (self.ith.0, self.jth.0);
+
+        (&graph.vertices[index_1], &graph.vertices[index_2])
+    }
+}
+
+pub trait Vertices {
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex>;
 }
 
 pub struct Graph {
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
-    pub connection_matrix: Vec<Vec<Option<usize>>> //Matrix of indices of edges
+    pub connection_matrix: DMatrix<Option<EdgeIndex>> // D stands for dynamic
 }
 
-impl Edge {
-    //fn distance() -> f64;
-}
-
-impl Vertex {
-    fn new(name: String, gps_point: GPSPoint) -> Vertex {
-        Vertex {
-            name,
-            gps_point,
-            parent_vertex: None,
-            tentative_distance: None,
-        }
+impl Vertices for &Graph {
+    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
+        graph.vertices.iter().collect()
     }
 }
 
-impl PartialEq for Vertex {
-    fn eq(&self, other: &Vertex) -> bool {
-        if self.name == other.name && self.gps_point == other.gps_point {
-            return true;
-        }
-
-        false
+impl Edges for &Graph {
+    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
+        graph.edges.iter().collect()
     }
-}
-
-/// Returns (number_of_edges, number_of_vertices) in the Buffer of KML contents
-pub(self) fn number_of_edges_and_vertices_from_buffer(reader: &mut BufReader<File>) -> (u32, u32) {
-    reader.seek(SeekFrom::Start(0)).unwrap();
-
-    let mut number_of_edges = 0;
-    let mut number_of_vertices = 0;
-
-    let mut graph_element_found = false;
-    for line in reader.lines() {
-        let line = line.unwrap();
-
-        if line.contains("<Placemark>") {
-            graph_element_found = true;
-        } else if line.contains("</Placemark>") {
-            graph_element_found = false;
-        }
-
-        if graph_element_found {
-            // Then determine whether its edge or vertex
-            if line.contains("<name>Line") {
-                number_of_edges += 1;
-            } else if line.contains("<name>Point") || line.contains("<name>") {
-                // Covers case of a regular vertex, or a key point in our graph
-                number_of_vertices += 1;
-            }
-        }
-    }
-
-    return (number_of_edges, number_of_vertices);
-}
-
-pub(self) fn add_gps_points_to_edges(
-    reader: &mut BufReader<File>,
-    edges: &mut Vec<Edge>,
-) {
-    // Rewind and start from beginning of contents of buffer
-    reader.seek(SeekFrom::Start(0)).unwrap();
-
-    // buffer for reading lines
-    let mut line = String::new();
-
-    let mut edge_found = false;
-
-    // Items needed for Edge
-    let mut name = String::new();
-
-    while let Ok(_) = reader.read_line(&mut line) {
-        if line == "" {
-            // Then we are at the end of the file
-            break;
-        }
-
-        if line.contains("<name>Line") {
-            edge_found = true;
-
-            // remove garbage from xml headers and store name
-            name = String::from(
-                line.replace("<name>", "")
-                .replace("</name>", "")
-                .trim()
-            );
-        }
-
-        if edge_found {
-
-            // Allocating memory for the number of gps points in an edge
-            let number_of_gps_points = number_of_gps_points_for_edge(reader);
-            let mut gps_points: Vec<GPSPoint> =
-                Vec::with_capacity(number_of_gps_points as usize);
-
-            // Populating the GPS Points
-            let mut gps_string = String::new();
-            reader.read_line(&mut gps_string).unwrap();
-
-            // Fast forward until we have coordinates
-            while !gps_string.contains("<coordinates>") {
-                gps_string.clear();
-                reader.read_line(&mut gps_string).unwrap();
-            }
-
-            while {
-                gps_string.clear();
-                reader.read_line(&mut gps_string).unwrap();
-                !gps_string.contains("</coordinates>")
-            } {
-                let (latitude, longitude) = parse_gps_string(&gps_string);
-                let gps_point = GPSPoint {latitude, longitude};
-                gps_points.push(gps_point);
-            }
-
-            edges.push(
-                Edge {
-                    name: name.clone(), 
-                    gps_points
-                }
-            );
-            
-            edge_found = false;
-        }
-        
-        line.clear();
-    }
-}
-
-pub(self) fn add_gps_points_to_vertices(
-    reader: &mut BufReader<File>,
-    vertices: &mut Vec<Vertex>,
-) {
-    // Rewind and start from beginning of contents of buffer
-    reader.seek(SeekFrom::Start(0)).unwrap();
-    let mut line = String::new();
-
-    let mut graph_element_found = false;
-    let mut vertex_found = false;
-    
-    let mut name = String::new();
-    
-    while let Ok(_) = reader.read_line(&mut line) {
-
-        if line == "" {
-            // then we have reached the end of the file
-            break;
-        }
-
-        if line.contains("<Placemark>") {
-            graph_element_found = true;
-        }
-
-        if graph_element_found {
-            if (line.contains("<name>Point") || line.contains("<name>")) 
-            && !line.contains("Line") {
-                vertex_found = true;
-
-                // remove garbage xml headers and store name
-                name = String::from(
-                    line.replace("<name>", "").replace("</name>", "").trim()
-                );
-            }
-        }
-
-        if vertex_found {
-            // Populate data for the vertex
-           if line.contains("<coordinates>") {
-                // Then the next line in the file contains the lat, long data
-                // for the vertex
-                let mut gps_string = String::new();
-                reader.read_line(&mut gps_string).unwrap();
-
-                let (latitude, longitude) = parse_gps_string(&gps_string);
-
-                let gps_point = GPSPoint {
-                    latitude,
-                    longitude
-                };
-
-                let vertex = Vertex::new(
-                    name.clone(),
-                    gps_point
-                );
-
-                vertices.push(vertex);
-                vertex_found = false;
-           }
-        }
-
-        if line.contains("</Placemark>") {
-            graph_element_found = false;
-        }
-
-        line.clear();
-    }
-}
-
-/// PreCondition: Must be inside the scope of a <name> before or at 
-/// <coordinates>
-///
-/// PostCondition: The number of points for an edge is returned and the
-/// curser is moved to location after the points have been read.
-pub(self) fn number_of_gps_points_for_edge(reader: &mut BufReader<File>) -> u32 {
-    let start_read_location = reader.seek(SeekFrom::Current(0)).unwrap();
-    let mut lines = reader.by_ref().lines();
-    let mut number_of_gps_points = 0;
-
-    // Move the curser that over the <coordinates> line
-    let mut line = lines.next().unwrap().unwrap();
-
-    if !line.contains("<coordinates>") {
-        // Fast forward until line does contain <coordinates>
-        while {
-            line.clear();
-            line = lines.next().unwrap().unwrap();
-            !line.contains("<coordinates>")
-        } {}
-    }
-
-    // Rust do-while loop
-    while {
-        line.clear();
-        line = lines.next().unwrap().unwrap();
-        !line.contains("</coordinates>")
-    } {
-        number_of_gps_points += 1;
-    }
-
-    // Set the buffer curser back to where it was before the invocation of this
-    // this function
-    reader.seek(SeekFrom::Start(start_read_location)).unwrap();
-
-    number_of_gps_points
-}
-
-pub(self) fn parse_gps_string(gps_string: &String) -> (f64, f64) {
-    let gps_data = gps_string
-        .trim() // Remove whitespace
-        .split(",") // Remove commas and store remaining information in Vec
-        .map(|s| s.parse().unwrap()) // Convert vec of strings to integers
-        .collect::<Vec<f64>>();
-
-    let latitude = gps_data[0];
-    let longitude = gps_data[1];
-
-    (latitude, longitude)
 }
 
 pub(self) fn connect_vertices_with_edges(
     edges: Vec<Edge>, 
     vertices: Vec<Vertex>
 ) -> Graph {
-    let connection_matrix = vec![vec![None; vertices.len()]; vertices.len()];
-    let mut graph = Graph {
-        edges,
-        vertices,
-        connection_matrix
-    };
+
+    let vertices_len = vertices.len();
+
+    let mut connection_matrix = DMatrix::from_vec(
+        vertices_len, // number of rows
+        vertices_len, // number of columns
+        vec![None; vertices_len * vertices_len] // initializing the array to None
+    );
     
-    for edge_number in 0..graph.edges.len() {
-        let start_of_edge = graph.edges[edge_number].gps_points.first();
-        let end_of_edge = graph.edges[edge_number].gps_points.last();
+    // Iterating though all edges and vertices. When the first and last point of an edge match two vertices, then the 
+    // connection matrix at v_m v_n and v_n v_m gets populated with the index to the edges vector.
+    for (edge_index, edge) in edges.iter().enumerate() {
+        let start_of_edge = edge.points.first().unwrap();
+        let end_of_edge = edge.points.last().unwrap();
         let mut start_vertex_index = None;
         let mut end_vertex_index = None;
 
-        for vertex_number in 0..graph.vertices.len() {
-            let vertex = &graph.vertices[vertex_number];
-            if Some(&vertex.gps_point) == start_of_edge {
-                start_vertex_index = Some(vertex_number as usize);
+        for (vertex_index, vertex) in vertices.iter().enumerate() {
+            if vertex.point.gps == start_of_edge.gps {
+                start_vertex_index = Some(vertex_index);
             }
-            else if Some(&vertex.gps_point) ==  end_of_edge {
-                end_vertex_index = Some(vertex_number as usize);
+            else if vertex.point.gps ==  end_of_edge.gps {
+                end_vertex_index = Some(vertex_index);
             }
         }
 
         let start_vertex_index = start_vertex_index.unwrap();
         let end_vertex_index = end_vertex_index.unwrap();
 
-        graph.connection_matrix[start_vertex_index][end_vertex_index] = Some(edge_number);
-        graph.connection_matrix[end_vertex_index][start_vertex_index] = Some(edge_number);
+        connection_matrix[(start_vertex_index, end_vertex_index)] = Some(EdgeIndex(edge_index));
+        connection_matrix[(end_vertex_index, start_vertex_index)] = Some(EdgeIndex(edge_index));
     }
 
-    return graph
+    Graph {
+        edges,
+        vertices,
+        connection_matrix
+    }
 }
 
 
-pub fn initialize_from_kml_file(name: &str) -> Graph {
+pub fn initialize_from_gpx_file(name: &str) -> Graph {
+    // Open file and read contents to memory
     let file = File::open(name).unwrap();
-    // Open the file and store its contents to a buffer in RAM
-    let mut reader = BufReader::new(file);
+    let reader = BufReader::new(file);
 
-    let (number_of_edges, number_of_vertices) =
-        number_of_edges_and_vertices_from_buffer(&mut reader);
+    let gpx_data = gpx::read(reader).unwrap();
 
-    let (mut edges, mut vertices) = (
-        Vec::with_capacity(number_of_edges as usize),
-        Vec::with_capacity(number_of_vertices as usize),
-    );
+    let vertices = gpx_data.waypoints.into_iter()
+        .map(|vertex_data| {
+            // long, lat order is intentional. They are stored in this order in the file.
+            let (long, lat) = vertex_data.point().x_y();
 
-    add_gps_points_to_edges(&mut reader, &mut edges);
-    add_gps_points_to_vertices(&mut reader, &mut vertices);
+            let height = vertex_data.elevation.unwrap();
+            let name = vertex_data.name.unwrap();
+            
+            Vertex::new(name, GPSPointDeg{long, lat, height})
+        })
+        .collect::<Vec<Vertex>>();
 
+    let edges = gpx_data.tracks.into_iter() 
+        .map(|track| {
+            // Indexing at 0 since for every track we are guaranteed to only have move segment.
+            let points = track.segments[0].points.iter()
+                .map(|waypoint| {
+                    let height = waypoint.elevation.unwrap();
+                    let (long, lat) = waypoint.point().x_y();
+                    let gps = GPSPointDeg{long, lat, height};
+                    let tangential = gps.into_tangential();
+
+                    Point{gps, tangential}
+                })
+                .collect::<Vec<Point>>();
+
+            let name = track.name.unwrap();
+
+            Edge::new(name, points)
+        })
+        .collect::<Vec<Edge>>();
+    
     let graph = connect_vertices_with_edges(edges, vertices);
 
-    return graph;
+    return graph
 
 }
 
-pub fn graph_to_geo_json_string(graph: &Graph) -> String {
-    // Allocating Memory
-    let number_of_vertices_and_edges = graph.edges.len() + graph.vertices.len();
-    let mut features = Vec::with_capacity(number_of_vertices_and_edges);
 
-    for edge in graph.edges.iter() {
-        let edge_points = edge.gps_points.iter()
-            .map(|point| vec![point.latitude, point.longitude])
-            .collect();
-
-        let geometry = Geometry::new(
-            Value::LineString(edge_points)
-        );
-
-        let feature = Feature {
-            bbox: None,
-            geometry: Some(geometry),
-            id: Some(Id::String(edge.name.clone())),
-            properties: None,
-            foreign_members: None
-        };
-        
-        features.push(feature);
-    }
-
-    for vertex in graph.vertices.iter() {
-        let vertex_point = vec![
-            vertex.gps_point.latitude,
-            vertex.gps_point.longitude
-        ];
-
-        let geometry = Geometry::new(
-            Value::Point(vertex_point)
-        );
-
-        let feature = Feature {
-            bbox: None,
-            geometry: Some(geometry),
-            id: Some(Id::String(vertex.name.clone())),
-            properties: None,
-            foreign_members:None
-        };
-
-        features.push(feature);
-    }
-
-    let feature_collection = FeatureCollection {
-        bbox: None,
-        features,
-        foreign_members: None
-    };
-
-    feature_collection.to_string()
-}
 
 #[cfg(test)]
 mod tests;
