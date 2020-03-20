@@ -166,6 +166,10 @@ int UARTSetBaud(int fd, int baud) {
     uartOptions.c_lflag &= ~(ISIG | ICANON | ECHO | ECHOE);
     uartOptions.c_lflag |= 0;
 
+    // Set additional options
+    uartOptions.c_cc[VTIME] = 1;
+    uartOptions.c_cc[VMIN] = 0;
+
     // Set baud rate based on input, bare minimum so far supported
     switch(baud) {
         case 115200:
