@@ -5,22 +5,29 @@ addpath('../optical_flow');
 
 % Ensure you downloaded one of the following video files from 
 % http://mercury.pr.erau.edu/~stockhod/samples/[filename]
-% and put it in this directory
-% filename = 'very_little_motion.tof';
-% filename = 'E:\med_rotate_left_then_right.tof';
+% and put it in an accessible directory
+% filename = 'C:\Users\stockhod\Downloads\very_little_motion.tof';
+% filename = 'C:\Users\stockhod\Downloads\med_rotate_left_then_right.tof';
 % filename = 'C:\Users\stockhod\Downloads\far_rotate_right_then_left.tof';
 % filename = 'C:\Users\stockhod\Downloads\medium_rotate_right_then_left.tof';
 % filename = 'C:\Users\stockhod\Downloads\near_rotate_right_then_left.tof';
 % filename = 'C:\Users\stockhod\Downloads\medium_noise_reduce_60_linear_move.tof';
 % filename = 'C:\Users\stockhod\Downloads\medium_noise_reduce_60_rotate.tof';
 % filename = 'C:\Users\stockhod\Downloads\far_noise_reduce_60_linear_move.tof';
-filename = 'C:\Users\stockhod\Downloads\far_noise_reduce_60_rotate.tof';
+% filename = 'C:\Users\stockhod\Downloads\far_noise_reduce_60_rotate.tof';
+filename = 'C:\Users\stockhod\Downloads\cart_long_turn.tof';
+% filename = 'C:\Users\stockhod\Downloads\cart_forward2.tof';
+% filename = 'C:\Users\stockhod\Downloads\cart_forward.tof';
+% filename = 'C:\Users\stockhod\Downloads\cart_rotate.tof';
+% filename = 'C:\Users\stockhod\Downloads\cart2_very_long_path.tof';
+% filename = 'C:\Users\stockhod\Downloads\cart2_medium_gravel_stop.tof';
+% filename = 'C:\Users\stockhod\Downloads\cart2_u_turn.tof';
 
 
 [path, fname, ext] = fileparts(filename);
 moviename = [fname '.mp4'];
 
-[depth_frames, ir_frames, constants] = read_tof_file(filename, 1000000000);
+[depth_frames, ir_frames, constants] = read_tof_file(filename, 600000000);
 rows = constants.rows;
 cols = constants.cols;
 
@@ -33,8 +40,8 @@ fprintf('Read camera data: captured at %d fps\n', constants.fps);
 
 
 %% Limit number of frames
-num_frames = 235;
-% num_frames = constants.num_frames;
+% num_frames = 235;
+num_frames = constants.num_frames;
 if num_frames > constants.num_frames
     num_frames = constants.num_frames;
 end
@@ -45,11 +52,15 @@ fprintf('Processing %d of %d frames (%.1f/%.1f)\n', ...
 
 %% Display depth images in a movie
 
-% Full screen figure window
-% hfig = figure(1);
-% set(hfig, 'position', [0 0 1 1], 'units', 'normalized');
-
+% Bool to save movie or not
 save_movie = true;
+
+% Full screen figure window
+if ~save_movie
+    hfig = figure(1);
+    set(hfig, 'position', [0 0 1 1], 'units', 'normalized');
+end
+
 if save_movie
     v = VideoWriter(moviename, 'MPEG-4');
     v.FrameRate = constants.fps;
@@ -57,6 +68,7 @@ if save_movie
     vfig = figure(1);
 end
 
+exposure_remove = false;
 fast_movie = true;
 for ii = 1:num_frames
     
@@ -64,10 +76,11 @@ for ii = 1:num_frames
     
     depth = reshape(depth_frames(ii, :, :), rows, cols);
     ir = reshape(ir_frames(ii, :, :), rows, cols);
-    
+    if exposure_remove
+        ir((ir < 40) | (ir > 4090)) = 0;
+    end
     % Filter depth map
-%     depth = imgaussfilt(depth, .5);
-    depth = fuse_ir_depth(depth, ir, 100);
+    depth = fuse_ir_depth(depth, ir, 4090, 40);
     
     % Generate point cloud from depth data
     points = depth2points(double(depth)/1000, f_length);
@@ -145,6 +158,7 @@ end
 if save_movie
     v.FrameRate;
     close(v);
+    fprintf('Finished writing ''%s''\n', moviename);
 end
 
 % %% Display Point clouds in a movie
