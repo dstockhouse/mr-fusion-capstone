@@ -19,6 +19,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <poll.h>
 
 #include "tcp.h"
 
@@ -65,13 +66,12 @@ void setup_sockets(void) {
     // Accept client from server
     rc = TCPServerTryAccept(server_fd);
     assert_that(rc, is_not_equal_to(-1));
+    // Old FD already closed, save new one
+    server_fd = rc;
 
     // Set client nonblocking for future calls to read
     rc = TCPSetNonBlocking(client_fd);
     assert_that(rc, is_not_equal_to(-1));
-
-    // Old FD already closed, save new one
-    server_fd = rc;
 
 }
 
@@ -209,9 +209,16 @@ Ensure(TCPInterface, send_message_client_to_server) {
     // Pause 10ms
     usleep(10000);
 
-    // Receive message
-    rc = TCPRead(client_fd, inmsg, 256);
-    assert_that(rc, is_equal_to(msglen));
+    // Check if input data is available
+    struct pollfd fds;
+    fds.fd = server_fd;
+    fds.events = POLLIN;
+    rc = poll(&fds, 1, 1);
+    assert_that(rc, is_equal_to(1));
+    assert_that(fds.revents & POLLIN, is_true);
 
+    // Receive message
+    rc = TCPRead(server_fd, inmsg, 256);
+    assert_that(rc, is_equal_to(msglen));
 }
 

@@ -51,3 +51,5 @@ jobs:
       - make test
       - cd ../navigation
       - make test
+      - cd ../system
+      - make test

@@ -316,7 +316,9 @@ int TCPWrite(int sock_fd, unsigned char *buf, int length) {
     }
 
     // Attempt to write to TCP socket length bytes
-    // Nonblocking and don't generate a SIGPIPE signal if the connection is broken
+    // Flags:
+    //      Nonblocking
+    //      Don't generate a SIGPIPE signal if the connection is broken
     numWritten = send(sock_fd, buf, length, MSG_DONTWAIT | MSG_NOSIGNAL);
     if (numWritten < 0) {
         logDebug(L_INFO, "%s: TCPWrite send() failed for TCP socket\n", strerror(errno));
