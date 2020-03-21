@@ -53,7 +53,7 @@
  */
 int TCPClientInit() {
 
-    int sock_fd, rc;
+    int sock_fd;
 
     // Create bare socket
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
