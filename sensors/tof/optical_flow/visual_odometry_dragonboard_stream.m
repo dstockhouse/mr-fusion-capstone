@@ -226,6 +226,13 @@ for frame_index = 2:constants.num_frames
     end % for image_level 
     
     % Update camera position
+    camera_pose = accumulatedTransformation * camera_pose;
+    
+    % Get v_xyz, w_xyz as 3-vectors
+    % Convert w_xyz into a 3x3 rotation matrix
+    %   Rotate camera orientation with rotation matrix
+    %   Translate camera position with velocity vector
+    
     
     
     % Set up "old" state for next frame
@@ -233,6 +240,11 @@ for frame_index = 2:constants.num_frames
     p_depth_old = p_depth_new;
     kai_est = trans2kai(accumulatedTransformation);
     kai_est_old = kai_est;
+    
+    
+    
+    
+    
 %     fprintf('\tEstimated v = [%.3f %.3f %.3f] m/s, w = [%.3f %.3f %.3f] deg/s\n',...
 %         kai_est(1), kai_est(2), kai_est(3),...
 %         kai_est(4)*180/pi, kai_est(5)*180/pi, kai_est(6)*180/pi);
@@ -270,6 +282,13 @@ for frame_index = 2:constants.num_frames
     grid on;
     pause(1e-3);
     % Update pose?
+    
+    
+    
+    %% Plot raw camera data 
+    % See ../samples/depth_movie.m
+    
+    
 
 end % for frame_index
 

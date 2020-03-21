@@ -15,11 +15,11 @@ addpath('../optical_flow');
 % filename = 'C:\Users\stockhod\Downloads\medium_noise_reduce_60_rotate.tof';
 % filename = 'C:\Users\stockhod\Downloads\far_noise_reduce_60_linear_move.tof';
 % filename = 'C:\Users\stockhod\Downloads\far_noise_reduce_60_rotate.tof';
-filename = 'C:\Users\stockhod\Downloads\cart_long_turn.tof';
+% filename = 'C:\Users\stockhod\Downloads\cart_long_turn.tof';
 % filename = 'C:\Users\stockhod\Downloads\cart_forward2.tof';
 % filename = 'C:\Users\stockhod\Downloads\cart_forward.tof';
 % filename = 'C:\Users\stockhod\Downloads\cart_rotate.tof';
-% filename = 'C:\Users\stockhod\Downloads\cart2_very_long_path.tof';
+filename = 'cart2_very_long_path.tof';
 % filename = 'C:\Users\stockhod\Downloads\cart2_medium_gravel_stop.tof';
 % filename = 'C:\Users\stockhod\Downloads\cart2_u_turn.tof';
 
@@ -27,7 +27,7 @@ filename = 'C:\Users\stockhod\Downloads\cart_long_turn.tof';
 [path, fname, ext] = fileparts(filename);
 moviename = [fname '.mp4'];
 
-[depth_frames, ir_frames, constants] = read_tof_file(filename, 600000000);
+[depth_frames, ir_frames, constants] = read_tof_file(filename, 200000000);
 rows = constants.rows;
 cols = constants.cols;
 
