@@ -40,7 +40,7 @@ TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
 
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall 
+CFLAGS = -g -Wall -shared -fPIC 
 LIBS = 
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
@@ -72,7 +72,7 @@ main: $(MAINBIN)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
 test: LIBS += cgreen
-test: CFLAGS += -shared -fPIC -L/usr/local/lib
+test: CFLAGS += -L/usr/local/lib
 # Copy and execute test script
 test: $(TESTBIN)
 	cp $(TESTBIN) .
