@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
-#include "control.h"
+#include "config.h"
 #include "buffer.h"
 #include "logger.h"
 #include "debuglog.h"

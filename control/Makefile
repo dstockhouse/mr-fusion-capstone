@@ -83,7 +83,7 @@ main: $(MAINBIN) | $(SYSLIB)
 test: LIBS += cgreen
 test: CFLAGS += -shared -fPIC -L/usr/local/lib
 # Copy and execute test script
-test: $(TESTBIN)
+test: $(TESTBIN) | $(SYSLIB)
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
 

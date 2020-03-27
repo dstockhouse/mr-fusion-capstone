@@ -32,7 +32,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "control.h"
+#include "config.h"
 #include "debuglog.h"
 #include "buffer.h"
 #include "logger.h"
