@@ -28,7 +28,7 @@ OBJS = $(foreach src,$(notdir $(SRCS)),$(OBJDIR)/$(src:.c=.o))
 DEPS = $(foreach src,$(notdir $(SRCS)),$(DEPDIR)/$(src:.c=.d))
 
 # Main sources and binaries
-MAINBIN = $(BASENAME:%=$(BINDIR)/%.a)
+MAINBIN = $(BASENAME:%=$(BINDIR)/lib%.a)
 
 # Test sources and binaries for cgreen
 TESTSRC = $(notdir $(wildcard $(TESTDIR)/*.c))
@@ -80,8 +80,9 @@ test: $(TESTBIN)
 
 # Rule to make all complete binaries
 #$(BINDIR)/%.a: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
-#	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
-#	@$(POSTCOMPILE)
+$(MAINBIN): $(OBJS) | $(BINDIR)
+	ar -cr $@ $^
+	@$(POSTCOMPILE)
 $(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)

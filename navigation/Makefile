@@ -6,6 +6,11 @@
 MAKEDIR = $(realpath $(firstword $(MAKEFILE_LIST)))
 DIRNAME = $(dir $(MAKEDIR:%/=%))
 
+# System library
+SYSDIR = ../system
+SYSBASE = $(notdir $(SYSDIR))
+SYSLIB = $(SYSDIR)/lib$(SYSBASE).a
+
 # Get the name of the directory we are in (i.e. guidance, navigation, or control)
 # Does not work if the current directory has spaces in the name
 BASENAME = $(shell basename $(lastword $(DIRNAME)))
@@ -14,7 +19,7 @@ BASENAME = $(shell basename $(lastword $(DIRNAME)))
 MAINDIR = main
 TESTDIR = test
 SRCDIR = src
-INCDIR = inc ../system/inc
+INCDIR = inc $(SYSDIR)/inc
 
 # bld and subdirectories
 BLDDIR = bld
@@ -44,8 +49,8 @@ TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
 
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall 
-LIBS = 
+CFLAGS = -g -Wall -L$(SYSDIR)
+LIBS = $(SYSBASE)
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
@@ -69,7 +74,7 @@ vpath %.o $(OBJDIR)
 
 # Main is the default
 .PHONY: main
-main: $(MAINBIN)
+main: $(MAINBIN) | $(SYSLIB)
 	cp $^ .
 
 # Perform unit test (after executing below rules)
@@ -111,6 +116,10 @@ clean:
 $(DEPS):
 include $(wildcard $(DEPS)) $(wildcard $(MAINDEP)) $(wildcard $(TESTDEP))
 
+
+# Rule to make system library
+$(SYSLIB):
+	make -C $(SYSDIR)
 
 
 ### Below this line are sandbox commands for possible extensions
