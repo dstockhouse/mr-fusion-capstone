@@ -301,7 +301,7 @@ int UARTClose(int uart_fd) {
         logDebug(L_INFO, "%s: UARTClose Couldn't close UART file\n", strerror(errno));
     }
 
-    return 0;
+    return rc;
 
 } // UARTClose(int)
 
