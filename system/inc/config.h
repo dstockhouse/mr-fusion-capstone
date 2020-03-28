@@ -33,16 +33,16 @@
 
 
 // Placeholders. Fill in with real data during test and integration
-#define GUIDANCE_IP_ADDR    "XXX.XXX.XXX.XXX"
-#define NAVIGATION_IP_ADDR  "XXX.XXX.XXX.XXX"
-#define CONTROL_IP_ADDR     "XXX.XXX.XXX.XXX"
-#define DRAGONBOARD_IP_ADDR "XXX.XXX.XXX.XXX"
+#define GUIDANCE_IP_ADDR    "192.168.1.1"
+#define NAVIGATION_IP_ADDR  "192.168.1.3"
+#define CONTROL_IP_ADDR     "192.168.1.2"
+#define IMAGEPROC_IP_ADDR   "192.168.1.4"
 
 // Need individual port for each pair of devices
-#define GUIDANCE_TCP_PORT       38000
-#define NAVIGATION_TCP_PORT     38010
-#define CONTROL_TCP_PORT        38020
-#define DRAGONBOARD_TCP_PORT    38030
+#define GUIDANCE_TCP_PORT       31400
+#define NAVIGATION_TCP_PORT     31402
+#define CONTROL_TCP_PORT        31401
+#define IMAGEPROC_TCP_PORT      31403
 
 #endif // MR_FUSION_SYSTEM_CONFIG
 

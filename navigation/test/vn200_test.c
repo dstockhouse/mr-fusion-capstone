@@ -8,6 +8,9 @@ BeforeEach(VN200) {}
 AfterEach(VN200) {}
 
 Ensure(VN200, dummy_test) {
-    assert_that(1, is_equal_to(1));
+
+    // Follow similar form for your assertions
+    // assert_that(this, is_equal_to(that));
+
 }
 

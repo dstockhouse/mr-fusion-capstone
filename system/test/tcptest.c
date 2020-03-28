@@ -21,11 +21,13 @@
 #include <unistd.h>
 #include <poll.h>
 
+#include "config.h"
+
 #include "tcp.h"
 
 #define IP_ADDR     "127.0.0.1"
-#define SERVER_PORT 42020
-#define CLIENT_PORT 42040
+#define SERVER_PORT NAVIGATION_TCP_PORT
+#define CLIENT_PORT CONTROL_TCP_PORT
 
 int client_fd, server_fd, rc;
 
@@ -47,31 +49,49 @@ AfterEach(TCPInterface) {
 
 }
 
-void setup_sockets(void) {
+
+/**** Function setup_sockets
+ *
+ * This function is the simplest example of how to properly initialize a socket
+ * connection, without taking advantage of the nonblocking ability. It shows the
+ * correct order to initiate API calls.
+ *
+ ****/
+void setup_sockets(int perform_asserts) {
 
     // Init both
     client_fd = TCPClientInit();
     server_fd = TCPServerInit(IP_ADDR, SERVER_PORT);
-    assert_that(client_fd, is_not_equal_to(-1));
-    assert_that(server_fd, is_not_equal_to(-1));
+    if (perform_asserts) {
+        assert_that(client_fd, is_not_equal_to(-1));
+        assert_that(server_fd, is_not_equal_to(-1));
+    }
 
     // Connect client to server
     rc = TCPClientTryConnect(client_fd, IP_ADDR, SERVER_PORT);
-    assert_that(rc, is_not_equal_to(-1));
+    if (perform_asserts) {
+        assert_that(rc, is_not_equal_to(-1));
+    }
 
     // Set server nonblocking for accept
     rc = TCPSetNonBlocking(server_fd);
-    assert_that(rc, is_not_equal_to(-1));
+    if (perform_asserts) {
+        assert_that(rc, is_not_equal_to(-1));
+    }
 
     // Accept client from server
     rc = TCPServerTryAccept(server_fd);
-    assert_that(rc, is_not_equal_to(-1));
-    // Old FD already closed, save new one
+    if (perform_asserts) {
+        assert_that(rc, is_not_equal_to(-1));
+    }
+    // Old server FD already closed, save new one
     server_fd = rc;
 
     // Set client nonblocking for future calls to read
     rc = TCPSetNonBlocking(client_fd);
-    assert_that(rc, is_not_equal_to(-1));
+    if (perform_asserts) {
+        assert_that(rc, is_not_equal_to(-1));
+    }
 
 }
 
@@ -97,7 +117,6 @@ Ensure(TCPInterface, client_fails_with_async_connect) {
     rc = TCPClientTryConnect(client_fd, IP_ADDR, SERVER_PORT);
     assert_that(rc, is_equal_to(-1));
     assert_that(errno, is_equal_to(ECONNREFUSED));
-    // perror("TCPClientTryConnect failed (expected)");
 
     // Open to be closed
     server_fd = TCPServerInit(IP_ADDR, SERVER_PORT);
@@ -117,7 +136,6 @@ Ensure(TCPInterface, server_fails_with_async_accept) {
     rc = TCPServerTryAccept(server_fd);
     assert_that(rc, is_equal_to(-1));
     assert_that(errno, is_equal_to(EAGAIN));
-    // perror("TCPServerTryAccept failed (expected)");
 
     // Open to be closed
     client_fd = TCPClientInit();
@@ -126,7 +144,8 @@ Ensure(TCPInterface, server_fails_with_async_accept) {
 
 Ensure(TCPInterface, client_server_connect_loopback) {
 
-    setup_sockets();
+    // Use function above to set up proper connection, with assertions
+    setup_sockets(1);
 
 }
 
@@ -196,7 +215,8 @@ Ensure(TCPInterface, connect_out_of_order_server_first) {
 
 Ensure(TCPInterface, send_message_client_to_server) {
 
-    setup_sockets();
+    // Use function above to set up proper connection, without assertions
+    setup_sockets(0);
 
     unsigned char outmsg[256], inmsg[256];
     strcpy(outmsg, "Howdy server");
@@ -220,5 +240,10 @@ Ensure(TCPInterface, send_message_client_to_server) {
     // Receive message
     rc = TCPRead(server_fd, inmsg, 256);
     assert_that(rc, is_equal_to(msglen));
+    assert_that(outmsg[0], is_equal_to(inmsg[0]));
+    assert_that(outmsg[1], is_equal_to(inmsg[1]));
+    assert_that(outmsg[rc-2], is_equal_to(inmsg[rc-2]));
+    assert_that(outmsg[rc-1], is_equal_to(inmsg[rc-1]));
+
 }
 

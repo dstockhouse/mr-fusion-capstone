@@ -98,10 +98,15 @@ int TCPClientTryConnect(int sock_fd, char *ipAddr, int port) {
     }
 
     // Configure socket address
+    // AF_INET = Address Family InterNet
     socketAddress.sin_family = AF_INET;
+
+    // Convert port number to network byte order
+    // htons = host to network byte order (short)
     socketAddress.sin_port = htons(port);
 
     // Convert IP address string into address variable
+    // pton = string to network address
     rc = inet_pton(AF_INET, ipAddr, &(socketAddress.sin_addr));
     if (rc == -1) {
         logDebug(L_INFO, "%s: Failed to convert IP address for TCP client (%s)\n", 
@@ -165,10 +170,15 @@ int TCPServerInit(char *ipAddr, int port) {
     // setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &socketOption, sizeof(int));
 
     // Configure socket address
+    // AF_INET = Address Family InterNet
     socketAddress.sin_family = AF_INET;
+
+    // Convert port number to network byte order
+    // htons = host to network byte order (short)
     socketAddress.sin_port = htons(port);
 
     // Convert IP address string into address variable
+    // pton = string to network address
     rc = inet_pton(AF_INET, ipAddr, &(socketAddress.sin_addr));
     if (rc == -1) {
         logDebug(L_INFO, "%s: Failed to convert IP address for TCP server (%s)\n", 
