@@ -108,9 +108,7 @@ impl IntoTangential for GPSPointDeg {
         let result = c_e_k * r_kb_e;
 
         TangentialPoint{
-            x: result[0],
-            y: result[1],
-            z: result[2]
+            vector: result
         }
     }
 }
