@@ -14,7 +14,7 @@ BASENAME = $(shell basename $(lastword $(DIRNAME)))
 MAINDIR = main
 TESTDIR = test
 SRCDIR = src
-INCDIR = inc
+INCDIR = inc ../framework
 
 # bld and subdirectories
 BLDDIR = bld
@@ -28,7 +28,11 @@ OBJS = $(foreach src,$(notdir $(SRCS)),$(OBJDIR)/$(src:.c=.o))
 DEPS = $(foreach src,$(notdir $(SRCS)),$(DEPDIR)/$(src:.c=.d))
 
 # Main sources and binaries
-MAINBIN = $(BASENAME:%=$(BINDIR)/lib%.a)
+MAINSRC = $(BASENAME)_main.c
+MAINBASE = $(basename $(MAINSRC))
+MAINOBJ = $(MAINBASE:%=$(OBJDIR)/%.o)
+MAINDEP = $(MAINBASE:%=$(DEPDIR)/%.d)
+MAINBIN = $(MAINBASE:%=$(BINDIR)/%.elf)
 
 # Test sources and binaries for cgreen
 TESTSRC = $(notdir $(wildcard $(TESTDIR)/*.c))
@@ -38,13 +42,9 @@ TESTDEP = $(TESTBASE:%=$(DEPDIR)/%.d)
 TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
 # cgreen wants a shared object file .so
 
-# Files for gcov coverage report
-COVDIR = $(BLDDIR)/cov
-COVS = $(foreach src,$(SRCS),$(COVDIR)/$(notdir $(src)).gcov)
-
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall -shared -fPIC 
+CFLAGS = -g -Wall 
 LIBS = 
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
@@ -60,9 +60,9 @@ vpath %.c $(SRCPATH)
 vpath %.o $(OBJDIR)
 
 # Useful debug print for make variables
-# $(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} TESTOBJ ${TESTOBJ})
-# $(info DEPS ${DEPS} ${TESTDEP} DEPFLAGS ${DEPFLAGS})
-# $(info TESTSRC=$(TESTSRC) TESTBASE=$(TESTBASE) TESTBIN=$(TESTBIN) TESTOBJ=$(TESTOBJ) TESTDEP=$(TESTDEP) OBJDIR=$(OBJDIR) )
+$(info MAKEDIR ${MAKEDIR} DIRNAME ${DIRNAME} BASENAME ${BASENAME} OBJS ${OBJS} MAINOBJ ${MAINOBJ} TESTOBJ ${TESTOBJ})
+$(info DEPS ${DEPS} ${MAINDEP} ${TESTDEP} DEPFLAGS ${DEPFLAGS})
+$(info TESTSRC=$(TESTSRC) TESTBASE=$(TESTBASE) TESTBIN=$(TESTBIN) TESTOBJ=$(TESTOBJ) TESTDEP=$(TESTDEP) OBJDIR=$(OBJDIR) )
 
 
 ### Start rules
@@ -76,20 +76,15 @@ main: $(MAINBIN)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
 test: LIBS += cgreen
-test: CFLAGS += --coverage -L/usr/local/lib
+test: CFLAGS += -shared -fPIC
 # Copy and execute test script
 test: $(TESTBIN)
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
-	make cov
 
-.PHONY: cov
-cov: $(COVS)
-
-# Rule to make all complete binaries
-#$(BINDIR)/%.a: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
-$(MAINBIN): $(OBJS) | $(BINDIR)
-	ar -cr $@ $^
+# Rule to make all executable binaries
+$(BINDIR)/%.elf: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
+	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 $(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 	$(CC) $(CFLAGS) $(INCFLAGS) $^ -o $@ $(LIBFLAGS)
@@ -103,13 +98,8 @@ $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
 	$(CC) $(CFLAGS) $(DEPFLAGS) $(INCFLAGS) -c $< -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
-# Rule to generate coverage analysis files
-$(COVDIR)/%.gcov: % | $(COVDIR)
-	gcov --object-directory $(OBJDIR)/ --source-prefix $(SRCDIR)/ $<
-	mv $(notdir $@) $@
-
 # Rule to make all directories when they are needed
-$(OBJDIR) $(DEPDIR) $(BINDIR) $(COVDIR):
+$(OBJDIR) $(DEPDIR) $(BINDIR):
 	mkdir -p $@
 
 # Remove bld directory and all copied executables

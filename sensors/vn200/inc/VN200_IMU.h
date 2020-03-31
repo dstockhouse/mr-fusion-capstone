@@ -1,10 +1,10 @@
 /***************************************************************************\
  *
  * File:
- * 	vn200_imu.h
+ * 	VN200_IMU.h
  *
  * Description:
- *	Function and type declarations and constants for vn200_imu.c
+ *	Function and type declarations and constants for VN200_IMU.c
  * 
  * Author:
  * 	Joseph Kroeker
@@ -21,8 +21,8 @@
 #define __VN200_IMU_H
 
 #include "logger.h"
-#include "vn200_struct.h"
-#include "vn200.h"
+#include "VN200Struct.h"
+#include "VN200.h"
 
 int VN200IMUInit(VN200_DEV *dev, char *devname, int fs);
 

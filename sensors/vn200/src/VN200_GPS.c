@@ -1,7 +1,7 @@
 /****************************************************************************\
  *
  * File:
- * 	vn200_gps.c
+ * 	VN200_GPS.c
  *
  * Description:
  * 	Interfaces with an GPS reciever connected to serial port through USB
@@ -32,15 +32,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "config.h"
+#include "control.h"
 #include "debuglog.h"
 #include "buffer.h"
 #include "logger.h"
 #include "uart.h"
-#include "vn200_crc.h"
-#include "vn200.h"
+#include "VN200_CRC.h"
+#include "VN200.h"
 
-#include "vn200_gps.h"
+#include "VN200_GPS.h"
 
 
 /**** Function VN200GPSInit ****

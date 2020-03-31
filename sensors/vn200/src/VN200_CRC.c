@@ -1,7 +1,7 @@
 /****************************************************************************\
  *
  * File:
- * 	vn200_crc.c
+ * 	VN200_CRC.c
  *
  * Description:
  * 	Checksum and CRC for VN200 IMU/GPS
@@ -16,7 +16,7 @@
 
 #include "debuglog.h"
 
-#include "vn200_crc.h"
+#include "VN200_CRC.h"
 
 // Calculates the 8-bit checksum for the given byte sequence. 
 unsigned char VN200CalculateChecksum(unsigned char data[], unsigned int length) {

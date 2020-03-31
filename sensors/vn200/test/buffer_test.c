@@ -62,15 +62,25 @@ Ensure(Buffer, has_correct_elements_after_add_array) {
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 1;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 2;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 10;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 22;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 32;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 49;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 50;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
-    i = 51;
+    i = 55;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 69;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 81;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 97;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 98;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
@@ -99,11 +109,31 @@ Ensure(Buffer, add_max_elements) {
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 1;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 2;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 100;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 220;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 321;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 492;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 5003;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 559;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 6999;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 812;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 9709;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 9800;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 9999;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 14000;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 16382;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
@@ -132,13 +162,31 @@ Ensure(Buffer, add_too_many_elements) {
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 1;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 2;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 100;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 220;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 321;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 492;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 5003;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 559;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 6999;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 812;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 9709;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
+    i = 9800;
+    assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 9999;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
-    i = 16381;
+    i = 14000;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
     i = 16382;
     assert_that(BufferIndex(&buf, i), is_equal_to(data[i]));
@@ -286,11 +334,25 @@ Ensure(Buffer, copies_correctly) {
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 1;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 2;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 10;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 22;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 32;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 49;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 50;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
-    i = 51;
+    i = 55;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 69;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 81;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 97;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 98;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
@@ -326,7 +388,15 @@ Ensure(Buffer, copies_starting_not_at_beginning) {
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 1;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 2;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 10;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 22;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 32;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 55;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 99;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
@@ -335,6 +405,8 @@ Ensure(Buffer, copies_starting_not_at_beginning) {
     i = 101;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 169;
+    assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
+    i = 197;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
     i = 198;
     assert_that(BufferIndex(&buf, i), is_equal_to(copied[i]));
@@ -351,67 +423,29 @@ Ensure(Buffer, copies_starting_not_at_beginning) {
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
     i = 1;
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
+    i = 2;
+    assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
+    i = 10;
+    assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
+    i = 22;
+    assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
     i = 32;
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
     i = 49;
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
     i = 50;
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
-    i = 51;
+    i = 55;
+    assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
+    i = 69;
+    assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
+    i = 81;
+    assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
+    i = 97;
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
     i = 98;
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
     i = 99;
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
-}
-
-Ensure(Buffer, catches_invalid_accesses) {
-    BYTE_BUFFER buf;
-    BufferEmpty(&buf);
-
-    int rc;
-    unsigned char data[BYTE_BUFFER_LEN] = {0};
-
-    // Null pointer checks
-    rc = BufferAdd(NULL, 0);
-    assert_that(rc, is_equal_to(-1));
-
-    rc = BufferAddArray(NULL, NULL, 0);
-    assert_that(rc, is_equal_to(-1));
-
-    rc = BufferRemove(NULL, 0);
-    assert_that(rc, is_equal_to(0));
-
-    rc = (int)BufferIndex(NULL, 0);
-    assert_that(rc, is_equal_to(0));
-
-    rc = BufferEmpty(NULL);
-    assert_that(rc, is_equal_to(-1));
-
-    rc = BufferIsFull(NULL);
-    assert_that(rc, is_equal_to(-1));
-
-    rc = BufferLength(NULL);
-    assert_that(rc, is_equal_to(-1));
-
-    rc = BufferCopy(NULL, NULL, 0, 0);
-    assert_that(rc, is_equal_to(-1));
-
-    // Bounds rejection
-    rc = BufferAddArray(&buf, data, BYTE_BUFFER_MAX_LEN);
-    assert_that(rc, is_equal_to(BYTE_BUFFER_MAX_LEN));
-    rc = BufferAdd(&buf, 0);
-    assert_that(rc, is_equal_to(0));
-
-    BufferRemove(&buf, 100);
-    rc = (int)BufferIndex(&buf, -1);
-    assert_that(rc, is_equal_to(0));
-    rc = (int)BufferIndex(&buf, BufferLength(&buf));
-    assert_that(rc, is_equal_to(0));
-
-    rc = BufferCopy(&buf, data, -1, 0);
-    assert_that(rc, is_equal_to(0));
-    rc = BufferCopy(&buf, data, 0, -1);
-    assert_that(rc, is_equal_to(0));
 }
 

@@ -1,7 +1,7 @@
 /***************************************************************************\
  *
  * File:
- * 	vn200_struct.h
+ * 	VN200Struct.h
  *
  * Description:
  *	Structures containing device and data for VN200. Must be kept

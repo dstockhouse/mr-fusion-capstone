@@ -1,7 +1,7 @@
 /***************************************************************************\
  *
  * File:
- * 	vn200.c
+ * 	VN200.c
  *
  * Description:
  *	Common functionality for VN200, GPS and IMU
@@ -27,16 +27,16 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
-#include "config.h"
+#include "control.h"
 #include "buffer.h"
 #include "logger.h"
 #include "debuglog.h"
 #include "uart.h"
-#include "vn200_crc.h"
-#include "vn200_gps.h"
-#include "vn200_imu.h"
+#include "VN200_CRC.h"
+#include "VN200_GPS.h"
+#include "VN200_IMU.h"
 
-#include "vn200.h"
+#include "VN200.h"
 
 
 /**** Function getTimestamp ****

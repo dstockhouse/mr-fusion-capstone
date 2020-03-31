@@ -86,7 +86,7 @@ int BufferAddArray(BYTE_BUFFER *buf, unsigned char *data, int numToAdd) {
 
     int i, numAdded = 0;
 
-    if (buf == NULL || data == NULL) {
+    if (buf == NULL) {
         return -1;
     }
 

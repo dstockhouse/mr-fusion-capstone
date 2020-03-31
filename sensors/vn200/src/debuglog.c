@@ -30,12 +30,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "config.h"
+#include "control.h"
 #include "logger.h"
 
 #include "debuglog.h"
 
-// The logDebug function's definition depends on DEBUG_OUT_**** set in config.h
+// The logDebug function's definition depends on DEBUG_OUT_**** set in control.h
 // 1-3 options can be defined individually or simultaneously, in which case
 // debug will be logged in more than one location
 

@@ -3,14 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 
-Describe(Control);
-BeforeEach(Control) {}
-AfterEach(Control) {}
+Describe(Strlen);
+BeforeEach(Strlen) {}
+AfterEach(Strlen) {}
 
-Ensure(Control, dummy_test) {
-
-    // Follow similar form for your assertions
-    // assert_that(this, is_equal_to(that));
-
+Ensure(Strlen, returns_five_for_hello) {
+	assert_that(strlen("hello"), is_equal_to(5));
 }
 

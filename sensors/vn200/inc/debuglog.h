@@ -20,7 +20,12 @@
 #ifndef __DEBUG_LOG_H
 #define __DEBUG_LOG_H
 
-#include "config.h"
+#include "control.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
 
 // Variadic wrapper for appropriate log function
 void logDebug(int, const char *fmt, ...);

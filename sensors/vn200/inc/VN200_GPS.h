@@ -1,7 +1,7 @@
 /***************************************************************************\
  *
  * File:
- * 	vn200_gps.h
+ * 	VN200_GPS.h
  *
  * Description:
  *	Function and type declarations and constants for VN200_GPS.c
@@ -18,8 +18,8 @@
 #define __VN200_GPS_H
 
 #include "logger.h"
-#include "vn200_struct.h"
-#include "vn200.h"
+#include "VN200Struct.h"
+#include "VN200.h"
 
 int VN200GPSInit(VN200_DEV *dev, char *devname, int fs);
 
