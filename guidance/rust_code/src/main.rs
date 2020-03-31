@@ -5,6 +5,7 @@ mod path_planning;
 mod constants;
 mod network;
 mod ui;
+mod traversal;
 
 use std::fs;
 use std::io::Write;

@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::f64;
-use std::ops::Sub;
+use std::ops::{Sub, Mul};
 
 pub mod conversions;
 
@@ -17,7 +17,7 @@ pub struct Point {
 }
 
 // Clone Trait only for unit testing
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct TangentialPoint {
     vector: Vector3<f64>,
 }
@@ -28,6 +28,16 @@ impl Sub for &TangentialPoint {
     fn sub(self, other: Self) -> TangentialPoint {
         TangentialPoint {
             vector: self.vector - other.vector
+        }
+    }
+}
+
+impl Mul<f64> for TangentialPoint {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        TangentialPoint {
+            vector: self.vector * rhs
         }
     }
 }
