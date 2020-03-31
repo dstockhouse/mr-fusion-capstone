@@ -38,6 +38,10 @@ TESTDEP = $(TESTBASE:%=$(DEPDIR)/%.d)
 TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
 # cgreen wants a shared object file .so
 
+# Files for gcov coverage report
+COVDIR = $(BLDDIR)/cov
+COVS = $(foreach src,$(SRCS),$(COVDIR)/$(notdir $(src)).gcov)
+
 # Compiler flags
 CC = gcc
 CFLAGS = -g -Wall -shared -fPIC 
@@ -72,11 +76,15 @@ main: $(MAINBIN)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
 test: LIBS += cgreen
-test: CFLAGS += -L/usr/local/lib
+test: CFLAGS += --coverage -L/usr/local/lib
 # Copy and execute test script
 test: $(TESTBIN)
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
+	make cov
+
+.PHONY: cov
+cov: $(COVS)
 
 # Rule to make all complete binaries
 #$(BINDIR)/%.a: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
@@ -95,8 +103,12 @@ $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
 	$(CC) $(CFLAGS) $(DEPFLAGS) $(INCFLAGS) -c $< -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
+# Rule to generate coverage analysis files
+$(COVDIR)/%.gcov: % | $(COVDIR)
+	gcov --object-directory $(OBJDIR)/ --source-prefix $(SRCDIR)/ --stdout $< > $@
+
 # Rule to make all directories when they are needed
-$(OBJDIR) $(DEPDIR) $(BINDIR):
+$(OBJDIR) $(DEPDIR) $(BINDIR) $(COVDIR):
 	mkdir -p $@
 
 # Remove bld directory and all copied executables
