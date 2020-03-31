@@ -156,7 +156,7 @@
         {
             "type": "lldb",
                 "request": "launch",
-                "name": "Debug Unit Tests",
+                "name": "Debug New Proximity Line",
                 "cargo": {
                     "args": [
                         "test",
@@ -169,7 +169,7 @@
                         "kind": "bin"
                     }
                 },
-                "args": ["--test-threads=1"],
+                "args": ["new_proximity_line", "--test-threads=1"],
                 "cwd": "${workspaceFolder}"
             },
     ]

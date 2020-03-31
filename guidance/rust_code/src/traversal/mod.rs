@@ -4,11 +4,19 @@
 
 
 use crate::graph::TangentialPoint;
+use cfg_if::cfg_if;
 
 // Determines when we increment to our next point. Once we have traversed the
 // percentage of 1 - OFFSET_FACTOR, we increment the point we are attempting to
 // traverse to.
-const OFFSET_FACTOR: f64 = 0.09;
+cfg_if! {
+    if #[cfg(test)] { // So unit tests never break
+        const OFFSET_FACTOR: f64 = 0.09;
+    }
+    else { // Here we can tweek this factor when experimenting with the robot.
+        const OFFSET_FACTOR: f64 = 0.09; 
+    }
+}
 
 pub struct ProximityLine {
     m: f64,
@@ -36,7 +44,7 @@ impl ProximityLine {
 
         // The slope of the proximity line. Garunteed to be perpendicular to the 
         // line that goes from our robot to the next desired point
-        let m = (-1.0)*ideal_traversal_v.y() / ideal_traversal_v.x();
+        let m = (-1.0)*ideal_traversal_v.x() / ideal_traversal_v.y();
 
         // The y intercept of our line
         let b = proximity_point.y() - m*proximity_point.x();

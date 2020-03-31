@@ -12,6 +12,12 @@ fn new_proximity_line() {
     
     let proximity_line = ProximityLine::new(&robot_loc, &next_point);
 
-    assert_eq!(proximity_line.m, 10.0);
+    assert!(
+        proximity_line.m > 9.9 &&
+        proximity_line.m < 10.1 &&
+
+        proximity_line.b > -17.19 &&
+        proximity_line.b < -17.17
+    );
 }
 
