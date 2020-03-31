@@ -365,3 +365,53 @@ Ensure(Buffer, copies_starting_not_at_beginning) {
     assert_that(BufferIndex(&buf, numElements/2 + i), is_equal_to(copied[i]));
 }
 
+Ensure(Buffer, catches_invalid_accesses) {
+    BYTE_BUFFER buf;
+    BufferEmpty(&buf);
+
+    int rc;
+    unsigned char data[BYTE_BUFFER_LEN] = {0};
+
+    // Null pointer checks
+    rc = BufferAdd(NULL, 0);
+    assert_that(rc, is_equal_to(-1));
+
+    rc = BufferAddArray(NULL, NULL, 0);
+    assert_that(rc, is_equal_to(-1));
+
+    rc = BufferRemove(NULL, 0);
+    assert_that(rc, is_equal_to(0));
+
+    rc = (int)BufferIndex(NULL, 0);
+    assert_that(rc, is_equal_to(0));
+
+    rc = BufferEmpty(NULL);
+    assert_that(rc, is_equal_to(-1));
+
+    rc = BufferIsFull(NULL);
+    assert_that(rc, is_equal_to(-1));
+
+    rc = BufferLength(NULL);
+    assert_that(rc, is_equal_to(-1));
+
+    rc = BufferCopy(NULL, NULL, 0, 0);
+    assert_that(rc, is_equal_to(-1));
+
+    // Bounds rejection
+    rc = BufferAddArray(&buf, data, BYTE_BUFFER_MAX_LEN);
+    assert_that(rc, is_equal_to(BYTE_BUFFER_MAX_LEN));
+    rc = BufferAdd(&buf, 0);
+    assert_that(rc, is_equal_to(0));
+
+    BufferRemove(&buf, 100);
+    rc = (int)BufferIndex(&buf, -1);
+    assert_that(rc, is_equal_to(0));
+    rc = (int)BufferIndex(&buf, BufferLength(&buf));
+    assert_that(rc, is_equal_to(0));
+
+    rc = BufferCopy(&buf, data, -1, 0);
+    assert_that(rc, is_equal_to(0));
+    rc = BufferCopy(&buf, data, 0, -1);
+    assert_that(rc, is_equal_to(0));
+}
+
