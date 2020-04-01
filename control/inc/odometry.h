@@ -17,7 +17,7 @@
 #ifndef __ODOMETRY_H
 #define __ODOMETRY_H
 
-float OdometryWheelVelocityFromPulses(int pulseCount, float timestep) {
+float OdometryWheelVelocityFromPulses(int pulseCount, float timestep);
 
 #endif // __ODOMETRY_H
 
