@@ -1,7 +1,7 @@
 /****************************************************************************
  *
  * File: 
- * 	VN200_IMU.c
+ * 	vn200_imu.c
  *
  * Description: 
  * 	Initialize the VN200 to gather and send IMU data
@@ -28,15 +28,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "control.h"
+#include "config.h"
 #include "debuglog.h"
 #include "buffer.h"
 #include "logger.h"
 #include "uart.h"
-#include "VN200_CRC.h"
-#include "VN200.h"
+#include "vn200_crc.h"
+#include "vn200.h"
 
-#include "VN200_IMU.h"
+#include "vn200_imu.h"
 
 /**** Function VN200IMUInit ****
  *

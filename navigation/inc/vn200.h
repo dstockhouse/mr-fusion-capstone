@@ -1,7 +1,7 @@
 /***************************************************************************\
  *
  * File:
- * 	VN200.h
+ * 	vn200.h
  *
  * Description:
  *	Function and type declarations and constants for VN200.c
@@ -31,7 +31,7 @@
 #include "buffer.h"
 #include "logger.h"
 #include "uart.h"
-#include "VN200Struct.h"
+#include "vn200_struct.h"
 
 #define VN200_DEVNAME "/dev/ttyUSB0"
 #define VN200_BAUD 57600

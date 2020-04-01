@@ -1,4 +1,4 @@
-/****************************************************************************\
+/****************************************************************************
  *
  * File:
  * 	uart.h
@@ -28,17 +28,10 @@
  * 	Added access() for permission checking
  * 	Last edited 5/08/2019
  *
-\***************************************************************************/
+ ***************************************************************************/
 
 #ifndef __UART_H
 #define __UART_H
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <termios.h>
-#include <errno.h>
 
 int UARTInit(char *devName, int baud);
 
