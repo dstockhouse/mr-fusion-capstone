@@ -2,6 +2,10 @@
 *.a
 *.so
 *.elf
+*.so
+*.gcov
+*.gcno
+*.gcda
 *.swp
 *.swo
 *~
@@ -10,7 +14,6 @@
 *.mp4
 school_map.geojson
 navigation/bld/
-*.so
 a.out
 bld/
 target/
