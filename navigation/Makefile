@@ -6,6 +6,11 @@
 MAKEDIR = $(realpath $(firstword $(MAKEFILE_LIST)))
 DIRNAME = $(dir $(MAKEDIR:%/=%))
 
+# System library
+SYSDIR = ../system
+SYSBASE = $(notdir $(SYSDIR))
+SYSLIB = $(SYSDIR)/lib$(SYSBASE).a
+
 # Get the name of the directory we are in (i.e. guidance, navigation, or control)
 # Does not work if the current directory has spaces in the name
 BASENAME = $(shell basename $(lastword $(DIRNAME)))
@@ -14,7 +19,7 @@ BASENAME = $(shell basename $(lastword $(DIRNAME)))
 MAINDIR = main
 TESTDIR = test
 SRCDIR = src
-INCDIR = inc ../system
+INCDIR = inc $(SYSDIR)/inc
 
 # bld and subdirectories
 BLDDIR = bld
@@ -42,10 +47,14 @@ TESTDEP = $(TESTBASE:%=$(DEPDIR)/%.d)
 TESTBIN = $(TESTBASE:%=$(BINDIR)/%.so)
 # cgreen wants a shared object file .so
 
+# Files for gcov coverage report
+COVDIR = $(BLDDIR)/cov
+COVS = $(foreach src,$(SRCS),$(COVDIR)/$(notdir $(src)).gcov)
+
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall 
-LIBS = 
+CFLAGS = -g -Wall -L$(SYSDIR)
+LIBS = $(SYSBASE)
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
@@ -69,18 +78,22 @@ vpath %.o $(OBJDIR)
 
 # Main is the default
 .PHONY: main
-main: $(MAINBIN)
+main: $(MAINBIN) | $(SYSLIB)
 	cp $^ .
 
 # Perform unit test (after executing below rules)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
 test: LIBS += cgreen
-test: CFLAGS += -shared -fPIC
+test: CFLAGS += --coverage -shared -fPIC -L/usr/local/lib
 # Copy and execute test script
-test: $(TESTBIN)
+test: $(TESTBIN) | $(SYSLIB)
 	cp $(TESTBIN) .
 	cgreen-runner $(notdir $(TESTBIN))
+	make cov
+
+.PHONY: cov
+cov: $(COVS)
 
 # Rule to make all executable binaries
 $(BINDIR)/%.elf: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
@@ -98,8 +111,12 @@ $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
 	$(CC) $(CFLAGS) $(DEPFLAGS) $(INCFLAGS) -c $< -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
+# Rule to generate coverage analysis files
+$(COVDIR)/%.gcov: % | $(COVDIR)
+	gcov --object-directory $(OBJDIR)/ --source-prefix $(SRCDIR)/ $<
+
 # Rule to make all directories when they are needed
-$(OBJDIR) $(DEPDIR) $(BINDIR):
+$(OBJDIR) $(DEPDIR) $(BINDIR) $(COVDIR):
 	mkdir -p $@
 
 # Remove bld directory and all copied executables
@@ -111,6 +128,10 @@ clean:
 $(DEPS):
 include $(wildcard $(DEPS)) $(wildcard $(MAINDEP)) $(wildcard $(TESTDEP))
 
+
+# Rule to make system library
+$(SYSLIB):
+	make -C $(SYSDIR)
 
 
 ### Below this line are sandbox commands for possible extensions
