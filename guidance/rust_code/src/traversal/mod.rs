@@ -45,11 +45,11 @@ impl ProximityLine {
         // The slope of the proximity line. Garunteed to be perpendicular to the 
         // line that goes from our robot to the next desired point
         let m = (-1.0)*ideal_traversal_v.x() / ideal_traversal_v.y();
-
+        
         // The y intercept of our line
         let b = proximity_point.y() - m*proximity_point.x();
 
-        ProximityLine {m, b}
+        ProximityLine{m, b}
             
         
     }
