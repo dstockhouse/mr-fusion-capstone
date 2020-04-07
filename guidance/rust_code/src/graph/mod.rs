@@ -299,7 +299,7 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph {
     
     let graph = connect_vertices_with_edges(edges, vertices);
 
-    return graph
+    graph
 
 }
 

@@ -24,7 +24,7 @@ fn main() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Partial School Map.gpx");
 
     {
-        TO_UI.lock().unwrap().write("hello".as_bytes()).unwrap();
+        TO_UI.lock().unwrap().write_all(b"hello").unwrap();
     } // Curly braces are here to drop the lock to the UI
     
     // This function will block waiting for nav, control, and image processing.

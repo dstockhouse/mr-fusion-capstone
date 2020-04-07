@@ -132,7 +132,7 @@ impl Graph {
         }
         
         match closest_edge_index {
-            None => return Err(Error::PathPlanningNotOnMap),
+            None => Err(Error::PathPlanningNotOnMap),
             Some(closest_edge_index) => self.connection_matrix_index_from(closest_edge_index)
         }
     }

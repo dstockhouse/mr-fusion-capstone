@@ -4,15 +4,15 @@ use nalgebra::{Vector3, Matrix3};
 use geojson::{Feature, FeatureCollection, Value, Geometry, feature::Id};
 
 // Distance from the earth relative to the equator (m)
-const RO: f64 = 6378137.0;
+const RO: f64 = 6_378_137.0;
 
 // Ecentricity of the earth (unitless?)
 const E: f64 = 0.0818;
 
 // Front entrance of king
 const ORIGIN: GPSPointDeg = GPSPointDeg {
-    lat: 34.6147979,
-    long: -112.4509615,
+    lat: 34.614_797_9,
+    long: -112.450_961_5,
     height: 1582.3
 };
 
