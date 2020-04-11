@@ -21,7 +21,7 @@ int ThreadAttrInit(pthread_attr_t *threadAttr, int priority);
 
 int ThreadCreate(pthread_t *thread, pthread_attr_t *threadAttr, void *(*threadRoutine)(void *), void *threadParams);
 
-int ThreadTryJoin(pthread_t *thread, int *threadReturn);
+int ThreadTryJoin(pthread_t thread, int *threadReturn);
 
 #endif // __THREAD_H
 

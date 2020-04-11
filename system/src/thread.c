@@ -14,6 +14,8 @@
  *
  ***************************************************************************/
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -138,13 +140,13 @@ int ThreadCreate(pthread_t *thread, pthread_attr_t *threadAttr, void *(*threadRo
  *      On failure (thread was not joined), returns -1 and errno is set to the
  *        value returned by the failed system service call
  */
-int ThreadTryJoin(pthread_t *thread, int *threadReturn) {
+int ThreadTryJoin(pthread_t thread, int *threadReturn) {
 
     int rc;
 
     // Attempt to join thread
-    // rc = pthread_tryjoin_np(thread, &threadReturn);
-    rc = pthread_join(thread, &threadReturn);
+    rc = pthread_tryjoin_np(thread, (void **)&threadReturn);
+    // rc = pthread_join(thread, &threadReturn);
     if (rc != 0) {
         if (rc != EBUSY) {
             logDebug(L_INFO, "%s: Failed to join thread\n", strerror(rc));
