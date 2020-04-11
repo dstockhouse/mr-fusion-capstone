@@ -44,8 +44,8 @@ COVS = $(foreach src,$(SRCS),$(COVDIR)/$(notdir $(src)).gcov)
 
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall -shared -fPIC 
-LIBS = 
+CFLAGS = -g -Wall -shared -fPIC
+LIBS =
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
@@ -75,8 +75,8 @@ main: $(MAINBIN)
 # Perform unit test (after executing below rules)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
-test: LIBS += cgreen
-test: CFLAGS += --coverage -L/usr/local/lib
+test: LIBS +=cgreen
+test: CFLAGS +=--coverage -L/usr/local/lib
 # Copy and execute test script
 test: $(TESTBIN)
 	cp $(TESTBIN) .

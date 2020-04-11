@@ -38,7 +38,8 @@
 #define CONTROL_IP_ADDR     "192.168.1.2"
 #define IMAGEPROC_IP_ADDR   "192.168.1.4"
 
-// Need individual port for each pair of devices
+// Ports that each client subsystem uses to seek connections to other subsystems
+// Ex. Control connects to guidance navigation at the same port
 #define GUIDANCE_TCP_PORT       31400
 #define NAVIGATION_TCP_PORT     31402
 #define CONTROL_TCP_PORT        31401
