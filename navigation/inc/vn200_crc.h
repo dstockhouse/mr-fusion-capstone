@@ -1,7 +1,7 @@
 /****************************************************************************\
  *
  * File:
- * 	VN200_CRC.h
+ * 	vn200_crc.h
  *
  * Description:
  * 	Function and type declarations and constants for crc.c
