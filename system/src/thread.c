@@ -36,7 +36,7 @@
  *
  * Initializes thread attributes for realtime scheduling and priority
  *
- * Arguments: 
+ * Arguments:
  *      threadAttr - Pointer to thread attributes object to set
  *      priority   - Integer priority to set thread scheduler
  *
@@ -49,6 +49,13 @@ int ThreadAttrInit(pthread_attr_t *threadAttr, int priority) {
 
     int rc;
     struct sched_param schedParams;
+
+    // Null not automatically rejected, so reject it here
+    if (threadAttr == NULL) {
+        // Invalid input
+        errno = EINVAL;
+        return -1;
+    }
 
     // Initialize attributes object
     rc = pthread_attr_init(threadAttr);
@@ -99,7 +106,7 @@ int ThreadAttrInit(pthread_attr_t *threadAttr, int priority) {
  *
  * Initializes thread attributes for realtime scheduling and priority
  *
- * Arguments: 
+ * Arguments:
  *      thread        - Pointer to thread object to be created
  *      threadAttr    - Pointer to thread attributes object to set
  *      threadRoutine - Pointer to function for thread to execute
@@ -131,7 +138,7 @@ int ThreadCreate(pthread_t *thread, pthread_attr_t *threadAttr, void *(*threadRo
  *
  * Checks if a given thread is finished, and if so returns the return value
  *
- * Arguments: 
+ * Arguments:
  *      thread       - Pointer to thread object to be joined
  *      threadReturn - Pointer to integer to hold an integer return value
  *
