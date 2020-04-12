@@ -5,7 +5,7 @@ function [V_odo, A_odo] = Wheel_Odometry_Simplified(V_truth, A_truth, constants)
 % Inputs: V_truth = Velocity Truth
 %         A_truth = Attitude Truth
 % Outputs: V_odo = Forward velocity Odometry
-%          A_odo = 
+%          A_odo = Orientation about z-axis on robot body frame 
 
 V_sigma = constants.odo.V_sigma;      % Radius of errors of velocity
 A_sigma = constants.odo.A_sigma;      % Radius of errors of attittude in radians
