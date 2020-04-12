@@ -17,10 +17,13 @@ IMU.Fs = 50;    % Set IMU Sampling Frequency (Hz)
 dt = 1/IMU.Fs;  % Set discrete time step
 t_len = 180;    % Set length of time sim will run (seconds)
 
+
 gyro = gyro_error(0, 0, 10, 13, 1000, 0.05);        % Set errors for gyros
 accel = accel_error(0, 0, 0.04, 0.14, 5000, 0.05);  % Set errors for accels
-gps = gps_error(2.5, 50);                          % Set errors for GPS
-
+gps = gps_error(2.5, 50);                           % Set errors for GPS
+odo = odo_error(0.1, 0.1);                          % Set errors for odometry
+tof = tof_error(1, 0.1);                            % Set errors for ToF
+    
 load_constants; % Run script to load constant values struct
 
 %% Loop to Run Model

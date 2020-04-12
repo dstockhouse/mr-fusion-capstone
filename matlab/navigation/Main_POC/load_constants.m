@@ -168,8 +168,20 @@ fprintf('  b_a,FB \t\t= %.6f (m/s^2)\n  b_a,BS \t\t= %.6f (m/s^2)\n  b_a,BI_sigm
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %% GPS Error Parameters
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-constants.gps.sigma = gps.sigma;                % radius of GPS measurements around truth (m)
-constants.gps.Fs = gps.Fs;              % Sampling Frequency of GPS
-constants.gps.dt = 1/constants.gps.Fs;  % Sampling time of GPS
+constants.gps.sigma = gps.sigma;        % radius of GPS measurements around truth (m)
+constants.gps.Fs = gps.Fs;              % Sampling Frequency of GPS (hz)
+constants.gps.dt = 1/constants.gps.Fs;  % Sampling time of GPS (sec)
+
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%% Time of Flight Error Paramters
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+constants.tof.P_sigma = tof.P_sigma;    % Radius of ToF Position measurements around truth (m)
+constants.tof.A_sigma = tof.A_sigma;    % Radius of ToF Attitude measurements around truth (rad)
+
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%% Odometry Error Parameters
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+constants.odo.V_sigma = tof.V_sigma;    % Radius of Odometry Velcoticy measurements around truth (m/s)
+constants.odo.A_sigma = tof.A_sigma;    % Radius of Odometry Attitude measurements around truth (rad)
 
 assignin('base','constants', constants);
