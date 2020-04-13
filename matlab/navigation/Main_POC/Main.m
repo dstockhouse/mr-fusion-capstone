@@ -5,7 +5,7 @@
 
 %% Initial Resets 
 close all;  % Close all figures
-clear;      % Clear all variables
+clear all;      % Clear all variables
 clc;        % Clear Command window
 
 %% Adjust System Path 
