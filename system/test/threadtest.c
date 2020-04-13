@@ -177,7 +177,7 @@ xEnsure(Thread, join_without_create) {
     int rc;
 
     // Start thread without valid attributes
-    rc = ThreadTryJoin(0, NULL);
+    rc = ThreadTryJoin(NULL, NULL);
     assert_that(rc, is_equal_to(-1));
 
 }
