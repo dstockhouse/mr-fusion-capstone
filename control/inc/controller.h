@@ -17,7 +17,9 @@
 #ifndef __CONTROLLER_H
 #define __CONTROLLER_H
 
-#define CONTROLLER_KP 0.5
+#define KP 4
+#define KI 0.2
+
 #define RADIUS 0.5524
 #define HALF_DRIVE_TRAIN 0.1524
 

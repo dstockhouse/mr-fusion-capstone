@@ -39,17 +39,30 @@ int ControllerCalculateActuation(float delta_heading, float speed, float *theta_
 
     // If no values are received, return as failure
     if (theta_L == NULL || theta_R == NULL) {
+        printf(' \n Error! No values received for theta_L and/or theta_R. \n');
         return -1;
     }
 
-    float omega = delta_heading * CONTROLLER_KP; // rate of angular change of robot
+    float P = KP * delta_heading; // proportional controller segment
+    float I = KI * delta_heading; // integral controller segment
 
-    float vL = speed - (HALF_DRIVE_TRAIN * omega);  // speed command for left motor (meters/sec)
-    float vR = speed + (HALF_DRIVE_TRAIN * omega);  // speed command for right motor (meters/sec)
+    if ((theta_L == 1) && (theta_R == 1)) {
+        float omega = P + I; // controller block
 
-    *theta_L = vL / RADIUS; // speed command for left motor (radians/second)
-    *theta_R = vR / RADIUS; // speed command for right motor (radians/second)
+        float vL = theta_L - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
+        float vR = theta_R + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
 
+        float angVelL = vL/RADIUS;
+        float andVelR = vR/RADIUS;
+    }
+    else if (theta_L == 0 || theta_R == 0) {
+        float angVelL = 1;
+        float andVelR = -1;
+    }
+    else {
+        printf('\n Error! Invalid theta_L or theta_R received. \n');
+        return -1;
+    }
     return 0;
 
 } // ControllerCalculateActuation(float, float *, float *)
