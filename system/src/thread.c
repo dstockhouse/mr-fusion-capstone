@@ -176,6 +176,7 @@ int ThreadTryJoin(pthread_t thread, int *threadReturn) {
     int rc, *tempReturn = NULL;
 
     // Attempt to join thread
+    // Not supported on non-Linux systems (ex. Cygwin)
     rc = pthread_tryjoin_np(thread, (void **)&tempReturn);
     // rc = pthread_join(thread, (void **)&tempReturn);
     if (rc != 0) {
