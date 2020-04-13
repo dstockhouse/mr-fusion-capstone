@@ -37,17 +37,17 @@
  * Initializes thread attributes for realtime scheduling and priority
  *
  * Arguments:
- *      threadAttr - Pointer to thread attributes object to set
- *      priority   - Integer priority to set thread scheduler
+ *      threadAttr      - Pointer to thread attributes object to set
+ *      inversePriority - Inverted priority to set thread scheduler (0 is highest)
  *
  * Return value:
  *      On success, returns 0
  *      On failure, returns -1 and errno is set to the value returned by the
  *        failed system service call
  */
-int ThreadAttrInit(pthread_attr_t *threadAttr, int priority) {
+int ThreadAttrInit(pthread_attr_t *threadAttr, int inversePriority) {
 
-    int rc;
+    int rc, priority, maxPriority, minPriority, tempPriority;
     struct sched_param schedParams;
 
     // Null not automatically rejected, so reject it here
@@ -80,6 +80,30 @@ int ThreadAttrInit(pthread_attr_t *threadAttr, int priority) {
         errno = rc;
         return -1;
     }
+
+    // Get maximum and minimum supported priority
+    maxPriority = sched_get_priority_max(SCHED_FIFO);
+    if (maxPriority == -1) {
+        logDebug(L_INFO, "%s: Failed to get maximum sched priority\n", strerror(errno));
+        return -1;
+    }
+    minPriority = sched_get_priority_min(SCHED_FIFO);
+    if (minPriority == -1) {
+        logDebug(L_INFO, "%s: Failed to get minimum sched priority\n", strerror(errno));
+        return -1;
+    }
+
+    // Invert input priority, check bounds
+    tempPriority = maxPriority - inversePriority;
+    if (tempPriority > maxPriority) {
+        priority = maxPriority;
+    } else if (tempPriority < minPriority) {
+        priority = minPriority;
+    } else {
+        priority = tempPriority;
+    }
+    logDebug(L_DEBUG, "Setting thread priority to %d\n", priority);
+    logDebug(L_VVDEBUG, "  (min = %d, max = %d)\n", minPriority, maxPriority);
 
     // Set scheduling priority
     schedParams.sched_priority = priority;
@@ -149,17 +173,22 @@ int ThreadCreate(pthread_t *thread, pthread_attr_t *threadAttr, void *(*threadRo
  */
 int ThreadTryJoin(pthread_t thread, int *threadReturn) {
 
-    int rc;
+    int rc, *tempReturn = NULL;
 
     // Attempt to join thread
-    rc = pthread_tryjoin_np(thread, (void **)&threadReturn);
-    // rc = pthread_join(thread, &threadReturn);
+    rc = pthread_tryjoin_np(thread, (void **)&tempReturn);
+    // rc = pthread_join(thread, (void **)&tempReturn);
     if (rc != 0) {
         if (rc != EBUSY) {
             logDebug(L_INFO, "%s: Failed to join thread\n", strerror(rc));
         }
         errno = rc;
         return -1;
+    }
+
+    // Save return value, if present and required
+    if (threadReturn != NULL && tempReturn != NULL) {
+        *threadReturn = *tempReturn;
     }
 
     return 0;
