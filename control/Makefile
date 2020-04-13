@@ -113,7 +113,8 @@ $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
 
 # Rule to generate coverage analysis files
 $(COVDIR)/%.gcov: % | $(COVDIR)
-	gcov --object-directory $(OBJDIR)/ --source-prefix $(SRCDIR)/ $<
+	test -f $<.gcno && gcov --object-directory $(OBJDIR)/ --source-prefix $(SRCDIR)/ $< || find
+	test -f $(notdir $@) && mv $(notdir $@) $@ || echo 1 > /dev/null
 
 # Rule to make all directories when they are needed
 $(OBJDIR) $(DEPDIR) $(BINDIR) $(COVDIR):

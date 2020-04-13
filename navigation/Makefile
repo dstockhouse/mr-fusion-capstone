@@ -53,7 +53,7 @@ COVS = $(foreach src,$(SRCS),$(COVDIR)/$(notdir $(src)).gcov)
 
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall -L$(SYSDIR)
+CFLAGS = -g -Wall --coverage -shared -fPIC -L$(SYSDIR)
 LIBS = $(SYSBASE)
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
@@ -85,7 +85,7 @@ main: $(MAINBIN) | $(SYSLIB)
 # Needs to include the cgreen library, which isn't necessary most of the time
 .PHONY: test
 test: LIBS += cgreen
-test: CFLAGS += --coverage -shared -fPIC -L/usr/local/lib
+test: CFLAGS += -L/usr/local/lib
 # Copy and execute test script
 test: $(TESTBIN) | $(SYSLIB)
 	cp $(TESTBIN) .
@@ -113,7 +113,8 @@ $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
 
 # Rule to generate coverage analysis files
 $(COVDIR)/%.gcov: % | $(COVDIR)
-	gcov --object-directory $(OBJDIR)/ --source-prefix $(SRCDIR)/ $<
+	test -n $$(find -name $(notdir $(basename $<)).gcno) && gcov --object-directory $(OBJDIR)/ --source-prefix $(SRCDIR)/ $< || find
+	test -f $(notdir $@) && mv $(notdir $@) $@ || echo 1 > /dev/null
 
 # Rule to make all directories when they are needed
 $(OBJDIR) $(DEPDIR) $(BINDIR) $(COVDIR):
