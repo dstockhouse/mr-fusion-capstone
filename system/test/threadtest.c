@@ -172,7 +172,7 @@ Ensure(Thread, create_with_invalid_attributes) {
 
 }
 
-Ensure(Thread, join_without_create) {
+xEnsure(Thread, join_without_create) {
 
     int rc;
 
