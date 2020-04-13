@@ -182,6 +182,8 @@ int ThreadTryJoin(pthread_t thread, int *threadReturn) {
     if (rc != 0) {
         if (rc != EBUSY) {
             logDebug(L_INFO, "%s: Failed to join thread\n", strerror(rc));
+        } else {
+            logDebug(L_DEBUG, "Attemped to join unfinished thread\n");
         }
         errno = rc;
         return -1;
