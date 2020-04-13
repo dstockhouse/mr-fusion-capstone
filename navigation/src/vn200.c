@@ -451,7 +451,7 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
         LogInit(&(dev->logFileGPSParsed), logFileDirName, "VN200_GPS", LOG_FILEEXT_CSV);
 
         // Write header to CSV data
-        logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,lat,lon,alt,velx,vely,velz,nacc,eacc,vacc,sacc,tacc,timestamp\n");
+        logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,posx,posy,posz,velx,vely,velz,xacc,yacc,zacc,sacc,tacc,timestamp\n");
         LogUpdate(&(dev->logFileGPSParsed), logBuf, logBufLen);
 
     }
