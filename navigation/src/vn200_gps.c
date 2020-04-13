@@ -106,14 +106,15 @@ int VN200GPSPacketParse(unsigned char *buf, int len, GPS_DATA *data) {
     logDebug(L_VDEBUG, "\n\n");
 
     // Copy string into local variable
-    strncpy(currentPacket, &(buf[0]), len);
+    strncpy(currentPacket, (char *)&(buf[0]), len);
 
     // Scan for fields in packet string
     rc = sscanf(currentPacket, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f",
             &(data->time), &(data->week), &(data->GpsFix), &(data->NumSats),
-            &(data->Latitude), &(data->Longitude), &(data->Altitude),
-            &(data->NedVelX), &(data->NedVelY), &(data->NedVelZ),
-            &(data->NorthAcc), &(data->EastAcc), &(data->VertAcc), &(data->SpeedAcc), &(data->TimeAcc));
+            &(data->PosX), &(data->PosY), &(data->PosZ),
+            &(data->VelX), &(data->VelY), &(data->VelZ),
+            &(data->PosAccX), &(data->PosAccY), &(data->PosAccZ),
+            &(data->SpeedAcc), &(data->TimeAcc));
     if(rc < 15) {
         logDebug(L_INFO, "%s: Didn't match entire formatted string: %d\n", __func__, rc);
 
@@ -134,9 +135,9 @@ int VN200GPSLogParsed(LOG_FILE *log, GPS_DATA *data) {
     // Log parsed data to file in CSV format
     logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
             data->time, data->week, data->GpsFix, data->NumSats,
-            data->Latitude, data->Longitude, data->Altitude,
-            data->NedVelX, data->NedVelY, data->NedVelZ,
-            data->NorthAcc, data->EastAcc, data->VertAcc,
+            data->PosX, data->PosY, data->PosZ,
+            data->VelX, data->VelY, data->VelZ,
+            data->PosAccX, data->PosAccY, data->PosAccZ,
             data->SpeedAcc, data->TimeAcc, data->timestamp);
 
     // Update log file

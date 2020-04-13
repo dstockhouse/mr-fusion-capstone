@@ -25,7 +25,9 @@
 
 unsigned char VN200CalculateChecksum(unsigned char data[], unsigned int length);
 
+/* From VN200 documentation. Used for binary messages, so keeping around in case
 unsigned short VN200CalculateCRC(unsigned char data[], unsigned int length);
+*/
 
 #endif
 
