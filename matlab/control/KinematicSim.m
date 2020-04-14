@@ -14,6 +14,19 @@ function [K, heading_act] = KinematicSim(theta_L , theta_R, time_step)
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------
+% Denote and draw starting position
+%--------------------------------------------------------------------------
+persistent Xpos;
+if isempty(Xpos)
+    Xpos = 0;
+end
+
+persistent Ypos;
+if isempty(Ypos)
+    Ypos = -1;
+end
+
+%--------------------------------------------------------------------------
 % Declare the current heading as a persistent variable
 %--------------------------------------------------------------------------
 persistent heading;
@@ -27,9 +40,9 @@ end
 r = .5524; % radius of the wheels
 R = .1524; % radius of the axle
 
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % Create kinematic model
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 transMatrix = [-r/2*sin(heading) -r/2*sin(heading);... 
                 r/2*cos(heading)  r/2*cos(heading);...
                     r/(2*R)           -r/(2*R)   ];
@@ -40,13 +53,16 @@ inMat = [ theta_R ; theta_L ]; % input vector
 K = transMatrix * inMat;    % K = |  Y_dot  | -> velocity in y
                             %     | PSI_dot | -> angular velocity
                                
-%----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % Update Kinematics
-%----------------------------------------------------------------------
-pause(time_step); % simulate time step
+%--------------------------------------------------------------------------
+Xpos = Xpos+K(1,1)*time_step;
+Ypos = Ypos+K(2,1)*time_step;
     
 heading = heading + K(3,1)*time_step; % update heading
-
 heading_act = heading; % return heading as output
-                                 
+
+K(1,1) = Xpos;
+K(2,1) = Ypos;
+
 end % End of function

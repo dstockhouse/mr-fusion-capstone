@@ -7,7 +7,7 @@
 %       graphed. The robot's position is remembered between function calls
 %       during a single run of this script.
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
-% Last Modified: 3/01/2020
+% Last Modified: 4/09/2020
 %--------------------------------------------------------------------------
 
 close; clc; clear KinematicSim; clear ControlSim; clear PlotSim
@@ -15,7 +15,7 @@ close; clc; clear KinematicSim; clear ControlSim; clear PlotSim
 %--------------------------------------------------------------------------
 % Determine whether or not to save as an animation
 %--------------------------------------------------------------------------
-save_movie = false;
+save_movie = true;
 
 %--------------------------------------------------------------------------
 % Define robot characteristics
@@ -40,7 +40,7 @@ quarter_turn = (pi/2*C)/(2*pi*r*Vsys); % time to run the robot to spin 90
 % Declare movie object for animation
 %--------------------------------------------------------------------------
 if save_movie
-    v = VideoWriter('ControlSim.mp4', 'MPEG-4');
+    v = VideoWriter('ControlSim(P Controller).mp4', 'MPEG-4');
     v.FrameRate = 1/time_step;
     open(v);
     vfig = figure(1);
@@ -156,6 +156,47 @@ for i = 0:time_step:5
     [K, heading_act] = KinematicSim(theta_L, theta_R, time_step);
     
     % Plot kinematics
+    PlotSim(K, heading_act, time_step, scenario, i, 3);
+    
+    % Save captured frame
+    if save_movie
+        frame = getframe(vfig);
+        writeVideo(v, frame);
+    end
+    
+end % end of for() loop
+
+clear KinematicSim; clear ControlSim; clear PlotSim;
+pause(1)
+
+%--------------------------------------------------------------------------
+% Fourth Scenario
+%--------------------------------------------------------------------------
+scenario = '90 Deg Turn';
+
+heading_act = 0; % Set actual heading of the robot before simulation
+
+for i = 0:time_step:5
+    
+    if (i>1) % Turn 90 degrees to the right
+        speed_des = 1; % Desired speed given by guidance (1 or 0)
+        heading_des = -pi/2; % Desired heading given by Guidance
+        delta_heading = heading_des - heading_act; % Heading error
+        
+    else
+        speed_des = 1; % Desired speed given by guidance (1 or 0)
+        heading_des = 0; % Desired heading given by Guidance
+        delta_heading = heading_des - heading_act; % Heading error
+        
+    end
+    
+    % Determine angular wheel velocities based on heading
+    [theta_L, theta_R] = ControlSim(delta_heading, speed_des);
+        
+    % Feed angular velocities into kinematics using KinematicSim()
+    [K, heading_act] = KinematicSim(theta_L, theta_R, time_step);
+    
+    % Plot kinematics
     PlotSim(K, heading_act, time_step, scenario, i, 4);
     
     % Save captured frame
@@ -172,15 +213,15 @@ pause(1)
 %--------------------------------------------------------------------------
 % Fifth Scenario
 %--------------------------------------------------------------------------
-scenario = '90 Deg Turn';
+scenario = '120 Deg Turn';
 
 heading_act = 0; % Set actual heading of the robot before simulation
 
 for i = 0:time_step:5
     
-    if (i>1) % Turn 90 degrees to the right
+    if (i>1) % Turn 120 degrees to the right
         speed_des = 1; % Desired speed given by guidance (1 or 0)
-        heading_des = -pi/2; % Desired heading given by Guidance
+        heading_des = -2*pi/3; % Desired heading given by Guidance
         delta_heading = heading_des - heading_act; % Heading error
         
     else
@@ -213,15 +254,15 @@ pause(1)
 %--------------------------------------------------------------------------
 % Sixth Scenario
 %--------------------------------------------------------------------------
-scenario = '120 Deg Turn';
+scenario = 'U Turn';
 
 heading_act = 0; % Set actual heading of the robot before simulation
 
 for i = 0:time_step:5
     
-    if (i>1) % Turn 120 degrees to the right
+    if (i>1) % Turn 180 degrees to the right
         speed_des = 1; % Desired speed given by guidance (1 or 0)
-        heading_des = -2*pi/3; % Desired heading given by Guidance
+        heading_des = -pi; % Desired heading given by Guidance
         delta_heading = heading_des - heading_act; % Heading error
         
     else
@@ -254,47 +295,6 @@ pause(1)
 %--------------------------------------------------------------------------
 % Seventh Scenario
 %--------------------------------------------------------------------------
-scenario = 'U Turn';
-
-heading_act = 0; % Set actual heading of the robot before simulation
-
-for i = 0:time_step:5
-    
-    if (i>1) % Turn 180 degrees to the right
-        speed_des = 1; % Desired speed given by guidance (1 or 0)
-        heading_des = -pi; % Desired heading given by Guidance
-        delta_heading = heading_des - heading_act; % Heading error
-        
-    else
-        speed_des = 1; % Desired speed given by guidance (1 or 0)
-        heading_des = 0; % Desired heading given by Guidance
-        delta_heading = heading_des - heading_act; % Heading error
-        
-    end
-    
-    % Determine angular wheel velocities based on heading
-    [theta_L, theta_R] = ControlSim(delta_heading, speed_des);
-        
-    % Feed angular velocities into kinematics using KinematicSim()
-    [K, heading_act] = KinematicSim(theta_L, theta_R, time_step);
-    
-    % Plot kinematics
-    PlotSim(K, heading_act, time_step, scenario, i, 7);
-    
-    % Save captured frame
-    if save_movie
-        frame = getframe(vfig);
-        writeVideo(v, frame);
-    end
-    
-end % end of for() loop
-
-clear KinematicSim; clear ControlSim; clear PlotSim;
-pause(1)
-
-%--------------------------------------------------------------------------
-% Eighth Scenario
-%--------------------------------------------------------------------------
 scenario = 'Turn on the Spot';
 
 heading_act = 0; % Set actual heading of the robot before simulation
@@ -324,7 +324,7 @@ for i = 0:time_step:5
     [K, heading_act] = KinematicSim(theta_L, theta_R, time_step);
     
     % Plot kinematics
-    PlotSim(K, heading_act, time_step, scenario, i, 8);
+    PlotSim(K, heading_act, time_step, scenario, i, 7);
     
     % Save captured frame
     if save_movie
