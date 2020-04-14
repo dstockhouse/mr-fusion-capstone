@@ -181,7 +181,7 @@ constants.tof.A_sigma = tof.A_sigma;    % Radius of ToF Attitude measurements ar
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %% Odometry Error Parameters
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-constants.odo.V_sigma = tof.V_sigma;    % Radius of Odometry Velcoticy measurements around truth (m/s)
+constants.odo.V_sigma = tof.P_sigma;    % Radius of Odometry Velcoticy measurements around truth (m/s)
 constants.odo.A_sigma = tof.A_sigma;    % Radius of Odometry Attitude measurements around truth (rad)
 
 assignin('base','constants', constants);

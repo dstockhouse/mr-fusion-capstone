@@ -37,6 +37,7 @@ w_b__i_b_tilde_array = zeros(3, length(t));
 f_b__i_b_tilde_array = zeros(3, length(t));
 P_imu = zeros(3, length(t));
 V_imu = zeros(3, length(t));
+V_odo_array = zeros(3, length(t));
 dP_array = zeros(3, length(t));
 dV_array = zeros(3, length(t));
 
@@ -70,6 +71,9 @@ for i = 1:length(t)
     % Simulate GPS Receiver 
     P_gps = GPS_Sim(r_t__t_b, constants);
     
+    % Simulate Wheel Odometry (Simplified)
+    [V_odo, A_odo] = Wheel_Odometry_Simplified(v_t__t_b, C_t__b, constants);
+    
     % Kalman Filter Setup and Execution
     delta_P = P_gps - r_t__t_b_K;
     [dP, dV, dA] = Kalman_Script(delta_P, f_b__i_b_tilde, r_t__t_b_K, C_t__b_K, constants);
@@ -91,6 +95,9 @@ for i = 1:length(t)
     
     % GPS
     P_gps_array(:,i) = P_gps;
+    
+    % Wheel Odometry 
+    V_odo_array(:,i) = V_odo;
     
     % Filtered Stuffs
     dP_array(:,i) = dP;
