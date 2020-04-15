@@ -3,7 +3,9 @@
 #ifndef CONTROL_RUN_H
 #define CONTROL_RUN_H
 
-int control_run(int arg);
+#include "control.h"
+
+int control_run(CONTROL_PARAMS *control);
 
 #endif // CONTROL_RUN_H
 

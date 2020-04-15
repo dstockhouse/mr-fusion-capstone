@@ -27,6 +27,7 @@
 #include "config.h"
 #include "debuglog.h"
 #include "tcp.h"
+#include "thread.h"
 
 // Subsystem library headers
 #include "control.h"
@@ -34,7 +35,7 @@
 
 int main(int argc, char** argv) {
 
-    int run_rc, rc;
+    int rc;
 
     // Object containing parameters for subsystem operation
     // See control.h for definition
@@ -125,41 +126,38 @@ int main(int argc, char** argv) {
 
 
     /**** Threads ****/
-    struct sched_param schedParams;
-    pid_t pid;
-    int schedPriorityMax;
+    // For now, only dispatch control thread. Will dispatch hardware interface
+    // threads when they are ready
+    pthread_attr_t controlThreadAttr /*, kangarooThreadAttr, encoderThreadAttr*/;
+    pthread_t controlThread /*, kangarooThread, encoderThread*/;
+    int controlReturn /*, kangarooReturn, encoderReturn*/;
 
-    // Get process PID to configure scheduler
-    pid = getpid();
-
-    // Get current scheduler parameters, to be modified
-    rc = sched_getparam(pid, &schedParams);
+    // Initialize thread attributes
+    // ThreadAttrInit(&encoderThreadAttr, 0);
+    // ThreadAttrInit(&kangarooThreadAttr, 1);
+    rc = ThreadAttrInit(&controlThreadAttr, 2);
     if (rc == -1) {
-        logDebug("sched_getparam() failed: %s\n", strerror(errno));
+        logDebug(L_INFO, "Failed to initialize control thread attributes: %s\n", strerror(errno));
     }
 
-    // Get maximum priority for realtime scheduler, set main priority to max
-    schedPriorityMax = sched_get_priority_max(SCHED_FIFO);
-    schedParams.sched_priority = schedPriorityMax;
-
-    // Set to realtime scheduler
-    rc = sched_setscheduler(pid, SCHED_FIFO, &schedParams);
+    // Dispatch threads, give configuration object as argument
+    // ThreadCreate(&encoderThreadAttr, &encoderThreadAttr, &encoder_run, (void *)&control);
+    // ThreadCreate(&kangarooThreadAttr, &kangarooThreadAttr, &kangaroo_run, (void *)&control);
+    rc = ThreadCreate(&controlThread, &controlThreadAttr, &control_run, (void *)&control);
     if (rc == -1) {
-        logDebug("sched_setscheduler() failed: %s\n", strerror(errno));
-        return 1;
+        logDebug(L_INFO, "Failed to dispatch control thread: %s\n", strerror(errno));
     }
-
-    // Dispatch necessary threads and processes
-    // Create thread for each serial interface
-    // Create thread for main control task
-
-    run_rc = control_run(&control);
 
     // Join threads
+    // ThreadCreate(&encoderThreadAttr, &encoder_run, (void *)&control);
+    // ThreadCreate(&kangarooThreadAttr, &kangaroo_run, (void *)&control);
+    rc = ThreadTryJoin(controlThread, &controlReturn);
+    if (rc == -1 && errno != EBUSY) {
+        logDebug(L_INFO, "Failed to join control thread: %s\n", strerror(errno));
+    }
 
     // Safely shutdown the application
-
-    return run_rc;
+    return 0;
 
 } // main()
 

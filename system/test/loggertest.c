@@ -51,9 +51,59 @@ void setup_sockets(int perform_asserts) {
 
 /**** Start test suite ****/
 
-xEnsure(Logger, dummy) {
+Ensure(Logger, generate_filename_and_mkdir_p) {
 
-    assert_that(0, is_equal_to(1));
+    char filename[LOG_FILENAME_LENGTH];
+    int length, rc;
+
+    length = generateFilename(filename, LOG_FILENAME_LENGTH, NULL, "bld/test", "LOGTEST", "d");
+    assert_that(length, is_equal_to(strlen(filename)));
+
+    rc = mkdir_p(filename, 0777);
+    assert_that(rc, is_equal_to(0));
+
+}
+
+Ensure(Logger, successful_init) {
+
+    char command[LOG_FILENAME_LENGTH*2];
+    int length, rc;
+    LOG_FILE logger;
+
+    rc = LogInit(&logger, "bld/test", "LOGTEST", LOG_FILEEXT_LOG);
+    assert_that(rc, is_equal_to(0));
+
+    // Test if the file exists
+    snprintf(command, LOG_FILENAME_LENGTH*2, "test -f %s", logger.filename);
+    rc = system(command);
+    assert_that(rc, is_equal_to(0));
+
+    rc = LogClose(&logger);
+    assert_that(rc, is_equal_to(0));
+
+}
+
+Ensure(Logger, successful_update) {
+
+    char command[LOG_FILENAME_LENGTH*2];
+    int length, rc;
+    LOG_FILE logger;
+
+    rc = LogInit(&logger, "bld/test", "LOGTEST", LOG_FILEEXT_LOG);
+    assert_that(rc, is_equal_to(0));
+
+    const char *message = "howdy";
+    rc = LogUpdate(&logger, message, strlen(message));
+    assert_that(rc, is_equal_to(strlen(message)));
+
+    // Test if the file has the expected contents
+    LogFlush(&logger);
+    snprintf(command, LOG_FILENAME_LENGTH*2, "echo -n '%s' | cmp %s", message, logger.filename);
+    rc = system(command);
+    assert_that(rc, is_equal_to(0));
+
+    rc = LogClose(&logger);
+    assert_that(rc, is_equal_to(0));
 
 }
 

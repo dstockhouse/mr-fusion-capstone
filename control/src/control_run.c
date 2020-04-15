@@ -1,8 +1,10 @@
 /* control_run.c */
 
-int control_run(int arg) {
+#include "control.h"
 
-	// Add control operation here
+int control_run(CONTROL_PARAMS *control) {
+
+	// Add control operations here
 
 	return 0;
 }

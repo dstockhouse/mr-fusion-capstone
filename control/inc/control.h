@@ -14,6 +14,9 @@
  *
  ***************************************************************************/
 
+#ifndef __CONTROL_H
+#define __CONTROL_H
+
 #include "logger.h"
 
 typedef struct {
@@ -28,4 +31,6 @@ typedef struct {
     LOG_FILE kangaroo_log, encoder_log;
 
 } CONTROL_PARAMS;
+
+#endif // __CONTROL_H
 
