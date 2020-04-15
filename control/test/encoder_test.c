@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
-Describe(Control);
-BeforeEach(Control) {}
-AfterEach(Control) {}
+#include "encoder.h"
 
-Ensure(Control, dummy_test) {
+Describe(Encoder);
+BeforeEach(Encoder) {}
+AfterEach(Encoder) {}
+
+Ensure(Encoder, dummy_test) {
 
     // Follow similar form for your assertions
     // assert_that(this, is_equal_to(that));

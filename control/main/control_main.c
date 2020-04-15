@@ -32,6 +32,8 @@
 // Subsystem library headers
 #include "control.h"
 #include "control_run.h"
+#include "kangaroo_run.h"
+#include "encoder_run.h"
 
 int main(int argc, char** argv) {
 

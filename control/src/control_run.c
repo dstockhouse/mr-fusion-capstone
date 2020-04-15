@@ -1,16 +1,16 @@
 /****************************************************************************
  *
  * File:
- * 	control_run.c
+ *      control_run.c
  *
  * Description:
- * 	Implementation of the control subsystem software control flow
+ *      Implementation of the control subsystem software control flow
  *
  * Author:
- * 	Connor Rockwell & Duncan Patel
+ *      Connor Rockwell & Duncan Patel
  *
  * Revision 0.1
- * 	Last edited 03/05/2020
+ *      Last edited 03/05/2020
  *
  ***************************************************************************/
 
