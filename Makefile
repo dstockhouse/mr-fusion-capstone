@@ -3,8 +3,14 @@
 DIRS = guidance navigation control imageproc
 BINS = $(DIRS:%=%_main.elf)
 
-.PHONY: all $(DIRS)
+.PHONY: all test $(DIRS)
 all: $(DIRS)
+
+test:
+	make -C guidance test
+	make -C navigation test
+	make -C control test
+	make -C imageproc test
 
 guidance:
 	make -C guidance
