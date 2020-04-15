@@ -51,5 +51,6 @@ jobs:
       - sudo make test
       - cd ../control && make test
       - cd ../navigation && make test
+      - cd ../imageproc && make test
     after_success: 
       - cd .. && bash <(curl -s https://codecov.io/bash)
