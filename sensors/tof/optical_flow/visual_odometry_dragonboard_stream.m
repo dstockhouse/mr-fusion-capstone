@@ -91,6 +91,7 @@ gaussian_levels = 6;
 start_depth = reshape(depth_images(1, :, :), constants.rows, constants.cols);
 start_depth = fuse_ir_depth(start_depth,reshape(ir_images(1, :, :), constants.rows, constants.cols),60);
 [p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
+kai_est_old = zeros(6,1);
 
 for frame_index = 2:constants.num_frames
     
@@ -152,7 +153,6 @@ for frame_index = 2:constants.num_frames
     p_kai = zeros(gaussian_levels, 6);
     p_transformations = zeros(gaussian_levels, 4, 4);
     kai_est = zeros(6, 1);
-    kai_est_old = zeros(6,1);
     accumulatedTransformation = eye(4);
 
     % Iterate through the gaussian pyramid
