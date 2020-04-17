@@ -156,23 +156,20 @@
         {
             "type": "lldb",
                 "request": "launch",
-                "name": "Debug Unit Tests",
+                "name": "Debug New Proximity Line",
                 "cargo": {
                     "args": [
                         "test",
                         "--no-run",
                         "--bin=rust_code",
-                        "--package=rust_code",
-                        "--",
-                        "--test-threads=1"
-                        "--nocapture"
+                        "--package=rust_code"
                     ],
                     "filter": {
                         "name": "rust_code",
                         "kind": "bin"
                     }
                 },
-                "args": [""],
+                "args": ["new_proximity_line", "--test-threads=1"],
                 "cwd": "${workspaceFolder}"
             },
     ]
