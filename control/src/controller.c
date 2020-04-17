@@ -53,12 +53,12 @@ int ControllerCalculateActuation(float delta_heading, float speed, float *theta_
         float vL = speed - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
         float vR = speed + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
 
-        float theta_L = vL/RADIUS;
-        float theta_R = vR/RADIUS;
+        *theta_L = vL/RADIUS;
+        *theta_R = vR/RADIUS;
     }
     else if (speed == 0) {
-        float theta_L = 1;
-        float theta_R = -1;
+        *theta_L = 1;
+        *theta_R = -1;
     }
     else {
         printf("\n Error! Invalid input received. \n");
