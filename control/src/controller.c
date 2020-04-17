@@ -47,21 +47,21 @@ int ControllerCalculateActuation(float delta_heading, float speed, float *theta_
     float P = KP * delta_heading; // proportional controller segment
     float I = KI * delta_heading; // integral controller segment
 
-    if ((theta_L == 1) && (theta_R == 1)) {
+    if (speed == 1) {
         float omega = P + I; // controller block
 
-        float vL = theta_L - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
-        float vR = theta_R + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
+        float vL = speed - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
+        float vR = speed + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
 
-        float angVelL = vL/RADIUS;
-        float andVelR = vR/RADIUS;
+        float theta_L = vL/RADIUS;
+        float theta_R = vR/RADIUS;
     }
-    else if (theta_L == 0 || theta_R == 0) {
-        float angVelL = 1;
-        float andVelR = -1;
+    else if (speed == 0) {
+        float theta_L = 1;
+        float theta_R = -1;
     }
     else {
-        printf("\n Error! Invalid theta_L or theta_R received. \n");
+        printf("\n Error! Invalid input received. \n");
         return -1;
     }
     return 0;
