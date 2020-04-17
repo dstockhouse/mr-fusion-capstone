@@ -15,6 +15,7 @@
  ***************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "debuglog.h"
@@ -39,7 +40,7 @@ int ControllerCalculateActuation(float delta_heading, float speed, float *theta_
 
     // If no values are received, return as failure
     if (theta_L == NULL || theta_R == NULL) {
-        printf(' \n Error! No values received for theta_L and/or theta_R. \n');
+        printf(" \n Error! No values received for theta_L and/or theta_R. \n");
         return -1;
     }
 
@@ -60,7 +61,7 @@ int ControllerCalculateActuation(float delta_heading, float speed, float *theta_
         float andVelR = -1;
     }
     else {
-        printf('\n Error! Invalid theta_L or theta_R received. \n');
+        printf("\n Error! Invalid theta_L or theta_R received. \n");
         return -1;
     }
     return 0;
