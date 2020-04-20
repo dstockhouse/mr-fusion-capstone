@@ -17,7 +17,11 @@ addpath('../samples');
 % From video captured from dragonboard
 samples_path = '../samples';
 addpath(samples_path);
-filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+% filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
+% filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
+% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+% filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
+filename = [samples_path '/far_move_forward_then_back.tof'];
 
 % Ensure file exists where expected
 if ~isfile(filename)
@@ -89,6 +93,11 @@ cam_pos = zeros(3, 1);
 cam_att = eye(3);
 cam_pos_unfiltered = zeros(3, 1);
 cam_att_unfiltered = eye(3);
+
+vtop = 0;
+vbot = 0;
+wtop = 0;
+wbot = 0;
     
 % First image is the "old" image
 gaussian_levels = 6;
@@ -98,11 +107,11 @@ start_depth = reshape(depth_images(1, :, :), constants.rows, constants.cols);
 kai_est_old = zeros(6,1);
 
 
-moviename = 'coordinate_motion.mp4'
+[path, fname, ext] = fileparts(filename);
+moviename = [fname '_with_coord.mp4'];
 v = VideoWriter(moviename, 'MPEG-4');
 v.FrameRate = constants.fps;
 open(v);
-vfig = figure(2);
 
 for frame_index = 2:constants.num_frames
     
@@ -112,7 +121,7 @@ for frame_index = 2:constants.num_frames
     
     % Fetch next frame from camera and construct pyramid
     new_depth = reshape(depth_images(frame_index, :, :), constants.rows, constants.cols);
-%     new_depth = fuse_ir_depth(new_depth,reshape(ir_images(frame_index, :, :), constants.rows, constants.cols),60);
+    new_depth = fuse_ir_depth(new_depth,reshape(ir_images(frame_index, :, :), constants.rows, constants.cols),4000, 60);
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
@@ -244,28 +253,80 @@ for frame_index = 2:constants.num_frames
         
     end % for image_level 
     
+    
+    
     % Update camera position
 %     camera_pose = accumulatedTransformation * camera_pose;
     [cam_pos, cam_att] = update_pose(constants, cam_pos, cam_att, accumulatedTransformation);
     [cam_pos_unfiltered, cam_att_unfiltered] = update_pose(constants, cam_pos_unfiltered, cam_att_unfiltered, accumulatedTransformation_unfiltered);
-    figure(2);
+    
+    
+    
+    
+    %% Nice plot
+    
+    vfig = figure(1);
     clf;
-    subplot(1, 2, 1);
+    
+    % Top left plot
+    subplot(2, 2, 1);
+    imshownorm(new_depth, [min(min(min(depth_images))) max(max(max(depth_images)))]);
+    xlabel('Depth', 'Color', 'w', 'FontWeight', 'bold');
+    
+    % Top right plot
+    subplot(2, 2, 2);
+    imshownorm(reshape(ir_images(frame_index, :, :), constants.rows, constants.cols));
+    xlabel('IR Intensity', 'Color', 'w', 'FontWeight', 'bold');
+    
+    % Bottom left plot
+    subplot(2, 2, 3);
+    p_exclude = reshape(p_points_new(1,:,:,:), constants.rows, constants.cols, 3);
+    pcshow(p_exclude);
+    title('Point Cloud (front)');
+    view([0 0 -1]);
+    xlabel('x (m)');
+    ylabel('y (m)');
+    zlabel('z (m)');
+    axis([ -4 4 -4 3 0 6]);
+    
+    
+    % Bottom right plot
+    subplot(2, 2, 4);
     plot_frame_orig(cam_att, cam_pos, '', 'k');
-    title('filtered');
-    view([-1 0.01 0.1]);
+    title('Estimated Camera Position');
+    view([0.01 0.1 -1]);
     axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
     grid on;
+    xlabel('x (m)');
+    ylabel('y (m)');
+    zlabel('z (m)');
     
-    subplot(1, 2, 2);
-    plot_frame_orig(cam_att_unfiltered, cam_pos_unfiltered, '', 'k');
-    title('unfiltered');
-    view([-1 0.01 0.1]);
-    axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
-    grid on;
-    
+    if exist('sgtitle', 'builtin')
+        % Figure title
+        sgtitle(['Frame ' num2str(ii) ' of ' num2str(num_frames) ...
+            ' (' num2str(ii/constants.fps, '%.1f') '/' num2str(num_frames/constants.fps, '%.1f') ' s)'],...
+            'Color', 'w');
+    end    
     frame = getframe(vfig);
     writeVideo(v, frame);
+    
+    
+    % Less good plot
+    figure(2);
+    clf;
+%     subplot(1, 2, 1);
+    plot_frame_orig(cam_att, cam_pos, '', 'k');
+    title('filtered');
+    view([0.01 0.1 -1]);
+    axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
+    grid on;
+    
+%     subplot(1, 2, 2);
+%     plot_frame_orig(cam_att_unfiltered, cam_pos_unfiltered, '', 'k');
+%     title('unfiltered');
+%     view([-1 0.01 0.1]);
+%     axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
+%     grid on;
     
     % Get v_xyz, w_xyz as 3-vectors
     % Convert w_xyz into a 3x3 rotation matrix
@@ -288,34 +349,52 @@ for frame_index = 2:constants.num_frames
 %         kai_est(1), kai_est(2), kai_est(3),...
 %         kai_est(4)*180/pi, kai_est(5)*180/pi, kai_est(6)*180/pi);
     % Estimated velocity graph
-    figure(1);
+    if max(kai_est(1:3)) > vtop
+        vtop = max(kai_est(1:3, :));
+    end
+    if min(kai_est(1:3)) < vbot
+        vbot = min(kai_est(1:3, :));
+    end
+    if max(kai_est(4:6))*180/pi > wtop
+        wtop = max(kai_est(4:6, :))*180/pi;
+    end
+    if min(kai_est(4:6))*180/pi < wbot
+        wbot = min(kai_est(4:6, :))*180/pi;
+    end
+    figure(3);
     subplot(3,2,1);
-    plot(frame_index,kai_est(1),'*');
+    plot(frame_index,kai_est(1),'*r');
+    ylim([vbot vtop]);
     title('V_x estimate');
     hold on;
     grid on;
     subplot(3,2,3);
-    plot(frame_index,kai_est(2),'*');
+    plot(frame_index,kai_est(2),'*g');
+    ylim([vbot vtop]);
     title('V_y estimate');
     hold on;
     grid on;
     subplot(3,2,5);
-    plot(frame_index,kai_est(3),'*');
+    plot(frame_index,kai_est(3),'*b');
+    ylim([vbot vtop]);
     title('V_z estimate');
     hold on;
     grid on;
     subplot(3,2,2);
-    plot(frame_index,kai_est(4)*180/pi,'*');
+    plot(frame_index,kai_est(4)*180/pi,'*r');
+    ylim([wbot wtop]);
     title('\omega_x estimate');
     hold on;
     grid on;
     subplot(3,2,4);
-    plot(frame_index,kai_est(5)*180/pi,'*');
+    plot(frame_index,kai_est(5)*180/pi,'*g');
+    ylim([wbot wtop]);
     title('\omega_y estimate');
     hold on;
     grid on;
     subplot(3,2,6);
-    plot(frame_index,kai_est(6)*180/pi,'*');
+    plot(frame_index,kai_est(6)*180/pi,'*b');
+    ylim([wbot wtop]);
     title('\omega_z estimate');
     hold on;
     grid on;

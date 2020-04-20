@@ -8,8 +8,9 @@ function [kai_loc_fil,transformations] = filter_velocity(constants,kai_est_old,e
 previous_speed_eig_weight = 0.5;
 previous_speed_const_weight = 0.05;
 
-Bii = eig(est_cov,'matrix');
-eigenVals = eig(est_cov);
+% Bii = eig(est_cov,'matrix');
+% eigenVals = eig(est_cov);
+[eigenVals, Bii] = eig(est_cov);
 
 kai_loc = kai_est_old - trans2kai(accumulatedTransformation);
 kai_b = Bii\kai_est;

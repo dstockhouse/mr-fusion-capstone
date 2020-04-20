@@ -1,5 +1,0 @@
-PicoZenseUTool_Windows_20191112_V3.0.0.4_DCAM710
-1. SDK version: PicoZenseSDK_Windows_20191112_V3.0.0.4_DCAM710
-
-
- 

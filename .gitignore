@@ -24,3 +24,4 @@ SampleData/
 cgreen_1.2.0_amd64.deb
 *.geojson
 .gitattributes
+PicoZenseUTool_*/
