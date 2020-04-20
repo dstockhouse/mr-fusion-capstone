@@ -119,7 +119,7 @@ for u = 1:cols
            warped(v,u,3) = warped(v,u,3)/wacu(v,u);
            warped(v,u,1) = (u - disp_u_i) * warped(v,u,3) * inv_f;
            warped(v,u,2) = (v - disp_v_i) * warped(v,u,3) * inv_f;
-           warped2(v,u,:) = warped(v,u,:);
+%            warped2(v,u,:) = warped(v,u,:);
            
        else
            warped(v,u,3) = 0;

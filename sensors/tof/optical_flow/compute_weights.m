@@ -7,7 +7,7 @@ function [weights] = compute_weights(pointCloudOld, pointCloudNew, pointCloudAvg
 %    pointCloudAvg
 %      Point cloud that is a spatial average of both inputs
 %    differentials
-%      rows-x-cols-x-3 array of du,dv,dt differentials at each pixel
+%      rows-by-cols-by-3 array of du,dv,dt differentials at each pixel
 %    constants
 %      Structure of the camera parameters
 %
@@ -35,6 +35,7 @@ dt = differentials(:,:,3);
 % Measurement
 focal_length = 2 * tan(0.5 * constants.fovh) / cols;
 f = focal_length;
+f_inv = 1/f;
 kz2 = (1.425e-5)^2 / 25;
 
 % Linearization
@@ -51,7 +52,7 @@ for u = 2:(cols-1)
     for v = 2:(rows-1)
         
         % Only compute if it has a nonzero depth value at the point
-        if pointCloudAvg(v, u, 3) > 0.1
+        if pointCloudAvg(v, u, 3) > 0.01
 
             x = pointCloudAvg(v, u, 1);
             y = pointCloudAvg(v, u, 2);
@@ -60,28 +61,34 @@ for u = 2:(cols-1)
             d = z;
             inv_d = 1/z;
             z2 = z^2;
-            z4 = z^4;
+            z4 = z2^2;
             
             
             %% Measurement error
-            % I honestly have no idea
-            
-            var44 = kz2 * z4 * constants.fps^2;
-            var55 = kz2 * z4 * 0.25;
-            var66 = var55;
-            
-            j4 = 1;
-            j5 = x / z^2 / f * (kai_level(3) + y*kai_level(4)*kai_level(5)) + ...
-                (-kai_level(1) - z*kai_level(5) + y*kai_level(6)) / d / f;
-            j6 = y / z^2 / f * (kai_level(3) + y*kai_level(4)*kai_level(5)) + ...
-                (-kai_level(2) - z*kai_level(4) + x*kai_level(6)) / d / f;
-            
-            sigma_m = j4^2 * var44 + j5^2 * var55 + j6^2 * var66;
+            % Directly from Jaimez work
+            % 
+            % var44 = kz2 * z4 * constants.fps^2;
+            % var55 = kz2 * z4 * 0.25;
+            % var66 = var55;
+            % 
+            % j4 = 1;
+            %
+            % j5 = x * inv_d * inv_d * f_inv * (kai_level(1) + y * kai_level(5) - x * kai_level(6)) + ...
+            %     inv_d * f_inv * (-kai_level(2) - z * kai_level(6) + y * kai_level(4));
+            %
+            % j6 = y * inv_d * inv_d * f_inv * (kai_level(1) + y * kai_level(5) - x * kai_level(6)) + ...
+            %     inv_d * f_inv * (-kai_level(3) + z * kai_level(5) - x * kai_level(4));
+            %
+            % sigma_m = j4^2 * var44 + j5^2 * var55 + j6^2 * var66;
+
+            % Easier method
+            sigma_m = kz2 * z^4;
             
             
             %% Linearization error
-            % du_old = ini_du
-            % du_new = final_du
+            % Renamed from example code:
+            %   du_old = ini_du
+            %   du_new = final_du
             du_old = pointCloudOld(v, u + 1, 3) - pointCloudOld(v, u - 1, 3);
             dv_old = pointCloudOld(v + 1, u, 3) - pointCloudOld(v - 1, u, 3);
             du_new = pointCloudNew(v, u + 1, 3) - pointCloudNew(v, u - 1, 3);
@@ -94,11 +101,13 @@ for u = 2:(cols-1)
             dvv = dv(v + 1, u) - dv(v - 1, u);
             
             dvu = dv(v, u + 1) - dv(v, u - 1);
-            duv = du(v + 1, u) - du(v - 1, u);
             
-            sigma_l = kdt * dt(v, u)^2 + kduv * (du(v, u)^2 + dt(v, u)^2) + ...
-                k2dt * (dut^2 + dvt^2) + k2duv * (duu^2 + dvv^2 + dvu^2);
-            
+            sigma_l =...
+                kdt * dt(v, u)^2 +...
+                kduv * (du(v, u)^2 + dv(v, u)^2) + ...
+                k2dt * (dut^2 + dvt^2) +...
+                k2duv * (duu^2 + dvv^2 + dvu^2);
+
             weights(v, u) = sqrt(1/(sigma_m + sigma_l));
             
         end

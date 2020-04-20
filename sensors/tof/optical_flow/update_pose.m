@@ -1,10 +1,27 @@
-function [new_pose] = update_pose(old_pose, transformation)
-
-rotation = old_pose(1:3, 1:3);
+function [new_pos, new_att] = update_pose(constants, old_pos, old_att, transformation)
 
 kai_est = trans2kai(transformation);
-v_tan = rotation * kai_est(1:3);
-w_tan = rotation * kai_est(4:6);
+
+v_b = kai_est(1:3);
+w_b = kai_est(4:6);
+theta = norm(w_b);
+k = w_b/theta;
+
+% Attitude update
+rotation = k_theta_2dcm(k, theta);
+new_att = rotation * old_att;
+
+% Put velocity into tan frame
+v_t = new_att * v_b;
+
+% Integrate velocity to get position
+dt = 1/constants.fps;
+new_pos = old_pos + v_t*dt;
+
+% rotation = old_pose(1:3, 1:3);
+
+% v_tan = rotation * kai_est(1:3);
+% w_tan = rotation * kai_est(4:6);
 
 % Follow Jaimez CPP procedure for the rest
 

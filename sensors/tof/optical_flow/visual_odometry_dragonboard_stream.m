@@ -15,7 +15,7 @@ clear; clc; close all;
 %% Read image files
 addpath('../samples');
 % From video captured from dragonboard
-samples_path = './samples';
+samples_path = '../samples';
 addpath(samples_path);
 filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 
@@ -28,7 +28,7 @@ end
 
 % Read image stream from file
 fprintf('Reading images from %s\n', filename);
-[depth_images, ir_images, constants] = read_tof_file(filename);
+[depth_images, ir_images, constants] = read_tof_file(filename, 200000000);
 
 % Set additional ToF dev kit parameters
 constants.fov_horizontal = 90    *pi/180;
@@ -85,13 +85,24 @@ depth_images = double(depth_images) / 1000;
 
 % Setup initial state
 camera_pose = eye(4);
+cam_pos = zeros(3, 1);
+cam_att = eye(3);
+cam_pos_unfiltered = zeros(3, 1);
+cam_att_unfiltered = eye(3);
     
 % First image is the "old" image
 gaussian_levels = 6;
 start_depth = reshape(depth_images(1, :, :), constants.rows, constants.cols);
-start_depth = fuse_ir_depth(start_depth,reshape(ir_images(1, :, :), constants.rows, constants.cols),60);
+% start_depth = fuse_ir_depth(start_depth,reshape(ir_images(1, :, :), constants.rows, constants.cols),60);
 [p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
 kai_est_old = zeros(6,1);
+
+
+moviename = 'coordinate_motion.mp4'
+v = VideoWriter(moviename, 'MPEG-4');
+v.FrameRate = constants.fps;
+open(v);
+vfig = figure(2);
 
 for frame_index = 2:constants.num_frames
     
@@ -101,7 +112,7 @@ for frame_index = 2:constants.num_frames
     
     % Fetch next frame from camera and construct pyramid
     new_depth = reshape(depth_images(frame_index, :, :), constants.rows, constants.cols);
-    new_depth = fuse_ir_depth(new_depth,reshape(ir_images(frame_index, :, :), constants.rows, constants.cols),60);
+%     new_depth = fuse_ir_depth(new_depth,reshape(ir_images(frame_index, :, :), constants.rows, constants.cols),60);
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
@@ -152,8 +163,11 @@ for frame_index = 2:constants.num_frames
     % Pre-allocate enough room to save transformation state for each pyramid level
     p_kai = zeros(gaussian_levels, 6);
     p_transformations = zeros(gaussian_levels, 4, 4);
+    p_kai_unfiltered = zeros(gaussian_levels, 6);
+    p_transformations_unfiltered = zeros(gaussian_levels, 4, 4);
     kai_est = zeros(6, 1);
     accumulatedTransformation = eye(4);
+    accumulatedTransformation_unfiltered = eye(4);
 
     % Iterate through the gaussian pyramid
     for image_level = gaussian_levels:-1:1
@@ -188,12 +202,12 @@ for frame_index = 2:constants.num_frames
         [du, dv, dt] = calcDepthDerivatives(...
             points_average,...
             level_points_old,...
-            level_points_new,...
+            level_points_warped,...
             constants);
         differentials(1:rows, 1:cols, 1) = du;
         differentials(1:rows, 1:cols, 2) = dv;
         differentials(1:rows, 1:cols, 3) = dt;
-        
+
         %% Compute uncertainties & weighting
         weights = compute_weights(...
             level_points_old,...
@@ -203,7 +217,7 @@ for frame_index = 2:constants.num_frames
             kai_est,...
             accumulatedTransformation,...
             constants);
-        
+
         %% Solve weighted least squares
         [p_kai(image_level, :), est_cov] = solveOneLevel(...
             points_average,...
@@ -217,16 +231,41 @@ for frame_index = 2:constants.num_frames
         %     p_kai(image_level, :) = filter_velocity();
 %         p_transformations(image_level,:,:) = kai2trans(p_kai(image_level, :)');
         %     p_transformations(image_level,:,:) = eye(4);
+        p_kai_unfiltered(image_level,:) = kai_est;
+        p_transformations_unfiltered(image_level,:,:) = kai2trans(reshape(p_kai_unfiltered(image_level,:), 6, 1));
         [p_kai(image_level,:), p_transformations(image_level,:,:)] = filter_velocity(constants,kai_est_old,est_cov,kai_est,image_level,accumulatedTransformation);
         
         %% Update state for next loop
         level_transformation = reshape(p_transformations(image_level,:,:),4,4);
         accumulatedTransformation = level_transformation * accumulatedTransformation;
         
+        level_transformation_unfiltered = reshape(p_transformations_unfiltered(image_level,:,:),4,4);
+        accumulatedTransformation_unfiltered = level_transformation_unfiltered * accumulatedTransformation_unfiltered;
+        
     end % for image_level 
     
     % Update camera position
-    camera_pose = accumulatedTransformation * camera_pose;
+%     camera_pose = accumulatedTransformation * camera_pose;
+    [cam_pos, cam_att] = update_pose(constants, cam_pos, cam_att, accumulatedTransformation);
+    [cam_pos_unfiltered, cam_att_unfiltered] = update_pose(constants, cam_pos_unfiltered, cam_att_unfiltered, accumulatedTransformation_unfiltered);
+    figure(2);
+    clf;
+    subplot(1, 2, 1);
+    plot_frame_orig(cam_att, cam_pos, '', 'k');
+    title('filtered');
+    view([-1 0.01 0.1]);
+    axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
+    grid on;
+    
+    subplot(1, 2, 2);
+    plot_frame_orig(cam_att_unfiltered, cam_pos_unfiltered, '', 'k');
+    title('unfiltered');
+    view([-1 0.01 0.1]);
+    axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
+    grid on;
+    
+    frame = getframe(vfig);
+    writeVideo(v, frame);
     
     % Get v_xyz, w_xyz as 3-vectors
     % Convert w_xyz into a 3x3 rotation matrix
@@ -291,4 +330,9 @@ for frame_index = 2:constants.num_frames
     
 
 end % for frame_index
+
+
+v.FrameRate;
+close(v);
+fprintf('Finished writing ''%s''\n', moviename);
 

@@ -29,7 +29,7 @@ for u = 2:cols-1
     for v = 2:rows-1
         
         % Only compute if point has nonzero depth (real point)
-        if pointCloudAvg(v,u,3) > 1
+        if pointCloudAvg(v,u,3) > .01
             d = pointCloudAvg(v,u,3);
             inv_d = 1/d;
             x = pointCloudAvg(v,u,1);
@@ -39,6 +39,9 @@ for u = 2:cols-1
             tw = weights(v,u);
             
             % Fill matrix
+            % This fills in the order (vz, vx, vy, wz, wx, wy)
+            % The order may need to be adjusted for the future, but for now axes
+            % will just be mislabeled
             A(cont,1) = tw*(1 + dycomp*x*inv_d + dzcomp*y*inv_d);
             A(cont,2) = tw*(-dycomp);
             A(cont,3) = tw*(-dzcomp);
@@ -65,7 +68,7 @@ res = -B;
 for k=1:6
     res = res + var(k) * A(:,k);
 end
-est_cov = (1/(numValidPoints - 6))*inv(AtA)*norm(res,2); % Might just be norm(res)^2
+est_cov = (1/(numValidPoints - 6))*inv(AtA)*norm(res,2)^2; % Might just be norm(res)^2
 
 % Update velocity
 kai = var;

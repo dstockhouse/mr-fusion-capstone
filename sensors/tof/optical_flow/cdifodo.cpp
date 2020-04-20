@@ -588,7 +588,7 @@ void CDifodo::calculateDepthDerivatives()
                     (rx_ninv(v, u - 1) * (depth_inter[image_level](v, u + 1) -
                                           depth_inter[image_level](v, u)) +
                      rx_ninv(v, u) * (depth_inter[image_level](v, u) -
-                         depth_inter[image_level](v, u - 1))) /
+									  depth_inter[image_level](v, u - 1))) /
                     (rx_ninv(v, u) + rx_ninv(v, u - 1));
 
         du(v, 0) = du(v, 1);
@@ -603,7 +603,7 @@ void CDifodo::calculateDepthDerivatives()
                     (ry_ninv(v - 1, u) * (depth_inter[image_level](v + 1, u) -
                                           depth_inter[image_level](v, u)) +
                      ry_ninv(v, u) * (depth_inter[image_level](v, u) -
-                         depth_inter[image_level](v - 1, u))) /
+									  depth_inter[image_level](v - 1, u))) /
                     (ry_ninv(v, u) + ry_ninv(v - 1, u));
 
         dv(0, u) = dv(1, u);
