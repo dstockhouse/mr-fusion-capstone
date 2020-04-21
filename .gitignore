@@ -13,6 +13,7 @@
 *.tof
 *.avi
 *.mp4
+*.png
 *.asv
 school_map.geojson
 navigation/bld/
