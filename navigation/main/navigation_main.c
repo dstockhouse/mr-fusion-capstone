@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "navigation_run.h"
+#include "nav_frames.h"
 
 int main(int argc, char** argv) {
 
