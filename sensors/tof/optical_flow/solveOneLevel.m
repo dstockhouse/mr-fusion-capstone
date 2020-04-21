@@ -54,14 +54,15 @@ for u = 2:cols-1
     end
 end
 
-% Restrict to get rid of the points on the edges (not part of eqn above)
+% Restrict to get rid of the points on the edges (excluded by loop above)
 A = A(1:cont-1,:);
 B = B(1:cont-1,:);
 
 % Solve the linear system of equations using weighted least squares
 AtA = A' * A;
 AtB = A' * B;
-var = linsolve(AtA,AtB);
+% var = linsolve(AtA,AtB);
+var = A \ B;
 
 % Covariance matrix calc
 res = -B;

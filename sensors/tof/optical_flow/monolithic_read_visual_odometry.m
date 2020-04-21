@@ -12,7 +12,7 @@ clear; clc; close all;
 %   XYZ coordinate axis that shows where we believe the camera to be
 % * Discuss the pitfalls of the depth map output and discuss fusing it with IR
 
-%% Read image file
+%% Read image files
 addpath('../samples');
 % From video captured from dragonboard
 samples_path = '../samples';
@@ -21,10 +21,7 @@ addpath(samples_path);
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
-% filename = [samples_path '/far_move_forward_then_back.tof'];
-% filename = [samples_path '/medium_apt_rotate.tof'];
-filename = [samples_path '/far_apt_stationary.tof'];
-% filename = [samples_path '/medium_apt_stationary.tof'];
+filename = [samples_path '/far_move_forward_then_back.tof'];
 
 % Ensure file exists where expected
 if ~isfile(filename)
@@ -33,9 +30,9 @@ if ~isfile(filename)
     return
 end
 
-% Read metadata from file header
-fprintf('Reading image header from %s...\n', filename);
-[fd, constants] = read_tof_header(filename);
+% Read image stream from file
+fprintf('Reading images from %s\n', filename);
+[depth_images, ir_images, constants] = read_tof_file(filename, 200000000);
 
 % Set additional ToF dev kit parameters
 constants.fov_horizontal = 90    *pi/180;
@@ -47,25 +44,31 @@ constants.fovv = constants.fov_vertical;
 fprintf('\trows: %d\n', constants.rows);
 fprintf('\tcols: %d\n', constants.cols);
 fprintf('\tfps:  %d\n', constants.fps);
-fprintf('\t %d frames for %.3f second video duration\n',...
+fprintf('\tRead %d frames for %.3f second video duration\n',...
     constants.num_frames, constants.duration);
 rows = constants.rows;
 cols = constants.cols;
 fps = constants.fps;
-num_frames = constants.num_frames;
-focal_length = cols / (2 * tan(0.5 * constants.fovh));
-constants.focal_length = focal_length;
 
 
-% Thresholding constants for image filtering
-ir_min_thresh = 30;
-ir_max_thresh = 4090;
+% For now, only keep one second's worth of frames
+numSeconds = 15;
+num_frames = numSeconds * fps;
+if num_frames < constants.num_frames
+    
+    % Update constants
+    constants.num_frames = num_frames;
+    constants.duration = constants.num_frames / constants.fps;
 
-% Read starting frame
-[depth_frame, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
+end
 
-% Reduce integer depth (mm) measurements to double (m) measurements
-depth_frame = double(depth_frame) / 1000;
+% Restrict image streams
+depth_images = depth_images(1:constants.num_frames, :, :);
+ir_images = ir_images(1:constants.num_frames, :, :);
+
+% Reduce integer (mm) measurements to double (m) measurements
+depth_images = double(depth_images) / 1000;
+
 
 
 %%%%%%%% Start Visual Odometry Calculation %%%%%%%%
@@ -95,23 +98,13 @@ vtop = 0;
 vbot = 0;
 wtop = 0;
 wbot = 0;
-vtop_unf = 0;
-vbot_unf = 0;
-wtop_unf = 0;
-wbot_unf = 0;
     
 % First image is the "old" image
 gaussian_levels = 6;
-top_odometry_level = 2;
-start_depth = fuse_ir_depth(depth_frame, ir_frame, ir_max_thresh, ir_min_thresh);
-denoise_window = 6;
-denoise_threshold = .7;
-start_depth = depth_denoise(start_depth, focal_length, denoise_window, denoise_threshold);
+start_depth = reshape(depth_images(1, :, :), constants.rows, constants.cols);
+% start_depth = fuse_ir_depth(start_depth,reshape(ir_images(1, :, :), constants.rows, constants.cols),60);
 [p_depth_old, p_points_old] = gaussian_pyramid(start_depth, gaussian_levels, constants);
 kai_est_old = zeros(6,1);
-
-min_depth = min(min(start_depth));
-max_depth = max(max(start_depth));
 
 
 [path, fname, ext] = fileparts(filename);
@@ -124,15 +117,11 @@ for frame_index = 2:constants.num_frames
     
     fprintf('Computing visual odometry on frame %d of %d\n', frame_index, constants.num_frames);
     
-    % Read next frame
-    [new_depth, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
-    new_depth = double(new_depth) / 1000;
-    
     %% Gaussian pyramid
     
-    % Construct pyramid with new frames
-    new_depth = fuse_ir_depth(new_depth, ir_frame, ir_max_thresh, ir_min_thresh);
-    new_depth = depth_denoise(new_depth, focal_length, denoise_window, denoise_threshold);
+    % Fetch next frame from camera and construct pyramid
+    new_depth = reshape(depth_images(frame_index, :, :), constants.rows, constants.cols);
+    new_depth = fuse_ir_depth(new_depth,reshape(ir_images(frame_index, :, :), constants.rows, constants.cols),4000, 60);
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
@@ -142,57 +131,37 @@ for frame_index = 2:constants.num_frames
         % Show starting depth and points
         cols = constants.cols;
         rows = constants.rows;
-        figure(5);
-        imshownorm(reshape(p_depth_old(1, 1:rows, 1:cols), rows, cols));
-        title('Old depth');
-        figure(6);
+        figure(1);
+        imshownorm(reshape(p_depth_old(1,1:rows, 1:cols), rows, cols));
         for ii = 1:gaussian_levels
             
             clear points_temp;
             points_temp(1:rows, 1:cols, 1:3) = p_points_old(ii,1:rows,1:cols,:);
-            % Subplotting is not general, assumes 6 gaussian levels
-            subplot(2, 3, ii);
+            figure(1+ii);
             pcshow(points_temp);
             view([0 0 -1]);
-            title(['level ' num2str(ii) ', ' num2str(cols) 'x' num2str(rows)]);
             
             cols = cols/2;
             rows = rows/2;
             
-        end
-        if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
-            % Figure title
-            sgtitle(['Frame ' num2str(frame_index) ' of ' num2str(num_frames) ...
-                ' old (' num2str(frame_index/fps, '%.1f') '/' num2str(num_frames/fps, '%.1f') ' s)'],...
-                'Color', 'w');
         end
         
         % Show ending depth and points
         cols = constants.cols;
         rows = constants.rows;
-        figure(7);
+        figure(gaussian_levels+1);
         imshownorm(reshape(p_depth_new(1,1:rows, 1:cols), rows, cols));
-        title('New depth');
-        figure(8);
         for ii = 1:gaussian_levels
             
             clear points_temp;
             points_temp(1:rows, 1:cols, 1:3) = p_points_new(ii,1:rows,1:cols,:);
-            % Subplotting is not general, assumes 6 gaussian levels
-            subplot(2, 3, ii);
+            figure(gaussian_levels+ii+1);
             pcshow(points_temp);
             view([0 0 -1]);
-            title(['level ' num2str(ii) ', ' num2str(cols) 'x' num2str(rows)]);
             
             cols = cols/2;
             rows = rows/2;
             
-        end
-        if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
-            % Figure title
-            sgtitle(['Frame ' num2str(frame_index) ' of ' num2str(num_frames) ...
-                ' new (' num2str(frame_index/fps, '%.1f') '/' num2str(num_frames/fps, '%.1f') ' s)'],...
-                'Color', 'w');
         end
         
         % Wait until user done looking at pyramid
@@ -210,7 +179,7 @@ for frame_index = 2:constants.num_frames
     accumulatedTransformation_unfiltered = eye(4);
 
     % Iterate through the gaussian pyramid
-    for image_level = gaussian_levels:-1:top_odometry_level
+    for image_level = gaussian_levels:-1:1
         
         % Number of rows and cols in this iteration
         cols = round(constants.cols / 2^(image_level-1));
@@ -272,14 +241,12 @@ for frame_index = 2:constants.num_frames
 %         p_transformations(image_level,:,:) = kai2trans(p_kai(image_level, :)');
         %     p_transformations(image_level,:,:) = eye(4);
         p_kai_unfiltered(image_level,:) = kai_est;
-        kai_est_unf = kai_est;
         p_transformations_unfiltered(image_level,:,:) = kai2trans(reshape(p_kai_unfiltered(image_level,:), 6, 1));
         [p_kai(image_level,:), p_transformations(image_level,:,:)] = filter_velocity(constants,kai_est_old,est_cov,kai_est,image_level,accumulatedTransformation);
         
         %% Update state for next loop
         level_transformation = reshape(p_transformations(image_level,:,:),4,4);
         accumulatedTransformation = level_transformation * accumulatedTransformation;
-        trans2kai(accumulatedTransformation)' .* [1 1 1 180/pi*[1 1 1]]
         
         level_transformation_unfiltered = reshape(p_transformations_unfiltered(image_level,:,:),4,4);
         accumulatedTransformation_unfiltered = level_transformation_unfiltered * accumulatedTransformation_unfiltered;
@@ -303,18 +270,12 @@ for frame_index = 2:constants.num_frames
     
     % Top left plot
     subplot(2, 2, 1);
-    if min(min(new_depth)) < min_depth
-        min_depth = min(min(new_depth));
-    end
-    if max(max(new_depth)) > max_depth
-        max_depth = max(max(new_depth));
-    end
-    imshownorm(new_depth, [min_depth max_depth]);
+    imshownorm(new_depth, [min(min(min(depth_images))) max(max(max(depth_images)))]);
     xlabel('Depth', 'Color', 'w', 'FontWeight', 'bold');
     
     % Top right plot
     subplot(2, 2, 2);
-    imshownorm(ir_frame);
+    imshownorm(reshape(ir_images(frame_index, :, :), constants.rows, constants.cols));
     xlabel('IR Intensity', 'Color', 'w', 'FontWeight', 'bold');
     
     % Bottom left plot
@@ -331,25 +292,19 @@ for frame_index = 2:constants.num_frames
     
     % Bottom right plot
     subplot(2, 2, 4);
-    plot_frame_orig(cam_att, cam_pos, '', 'w');
-    ax = gca;
-    ax.Color = 'black';
-    ax.XColor = [.85 .85 .85];
-    ax.YColor = [.85 .85 .85];
-    ax.ZColor = [.85 .85 .85];
-    ax.GridColor = [.85 .85 .85];
-    title(['Estimated Position (' num2str(norm(cam_pos), '%.2f') 'm displaced)'], 'color', 'w');
+    plot_frame_orig(cam_att, cam_pos, '', 'k');
+    title('Estimated Camera Position');
     view([0.01 0.1 -1]);
     axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
     grid on;
-    xlabel('x (m)', 'color', [.85 .85 .85]);
-    ylabel('y (m)', 'color', [.85 .85 .85]);
-    zlabel('z (m)', 'color', [.85 .85 .85]);
+    xlabel('x (m)');
+    ylabel('y (m)');
+    zlabel('z (m)');
     
-    if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
+    if exist('sgtitle', 'builtin')
         % Figure title
-        sgtitle(['Frame ' num2str(frame_index) ' of ' num2str(num_frames) ...
-            ' (' num2str(frame_index/fps, '%.1f') '/' num2str(num_frames/fps, '%.1f') ' s)'],...
+        sgtitle(['Frame ' num2str(ii) ' of ' num2str(num_frames) ...
+            ' (' num2str(ii/constants.fps, '%.1f') '/' num2str(num_frames/constants.fps, '%.1f') ' s)'],...
             'Color', 'w');
     end    
     frame = getframe(vfig);
@@ -358,21 +313,25 @@ for frame_index = 2:constants.num_frames
     
     % Less good plot
     figure(2);
-    bound = 2;
     clf;
-    subplot(1, 2, 1);
+%     subplot(1, 2, 1);
     plot_frame_orig(cam_att, cam_pos, '', 'k');
     title('filtered');
     view([0.01 0.1 -1]);
-    axis([-bound bound -bound bound -bound bound]);
+    axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
     grid on;
     
-    subplot(1, 2, 2);
-    plot_frame_orig(cam_att_unfiltered, cam_pos_unfiltered, '', 'k');
-    title('unfiltered');
-    view([-1 0.01 0.1]);
-    axis([-bound bound -bound bound -bound bound]);
-    grid on;
+%     subplot(1, 2, 2);
+%     plot_frame_orig(cam_att_unfiltered, cam_pos_unfiltered, '', 'k');
+%     title('unfiltered');
+%     view([-1 0.01 0.1]);
+%     axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
+%     grid on;
+    
+    % Get v_xyz, w_xyz as 3-vectors
+    % Convert w_xyz into a 3x3 rotation matrix
+    %   Rotate camera orientation with rotation matrix
+    %   Translate camera position with velocity vector
     
     
     
@@ -439,76 +398,19 @@ for frame_index = 2:constants.num_frames
     title('\omega_z estimate');
     hold on;
     grid on;
-    if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
-        % Figure title
-        sgtitle('Filtered \xi');
-    end
     pause(1e-3);
+    % Update pose?
     
     
-    % Plot unfiltered velocity estimates
-    if max(kai_est_unf(1:3)) > vtop_unf
-        vtop_unf = max(kai_est_unf(1:3, :));
-    end
-    if min(kai_est_unf(1:3)) < vbot_unf
-        vbot_unf = min(kai_est_unf(1:3, :));
-    end
-    if max(kai_est_unf(4:6))*180/pi > wtop_unf
-        wtop_unf = max(kai_est_unf(4:6, :))*180/pi;
-    end
-    if min(kai_est_unf(4:6))*180/pi < wbot_unf
-        wbot_unf = min(kai_est_unf(4:6, :))*180/pi;
-    end
-    figure(4);
-    subplot(3,2,1);
-    plot(frame_index,kai_est_unf(1),'*r');
-    ylim([vbot_unf vtop_unf]);
-    title('V_x estimate');
-    hold on;
-    grid on;
-    subplot(3,2,3);
-    plot(frame_index,kai_est_unf(2),'*g');
-    ylim([vbot_unf vtop_unf]);
-    title('V_y estimate');
-    hold on;
-    grid on;
-    subplot(3,2,5);
-    plot(frame_index,kai_est_unf(3),'*b');
-    ylim([vbot_unf vtop_unf]);
-    title('V_z estimate');
-    hold on;
-    grid on;
-    subplot(3,2,2);
-    plot(frame_index,kai_est_unf(4)*180/pi,'*r');
-    ylim([wbot_unf wtop_unf]);
-    title('\omega_x estimate');
-    hold on;
-    grid on;
-    subplot(3,2,4);
-    plot(frame_index,kai_est_unf(5)*180/pi,'*g');
-    ylim([wbot_unf wtop_unf]);
-    title('\omega_y estimate');
-    hold on;
-    grid on;
-    subplot(3,2,6);
-    plot(frame_index,kai_est_unf(6)*180/pi,'*b');
-    ylim([wbot_unf wtop_unf]);
-    title('\omega_z estimate');
-    hold on;
-    grid on;
-    if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
-        % Figure title
-        sgtitle('Unfiltered \xi');
-    end
-    pause(1e-3);
+    
+    %% Plot raw camera data 
+    % See ../samples/depth_movie.m
+    
     
 
 end % for frame_index
 
-% Close image stream file
-fclose(fd);
 
-% Close animation video file
 v.FrameRate;
 close(v);
 fprintf('Finished writing ''%s''\n', moviename);

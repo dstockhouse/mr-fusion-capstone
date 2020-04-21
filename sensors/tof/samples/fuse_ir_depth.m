@@ -14,5 +14,9 @@ end
 % fused = depth .* ((ir > ir_min_threshold) & (ir < ir_max_threshold) & ...
 fused = depth .* ((ir > ir_min_threshold) & ...
     (depth < max(max(depth))) & reshape((depth > min(min(depth(depth > 0)))), rows, cols));
+
+
+% Trim points in point cloud that don't have any neighbors (likely noise)
+
     
 end
