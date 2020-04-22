@@ -10,12 +10,13 @@
  * 	Connor Rockwell
  *
  * Revision 0.1
- * 	Last edited 03/05/2020
+ * 	Last edited 04/20/2020
  *
  ***************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <math.h>
 
 #include "debuglog.h"
@@ -36,7 +37,7 @@
  * 	On success, returns 0
  *	On failure, returns a negative number 
  */
-int ControllerCalculateActuation(float delta_heading, float speed, float *theta_L, float *theta_R) {
+int ControllerCalculateActuation(float delta_heading, bool speed, float *theta_L, float *theta_R) {
 
     // If no values are received, return as failure
     if (theta_L == NULL || theta_R == NULL) {
@@ -50,21 +51,22 @@ int ControllerCalculateActuation(float delta_heading, float speed, float *theta_
     if (speed == 1) {
         float omega = P + I; // controller block
 
-        float vL = speed - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
-        float vR = speed + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
+        float vL = 1.0 - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
+        float vR = 1.0 + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
 
         *theta_L = vL/RADIUS;
         *theta_R = vR/RADIUS;
+        return 0;
     }
     else if (speed == 0) {
         *theta_L = 1;
         *theta_R = -1;
+        return 0;
     }
     else {
         printf("\n Error! Invalid input received. \n");
         return -1;
     }
-    return 0;
 
 } // ControllerCalculateActuation(float, float *, float *)
 
