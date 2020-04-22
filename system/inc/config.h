@@ -25,18 +25,28 @@
 #define L_DEBUG     1
 #define L_INFO      2
 
+#ifdef MRFUS_CONFIG_DEBUG
 #define CONTROL_DEBUG_L_MASK    L_DEBUG
+#else
+#define CONTROL_DEBUG_L_MASK    L_INFO
+#endif
 
 #define DEBUG_OUT_PRINTF
 #undef DEBUG_OUT_SYSLOG
 #undef DEBUG_OUT_LOGFILE
 
 
-// Placeholders. Fill in with real data during test and integration
+#ifdef MRFUS_CONFIG_DEPLOY
 #define GUIDANCE_IP_ADDR    "192.168.1.1"
 #define NAVIGATION_IP_ADDR  "192.168.1.3"
 #define CONTROL_IP_ADDR     "192.168.1.2"
 #define IMAGEPROC_IP_ADDR   "192.168.1.4"
+#else
+#define GUIDANCE_IP_ADDR    "127.0.0.1"
+#define NAVIGATION_IP_ADDR  "127.0.0.1"
+#define CONTROL_IP_ADDR     "127.0.0.1"
+#define IMAGEPROC_IP_ADDR   "127.0.0.1"
+#endif
 
 // Ports that each client subsystem uses to seek connections to other subsystems
 // Ex. Control connects to guidance navigation at the same port

@@ -149,7 +149,7 @@ Ensure(Thread, create_and_join) {
         usleep(100000);
         rc = ThreadTryJoin(thread, &threadReturn);
         i++;
-    } while (i < 10 && rc != 0);
+    } while (i < 10 && rc != 0 && errno == EBUSY);
     assert_that(rc, is_equal_to(0));
 
     // Ensure the thread did its work

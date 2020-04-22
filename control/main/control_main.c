@@ -16,6 +16,7 @@
 
 // Standard headers
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -39,12 +40,17 @@ int main(int argc, char** argv) {
 
     int rc;
 
+    printf("Start\n\n\n");
+
     // Object containing parameters for subsystem operation
     // See control.h for definition
     CONTROL_PARAMS control;
 
+    logDebug(L_DEBUG, "Starting control process...\n\n");
 
     /**** Serial device loggers ****/
+
+    logDebug(L_DEBUG, "Initializing serial interfaces...\n");
 
     rc = LogInit(&(control.kangaroo_log), "log", "KANGAROO", LOG_FILEEXT_LOG);
     if (rc < 0) {
@@ -58,6 +64,8 @@ int main(int argc, char** argv) {
 
     /**** Serial interfaces ****/
 
+    logDebug(L_INFO, "  Skipping serial interface initialization\n");
+
     // Kangaroo Motion Controller (UART)
     //   Init units, communication format
     //   Turn off motors
@@ -68,6 +76,8 @@ int main(int argc, char** argv) {
 
 
     /**** Network interfaces ****/
+
+    logDebug(L_DEBUG, "Initializing network interfaces...\n");
 
     // Initialize socket file descriptors
     control.guidance_sock = -1;
@@ -90,6 +100,7 @@ int main(int argc, char** argv) {
         // Attempt to connect to guidance (if not already connected)
         if (!gConnected) {
 
+            logDebug(L_DEBUG, "Attempting to connect to guidance at %s:%d\n", GUIDANCE_IP_ADDR, CONTROL_TCP_PORT);
             rc = TCPClientTryConnect(gSock, GUIDANCE_IP_ADDR, CONTROL_TCP_PORT);
             if (rc != -1) {
                 logDebug(L_INFO, "Successful TCP connection to guidance\n");
@@ -97,8 +108,8 @@ int main(int argc, char** argv) {
                 control.guidance_sock = gSock;
             } else if (errno == ECONNREFUSED) {
                 logDebug(L_DEBUG, "Unsuccessful connection to guidance, will try again\n");
-                // Possibly delay?
-                // usleep(10000);
+                // Delay to give other end a chance to start
+                usleep(10000);
             } else {
                 logDebug(L_INFO, "Could not connect to guidance: %s\n", strerror(errno));
             }
@@ -107,6 +118,7 @@ int main(int argc, char** argv) {
         // Attempt to connect to navigation (if not already connected)
         if (!nConnected) {
 
+            logDebug(L_DEBUG, "Attempting to connect to navigation at %s:%d\n", NAVIGATION_IP_ADDR, CONTROL_TCP_PORT);
             rc = TCPClientTryConnect(nSock, NAVIGATION_IP_ADDR, CONTROL_TCP_PORT);
             if (rc != -1) {
                 logDebug(L_INFO, "Successful TCP connection to navigation\n");
@@ -114,6 +126,8 @@ int main(int argc, char** argv) {
                 control.navigation_sock = nSock;
             } else if (errno == ECONNREFUSED) {
                 logDebug(L_DEBUG, "Unsuccessful connection to navigation, will try again\n");
+                // Delay to give other end a chance to start
+                usleep(10000);
             } else {
                 logDebug(L_INFO, "Could not connect to navigation: %s\n", strerror(errno));
             }
@@ -124,10 +138,15 @@ int main(int argc, char** argv) {
     // Too many attempts to establish connection
     if (numTries >= MAX_CONNECT_ATTEMPTS) {
         logDebug(L_INFO, "Exceeded maximum number of TCP connection attempts (%d)\n", MAX_CONNECT_ATTEMPTS);
+        logDebug(L_INFO, "TCP connections failed, exiting\n");
+        return -1;
     }
 
 
     /**** Threads ****/
+
+    logDebug(L_DEBUG, "Starting subsystem threads...\n");
+
     // For now, only dispatch control thread. Will dispatch hardware interface
     // threads when they are ready
     pthread_attr_t controlThreadAttr /*, kangarooThreadAttr, encoderThreadAttr*/;
@@ -145,18 +164,24 @@ int main(int argc, char** argv) {
     // Dispatch threads, give configuration object as argument
     // ThreadCreate(&encoderThreadAttr, &encoderThreadAttr, &encoder_run, (void *)&control);
     // ThreadCreate(&kangarooThreadAttr, &kangarooThreadAttr, &kangaroo_run, (void *)&control);
-    rc = ThreadCreate(&controlThread, &controlThreadAttr, &control_run, (void *)&control);
+    rc = ThreadCreate(&controlThread, &controlThreadAttr,
+            (void *(*)(void *)) &control_run, (void *)&control);
     if (rc == -1) {
         logDebug(L_INFO, "Failed to dispatch control thread: %s\n", strerror(errno));
     }
 
+    logDebug(L_DEBUG, "Threads initialized\n");
+
     // Join threads
-    // ThreadCreate(&encoderThreadAttr, &encoder_run, (void *)&control);
-    // ThreadCreate(&kangarooThreadAttr, &kangaroo_run, (void *)&control);
-    rc = ThreadTryJoin(controlThread, &controlReturn);
-    if (rc == -1 && errno != EBUSY) {
-        logDebug(L_INFO, "Failed to join control thread: %s\n", strerror(errno));
-    }
+    int i = 0;
+    do {
+        usleep(100000);
+        rc = ThreadTryJoin(controlThread, &controlReturn);
+        i++;
+    } while (i < 10 && rc != 0 && errno == EBUSY);
+
+    logDebug(L_DEBUG, "Successfully joined threads.\n");
+    logDebug(L_INFO, "\nClosing application.\n");
 
     // Safely shutdown the application
     return 0;
