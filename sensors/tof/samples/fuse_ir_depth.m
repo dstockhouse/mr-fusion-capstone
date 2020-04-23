@@ -15,6 +15,11 @@ end
 fused = depth .* ((ir > ir_min_threshold) & ...
     (depth < max(max(depth))) & reshape((depth > min(min(depth(depth > 0)))), rows, cols));
 
+% Trim points at "infinite" depth
+% max_dist = max(max(fused));
+% p_max = fused(fused == max_dist);
+% if sum(sum(p_max)) > 
+% fused(fused
 
 % Trim points in point cloud that don't have any neighbors (likely noise)
 

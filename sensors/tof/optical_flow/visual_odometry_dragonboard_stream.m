@@ -63,6 +63,8 @@ ir_max_thresh = 4090;
 
 % Read starting frame
 [depth_frame, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
+raw_depth = depth_frame;
+raw_ir = ir_frame;
 
 % Reduce integer depth (mm) measurements to double (m) measurements
 depth_frame = double(depth_frame) / 1000;
@@ -115,7 +117,8 @@ max_depth = max(max(start_depth));
 
 
 [path, fname, ext] = fileparts(filename);
-moviename = [fname '_with_coord.mp4'];
+% moviename = [fname '_with_coord.mp4'];
+moviename = [fname '_still_frame.mp4'];
 v = VideoWriter(moviename, 'MPEG-4');
 v.FrameRate = constants.fps;
 open(v);
@@ -125,7 +128,8 @@ for frame_index = 2:constants.num_frames
     fprintf('Computing visual odometry on frame %d of %d\n', frame_index, constants.num_frames);
     
     % Read next frame
-    [new_depth, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
+    new_depth = raw_depth;
+%     [new_depth, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
     new_depth = double(new_depth) / 1000;
     
     %% Gaussian pyramid
@@ -133,6 +137,8 @@ for frame_index = 2:constants.num_frames
     % Construct pyramid with new frames
     new_depth = fuse_ir_depth(new_depth, ir_frame, ir_max_thresh, ir_min_thresh);
     new_depth = depth_denoise(new_depth, focal_length, denoise_window, denoise_threshold);
+    % Add noise
+    new_depth(new_depth > .001) = new_depth(new_depth > .001) + .00001*rand(size(new_depth(new_depth > .001)));
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
@@ -155,6 +161,9 @@ for frame_index = 2:constants.num_frames
             pcshow(points_temp);
             view([0 0 -1]);
             title(['level ' num2str(ii) ', ' num2str(cols) 'x' num2str(rows)]);
+            xlabel('x (m)');
+            ylabel('y (m)');
+            zlabel('z (m)');
             
             cols = cols/2;
             rows = rows/2;
@@ -183,6 +192,9 @@ for frame_index = 2:constants.num_frames
             pcshow(points_temp);
             view([0 0 -1]);
             title(['level ' num2str(ii) ', ' num2str(cols) 'x' num2str(rows)]);
+            xlabel('x (m)');
+            ylabel('y (m)');
+            zlabel('z (m)');
             
             cols = cols/2;
             rows = rows/2;
@@ -279,10 +291,17 @@ for frame_index = 2:constants.num_frames
         %% Update state for next loop
         level_transformation = reshape(p_transformations(image_level,:,:),4,4);
         accumulatedTransformation = level_transformation * accumulatedTransformation;
-        trans2kai(accumulatedTransformation)' .* [1 1 1 180/pi*[1 1 1]]
+        kai_degrees = trans2kai(accumulatedTransformation)' .* [1 1 1 180/pi*[1 1 1]];
+        fprintf('  kai %d = %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f\n', image_level,...
+            kai_degrees(1), kai_degrees(2), kai_degrees(3),...
+            kai_degrees(4), kai_degrees(5), kai_degrees(6));
         
         level_transformation_unfiltered = reshape(p_transformations_unfiltered(image_level,:,:),4,4);
         accumulatedTransformation_unfiltered = level_transformation_unfiltered * accumulatedTransformation_unfiltered;
+        kai_degrees_unf = kai_est_unf' .* [1 1 1 180/pi*[1 1 1]];
+        fprintf(' ukai %d = %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f\n', image_level,...
+            kai_degrees_unf(1), kai_degrees_unf(2), kai_degrees_unf(3),...
+            kai_degrees_unf(4), kai_degrees_unf(5), kai_degrees_unf(6));
         
     end % for image_level 
     
@@ -406,39 +425,57 @@ for frame_index = 2:constants.num_frames
     subplot(3,2,1);
     plot(frame_index,kai_est(1),'*r');
     ylim([vbot vtop]);
-    title('V_x estimate');
+    title('v_x estimate');
+    xlabel('Frame #');
+    ylabel('m/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,3);
     plot(frame_index,kai_est(2),'*g');
     ylim([vbot vtop]);
-    title('V_y estimate');
+    title('v_y estimate');
+    xlabel('Frame #');
+    ylabel('m/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,5);
     plot(frame_index,kai_est(3),'*b');
     ylim([vbot vtop]);
-    title('V_z estimate');
+    title('v_z estimate');
+    xlabel('Frame #');
+    ylabel('m/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,2);
     plot(frame_index,kai_est(4)*180/pi,'*r');
     ylim([wbot wtop]);
     title('\omega_x estimate');
+    xlabel('Frame #');
+    ylabel('\deg/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,4);
     plot(frame_index,kai_est(5)*180/pi,'*g');
     ylim([wbot wtop]);
     title('\omega_y estimate');
+    xlabel('Frame #');
+    ylabel('\deg/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,6);
     plot(frame_index,kai_est(6)*180/pi,'*b');
     ylim([wbot wtop]);
     title('\omega_z estimate');
+    xlabel('Frame #');
+    ylabel('\deg/s');
     hold on;
     grid on;
+    axis tight;
     if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
         % Figure title
         sgtitle('Filtered \xi');
@@ -463,39 +500,57 @@ for frame_index = 2:constants.num_frames
     subplot(3,2,1);
     plot(frame_index,kai_est_unf(1),'*r');
     ylim([vbot_unf vtop_unf]);
-    title('V_x estimate');
+    title('v_x estimate');
+    xlabel('Frame #');
+    ylabel('m/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,3);
     plot(frame_index,kai_est_unf(2),'*g');
     ylim([vbot_unf vtop_unf]);
-    title('V_y estimate');
+    title('v_y estimate');
+    xlabel('Frame #');
+    ylabel('m/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,5);
     plot(frame_index,kai_est_unf(3),'*b');
     ylim([vbot_unf vtop_unf]);
-    title('V_z estimate');
+    title('v_z estimate');
+    xlabel('Frame #');
+    ylabel('m/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,2);
     plot(frame_index,kai_est_unf(4)*180/pi,'*r');
     ylim([wbot_unf wtop_unf]);
     title('\omega_x estimate');
+    xlabel('Frame #');
+    ylabel('\deg/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,4);
     plot(frame_index,kai_est_unf(5)*180/pi,'*g');
     ylim([wbot_unf wtop_unf]);
     title('\omega_y estimate');
+    xlabel('Frame #');
+    ylabel('\deg/s');
     hold on;
     grid on;
+    axis tight;
     subplot(3,2,6);
     plot(frame_index,kai_est_unf(6)*180/pi,'*b');
     ylim([wbot_unf wtop_unf]);
     title('\omega_z estimate');
+    xlabel('Frame #');
+    ylabel('\deg/s');
     hold on;
     grid on;
+    axis tight;
     if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
         % Figure title
         sgtitle('Unfiltered \xi');

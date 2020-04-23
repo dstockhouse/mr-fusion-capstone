@@ -18,6 +18,7 @@ filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_apt_rotate.tof'];
 % filename = [samples_path '/far_apt_stationary.tof'];
 % filename = [samples_path '/medium_apt_stationary.tof'];
+filename = [samples_path '/cart2_very_long_path.tof'];
 
 % Ensure file exists where expected
 if ~isfile(filename)
@@ -81,12 +82,16 @@ for frame_index = 2:constants.num_frames
     % Read next frame
     [new_depth, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
     new_depth = double(new_depth) / 1000;
+    rows = constants.rows;
+    cols = constants.cols;
     
     %% Gaussian pyramid
     
     % Construct pyramid with new frames
+    denoise_window = 6;
+    denoise_threshold = .7;
 %     new_depth = fuse_ir_depth(new_depth, ir_frame, ir_max_thresh, ir_min_thresh);
-%     new_depth = depth_denoise(new_depth, focal_length, denoise_window, denoise_threshold);
+    new_depth = depth_denoise(new_depth, focal_length, denoise_window, denoise_threshold);
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     rows = rows/(2^(gaussian_levels-1));
@@ -97,9 +102,22 @@ for frame_index = 2:constants.num_frames
     % Linearize point cloud into vector format
     vecdepth = reshape(rawdepth, rows*cols, 1);
     vecpoints = reshape(rawpoints, rows*cols, 3);
-    p_select = (vecdepth > .001) & (vecdepth < .99*max(vecdepth));
-    vecdepth = vecdepth(p_select);
-    vecpoints = reshape(vecpoints([p_select p_select p_select]), length(vecdepth), 3);
+    vecpointsy = reshape(vecpoints(:,2), rows*cols, 1);
+    y_select = vecpointsy > -1;
+    z_select = (vecdepth > .001) & (vecdepth < .99*max(vecdepth));
+    vecdepth = vecdepth(z_select);
+    vecpoints = reshape(vecpoints([z_select z_select z_select]), length(vecdepth), 3);
+    
+    figure(2);
+    clf
+    pcshow(vecpoints);
+    view([0 0 -1])
+%     xlim([-300 300]);
+%     ylim([-220 120])
+%     zlim([300 1200]);
+    xlabel('x (m)');
+    ylabel('y (m)');
+    zlabel('z (m)');
     
     %% Cut into vertical slices. "Up" is the negative y-axis
     
@@ -155,15 +173,6 @@ for frame_index = 2:constants.num_frames
     end
     
     %% Determine which slices contain obstacles
-    figure(2);
-    clf
-    pcshow(vecpoints);
-%     xlim([-300 300]);
-%     ylim([-220 120])
-%     zlim([300 1200]);
-    xlabel('x (m)');
-    ylabel('y (m)');
-    zlabel('z (m)');
     
     upperthreshold = 150;
     lowerthreshold = 20;
