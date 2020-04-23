@@ -13,29 +13,10 @@ function trans = kai2trans(kai)
 v = kai(1:3);
 w = kai(4:6);
 
-% Old method, not using matlab built in exp
-% theta = norm(w);
-% if abs(theta) < 0.0000001
-%     rot_mat = eye(3);
-%     lin_trans = v;
-% else
-%     w_cross = vec2ss(w);
-%     k = w / theta;
-%     rot_mat = k_theta_2dcm(k, theta);
-%     
-%     V = eye(3) + (1-cos(theta))/theta^2 * w_cross + (theta - sin(theta))/theta^3 * w_cross^2;
-%     lin_trans = V * v;
-% end
-% 
-% % Populate transformation matrix with linear and angular velocities
-% trans = eye(4);
-% trans(1:3, 1:3) = rot_mat;
-% trans(1:3, 4) = lin_trans;
-
 mat = zeros(4);
 mat(1:3, 1:3) = vec2ss(w);
 mat(1:3, 4) = v;
 
-trans = expm(mat);
+trans = expm(mat); % takes the exponent of the skew-symmetric matrix
 
 end
