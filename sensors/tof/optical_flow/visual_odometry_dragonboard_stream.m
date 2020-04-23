@@ -241,7 +241,7 @@ for frame_index = 2:constants.num_frames
             points_warped = warp_image(level_points_new, accumulatedTransformation, constants);
         end
         level_points_warped = reshape(points_warped, rows, cols, 3);
-        
+
         %% Take the average of the old PC and new warped PC
         % Error popping up here
         level_points_old = reshape(p_points_old(image_level,1:rows,1:cols,:), rows, cols, 3);
