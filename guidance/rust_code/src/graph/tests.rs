@@ -24,6 +24,22 @@ fn initialize_from_gpx_file_test_triangle() {
 }
 
 #[test]
+fn full_graph_no_dangling_edge() {
+    let graph = graph::initialize_from_gpx_file("src/graph/Full School Map.gpx");
+
+    // Checking that no edge was left unconnected by asserting that the connection matrix is 
+    // symmetrical across its diagonal.
+    /*for row_i in 0..graph.connection_matrix.nrows() {
+        for col_i in 0..graph.connection_matrix.ncols() {
+            if graph.connection_matrix[(row_i, col_i)].is_some() {
+                assert!(graph.connection_matrix[(col_i, row_i)].is_some())
+            }
+        }
+    }
+    */
+}
+
+#[test]
 fn initialize_from_gpx_file_single_edge() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
 

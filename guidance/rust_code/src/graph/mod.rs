@@ -243,8 +243,14 @@ pub(self) fn connect_vertices_with_edges(
             }
         }
 
-        let start_vertex_index = start_vertex_index.unwrap();
-        let end_vertex_index = end_vertex_index.unwrap();
+        let (start_vertex_index, end_vertex_index) = match (start_vertex_index, end_vertex_index) {
+            // If both start and end vertex go assigned, life is good.
+            (Some(start_vertex_index), Some(end_vertex_index)) => 
+                (start_vertex_index, end_vertex_index),
+            
+            // If either one of them didn't panic with some helpful information.
+            _ => panic!("{} is dangling in the gpx file", edge.name)
+        };
 
         connection_matrix[(start_vertex_index, end_vertex_index)] = Some(EdgeIndex(edge_index));
         connection_matrix[(end_vertex_index, start_vertex_index)] = Some(EdgeIndex(edge_index));
