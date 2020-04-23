@@ -142,7 +142,7 @@ for frame_index = 2:constants.num_frames
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
-    PLOT_PYRAMID = false;
+    PLOT_PYRAMID = true;
     if PLOT_PYRAMID
         
         % Show starting depth and points

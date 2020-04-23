@@ -23,6 +23,4 @@ new_pos = old_pos + v_t*dt;
 % v_tan = rotation * kai_est(1:3);
 % w_tan = rotation * kai_est(4:6);
 
-% Follow Jaimez CPP procedure for the rest
-
 end
