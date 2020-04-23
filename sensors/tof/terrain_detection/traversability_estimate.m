@@ -12,7 +12,7 @@ samples_path = '../samples';
 addpath(samples_path);
 % filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
-% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/far_move_forward_then_back.tof'];
 % filename = [samples_path '/medium_apt_rotate.tof'];
@@ -221,8 +221,8 @@ for frame_index = 2:constants.num_frames
 %     if max(max(new_depth)) > max_depth
 %         max_depth = max(max(new_depth));
 %     end
-    min_depth = min(new_depth);
-    max_depth = max(new_depth);
+    min_depth = min(min(new_depth));
+    max_depth = max(max(new_depth));
     imshownorm(new_depth, [min_depth max_depth]);
     xlabel('Depth', 'Color', 'w', 'FontWeight', 'bold');
     
@@ -245,14 +245,14 @@ for frame_index = 2:constants.num_frames
     
     % Bottom right plot
     subplot(2, 2, 4);
-    plot_frame_orig(cam_att, cam_pos, '', 'w');
+    %plot_frame_orig(cam_att, cam_pos, '', 'w');
     ax = gca;
     ax.Color = 'black';
     ax.XColor = [.85 .85 .85];
     ax.YColor = [.85 .85 .85];
     ax.ZColor = [.85 .85 .85];
     ax.GridColor = [.85 .85 .85];
-    title(['Estimated Position (' num2str(norm(cam_pos), '%.2f') 'm displaced)'], 'color', 'w');
+    %title(['Estimated Position (' num2str(norm(cam_pos), '%.2f') 'm displaced)'], 'color', 'w');
     view([0.01 0.1 -1]);
     axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
     grid on;
