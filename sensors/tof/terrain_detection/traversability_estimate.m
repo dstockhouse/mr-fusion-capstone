@@ -276,17 +276,21 @@ for frame_index = 2:constants.num_frames
     
     %% Histogram of counts
     
-%     figure(3);
+%     figure(2);
 %     bar3(slicecount);
 %     title('Histogram of raw point counts');
 %     
-%     figure(4);
+%     figure(3);
 %     bar3(slicecountquad);
 %     title('Histogram of quadratic adjusted point counts');
 %     
-%     figure(5);
+%     figure(4);
 %     bar3(adjustedcount);
 %     title('Histogram of coarse adjusted point counts');
+%     
+%     figure(5);
+%     bar3(sclicecountpolar);
+%     title('Histogram of polar-counted point counts');
   
     
 

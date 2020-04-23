@@ -19,12 +19,12 @@ samples_path = '../samples';
 addpath(samples_path);
 % filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
-% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/far_move_forward_then_back.tof'];
 % filename = [samples_path '/medium_apt_rotate.tof'];
 % filename = [samples_path '/far_apt_stationary.tof'];
-filename = [samples_path '/medium_apt_stationary.tof'];
+% filename = [samples_path '/medium_apt_stationary.tof'];
 
 % Ensure file exists where expected
 if ~isfile(filename)
