@@ -10,7 +10,7 @@
  * 	Connor Rockwell
  *
  * Revision 0.1
- * 	Last edited 04/20/2020
+ * 	Last edited 04/23/2020
  *
  ***************************************************************************/
 
@@ -37,7 +37,9 @@
  * 	On success, returns 0
  *	On failure, returns a negative number 
  */
-int ControllerCalculateActuation(double delta_heading, bool speed, double *delta_heading_previous_sum, double *theta_L, double *theta_R) {
+int ControllerCalculateActuation(double delta_heading, bool speed, double *theta_L, double *theta_R) {
+
+    static double delta_heading_previous_sum = 0.0;               // cumulative error for integral component
 
     // If no values are received, return as failure
     if (theta_L == NULL || theta_R == NULL) {
@@ -45,17 +47,17 @@ int ControllerCalculateActuation(double delta_heading, bool speed, double *delta
         return -1;
     }
 
-    double integral = *delta_heading_previous_sum;
-
-    double P = KP * delta_heading;                                 // proportional controller segment
-    double I = KI * (delta_heading + integral); // integral controller segment
+    double P = KP * delta_heading;                                // proportional controller segment
+    double I = KI * (delta_heading + delta_heading_previous_sum); // integral controller segment
 
     if (speed == 1) {
         double omega = P + I; // controller block
 
+        // Linear Velocities
         double vL = 1.0 - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
         double vR = 1.0 + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
 
+        // Angular velocities
         *theta_L = vL/RADIUS;
         *theta_R = vR/RADIUS;
         return 0;
@@ -70,7 +72,7 @@ int ControllerCalculateActuation(double delta_heading, bool speed, double *delta
         return -1;
     }
 
-    *delta_heading_previous_sum+=delta_heading;
+    delta_heading_previous_sum+=delta_heading; // update cumulative error for integral component
 
 } // ControllerCalculateActuation(float, float *, float *)
 

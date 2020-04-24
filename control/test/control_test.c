@@ -12,18 +12,19 @@ Ensure(ControllerCalculateActuation, test_one) {
     double delta_heading = 0;
     bool speed = 1;
 
-    double delta_heading_previous_sum = 0.0;
     double theta_L = 0;
     double theta_R = 0;
 
     double expected_L_value = 1;
     double expected_R_value = 1;
+    int expected_result = 0;
 
-    int result = ControllerCalculateActuation(delta_heading, speed, &delta_heading_previous_sum, &theta_L, &theta_R);
+    int result = ControllerCalculateActuation(delta_heading, speed, &theta_L, &theta_R);
 
     // Assert that both theta values equal 1
     assert_that(expected_L_value, is_equal_to(theta_L));
     assert_that(expected_R_value, is_equal_to(theta_R));
+    assert_that(expected_result, is_equal_to(result));
 }
 
 Ensure(ControllerCalculateActuation, test_two) {
@@ -33,14 +34,15 @@ Ensure(ControllerCalculateActuation, test_two) {
 
     double theta_L = 0.0;
     double theta_R = 0.0;
-    double delta_heading_previous_sum = 0.0;
 
     double expected_L_value = 1;
     double expected_R_value = -1;
+    int expected_result = 0;
 
-    int result = ControllerCalculateActuation(delta_heading, speed, &delta_heading_previous_sum, &theta_L, &theta_R);
+    int result = ControllerCalculateActuation(delta_heading, speed, &theta_L, &theta_R);
 
     // Assert that theta_L equals 1 and theta_R equals -1
     assert_that(expected_L_value, is_equal_to(theta_L));
     assert_that(expected_R_value, is_equal_to(theta_R));
+    assert_that(expected_result, is_equal_to(result));
 }

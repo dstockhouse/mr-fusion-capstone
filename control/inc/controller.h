@@ -23,7 +23,7 @@
 #define RADIUS 0.5524
 #define HALF_DRIVE_TRAIN 0.1524
 
-int ControllerCalculateActuation(double delta_heading, bool speed, double *delta_heading_previous_sum, double *theta_L, double *theta_R);
+int ControllerCalculateActuation(double delta_heading, bool speed, double *theta_L, double *theta_R);
 
 #endif // __CONTROLLER_H
 
