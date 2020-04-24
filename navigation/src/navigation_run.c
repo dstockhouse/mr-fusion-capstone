@@ -15,6 +15,7 @@
  ***************************************************************************/
 
 #include "navigation.h"
+#include "nav_frames.h"
 
 int navigation_run(NAVIGATION_PARAMS *navigation) {
 
