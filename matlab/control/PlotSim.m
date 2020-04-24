@@ -11,7 +11,7 @@ function plotty = PlotSim(K, heading, time_step, scenario, time, direction)
 %                     for the ideal path.
 % Outputs: N/A
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
-% Last Modified: 3/31/2020
+% Last Modified: 4/01/2020
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------                           
@@ -36,7 +36,7 @@ grid on
 daspect([1 1 1])
 xlabel('Meters');
 ylabel('Meters');
-title([scenario ' (P Controller) - Time: ' num2str(time, '%.2f')]);
+title([scenario ' (PI Controller) - Time: ' num2str(time, '%.2f')]);
 axis square
 
 %--------------------------------------------------------------------------
@@ -126,9 +126,6 @@ str1 = ['Heading Change: ' num2str(abs(rad2deg(heading)), '%.2f') ' deg'];
 str2 = ['Distance Error: ' num2str(dist, '%.2f') ' m'];
 str = {str1,str2};
 text(-3.75,3,str,'FontSize',10);
-
-% Line between the center of the robot and the path it's following
-% line([K(1,1) x(increment)],[K(2,1) y(increment)], 'Color','red','Linewidth',2);
 
 %--------------------------------------------------------------------------
 % Pause and increment
