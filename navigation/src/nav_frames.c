@@ -61,9 +61,9 @@ int xyz_to_llh(double* xyz, double* llh) {
     // Iterate through approximating Lattitude and Height to get most accurate value
     for(int i = 0; i<10; i++) {
         sin_Lat = xyz[2]/((1-exp(2))*R_e + xyz[2]);
-	    xyz[0] = atan((xyz[2]+exp(2)*R_e*sin_Lat)/rr); // Aproximate Latitude
-	    R_e = RADIUS/sqrt(1-exp(2)*pow(sin_Lat,2));
-	    xyz[2] = rr/cos(xyz[0] - R_e); // Aproximate Height
+        xyz[0] = atan((xyz[2]+exp(2)*R_e*sin_Lat)/rr); // Aproximate Latitude
+        R_e = RADIUS/sqrt(1-exp(2)*pow(sin_Lat,2));
+	xyz[2] = rr/cos(xyz[0] - R_e); // Aproximate Height
     }
 } // xyz_to_llh(double* xyz, double* llh)
 
@@ -95,7 +95,7 @@ int ECEF_llh_to_tan(double* llh, double* r_t__t_b, double** C_e__t) {
     // Determine the tangential rotation matrix
     rv = llh_to_C_e__n(llh, C_e__n); // Rotation matrix to body frame
     rv = invert(C_n__e, C_e__n); // Invert to transform from earth to body
-    rv = mtimes(C_n__e, r_e__t_b, r_t__t_b); // Determine XYZ in tan frame
+    rv = mtimes_3_1(C_n__e, r_e__t_b, r_t__t_b); // Determine XYZ in tan frame
     C_e__t = C_e__n;
     return 1;
 } // ECEF_llh_to_tan(double* llh, double* r_t__t_b, double** C_e__t)
@@ -129,7 +129,7 @@ int ECEF_xyz_to_tan(double* r_e__e_b, double* r_t__t_b, double** C_e__t) {
     // Determine the tangential rotation matrix
     rv = llh_to_C_e__n(llh, C_e__n); // Determine Rotation matrix
     rv = invert(C_n__e, C_e__n); // Invert matrix
-    rv = mtimes(C_n__e, r_e__t_b, r_t__t_b); // Find final vector
+    rv = mtimes_3_1(C_n__e, r_e__t_b, r_t__t_b); // Find final vector
     C_e__t = C_e__n;
     return 1;
 } // ECEF_xyz_to_tan(double* r_e__e_b, double* r_t__t_b, double** C_e__t)
