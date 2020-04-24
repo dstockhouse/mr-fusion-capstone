@@ -1,4 +1,4 @@
-#include "spi_interface.h"
+#include "encoder_buffer_interface.h"
 
 #include <wiringPiSPI.h>   // only available on Raspberry Pi 
 
@@ -152,6 +152,7 @@ unsigned char* registerSelect(int reg)
  * Notes:
  *      Should add logic for error handling
  *      Could change to allow for inputs into function and output from the function
+ *      Should change so that it calls encoderBufferRW() function.
 *********************************************************************************************************************************************/
 void encoderBufferSetup(void)
 {

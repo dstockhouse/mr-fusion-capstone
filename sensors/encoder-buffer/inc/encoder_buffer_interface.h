@@ -1,7 +1,9 @@
-#ifndef __SPI_INTERFACE_H
-#define __SPI_INTERFACE_H
+#ifndef __ENCODER_BUFFER_INTERFACE_H
+#define __ENCODER_BUFFER_INTERFACE_H
 
 void encoderBufferRW(int intruct, int reg, unsigned char * data, int dataLength/*, static const int channel*/);
-void spiInterfaceSetup(void);
+unsigned char* instructionSelect(int OPcode);
+unsigned char* registerSelect(int reg);
+void encoderBufferSetup(void);
 
 #endif
