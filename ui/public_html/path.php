@@ -168,7 +168,7 @@ class Graph {
 
         // If closer than threshold, return index
         // echo "\t\tEnd: min dist is " . $min_dist . "\n";
-        $dist_thresh = 2.0;
+        $dist_thresh = 5.0;
         if($min_dist < $dist_thresh) {
             return $min_index;
         } else {
@@ -321,12 +321,9 @@ class Graph {
 $pathsource = $_REQUEST["s"];
 $pathdest = $_REQUEST["d"];
 
-if ($pathsource === "") {
-    $pathsource = "-112.4509615,34.6147979";
-}
-if ($pathdest === "") {
-    $pathdest = "-112.4489055,34.6159122";
-}
+// $pathsource = "-112.4509615,34.6147979";
+// $pathdest = "-112.4489055,34.6159122";
+// $pathdest = "-112.45038986206056,34.61661888705339";
 
 if ($pathsource != "" && $pathdest != "") {
 
@@ -344,7 +341,7 @@ if ($pathsource != "" && $pathdest != "") {
     // Loop through KML map and find nodes an edges for graph
     $g_nodes = array();
     $g_edges = array();
-    foreach($map_xml->Document->Placemark as $pm) {
+    foreach($map_xml->Document->Folder->Placemark as $pm) {
 
         // Print out Placemark information
         if($pm->Point) {

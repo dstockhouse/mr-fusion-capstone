@@ -29,7 +29,10 @@ $map_xml = simplexml_load_file($map_filename) or die("Failed to " . $map_filenam
 // Loop through KML map and find nodes an edges for graph
 $g_nodes = array();
 $g_edges = array();
-foreach($map_xml->Document->Placemark as $pm) {
+foreach($map_xml->Document->Folder->Placemark as $pm) {
+
+    // echo $pm->name;
+    // echo "\n";
 
     // Print out Placemark information
     if($pm->Point) {
