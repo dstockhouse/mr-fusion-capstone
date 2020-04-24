@@ -35,9 +35,13 @@ p_points = zeros(levels, rows, cols, 3); % xyz point at each pixel
 p_depth(1, :, :) = depth(:, :);
 
 % Gaussian mask
-gauss_kernel = [ 1 2 1;
-                 2 4 2;
-                 1 2 1 ] / 16;
+kernel_v = [1 4 6 4 1];
+gauss_kernel = zeros(5);
+for ii = 1:5
+    for jj = 1:5
+        gauss_kernel(ii, jj) = kernel_v(ii) * kernel_v(jj) / 256;
+    end
+end
 
 % Manual convolution and de-resolution
 for level = 1:levels
@@ -57,7 +61,7 @@ for level = 1:levels
                 center_prev_depth = p_depth(level - 1, jj*2, ii*2);
 
                 % For inner pixels
-                if ii > 1 && jj > 1 && ii < cols_l && jj < rows_l
+                if ii > 2 && jj > 2 && ii < (cols_l-1) && jj < (rows_l-1)
 
                     % True filter only if valid depth at this space
                     if center_prev_depth > 0
@@ -66,8 +70,8 @@ for level = 1:levels
                         weight = 0;
 
                         % Manual kernel convolution
-                        for kernel_i = -1:1
-                            for kernel_j = -1:1
+                        for kernel_i = -2:2
+                            for kernel_j = -2:2
 
                                 % Depth for this kernel position
                                 kernel_prev_depth = p_depth(level - 1, jj*2, ii*2);
@@ -78,7 +82,7 @@ for level = 1:levels
 
                                     % Here's a step away from gaussian;
                                     %   Points that are closer in depth are weighted more
-                                    proximity_weight = gauss_kernel(kernel_i + 2, kernel_j + 2) ...
+                                    proximity_weight = gauss_kernel(kernel_i + 3, kernel_j + 3) ...
                                         * (edge_depth_thresh - depth_diff);
 
                                     % Update cumulative sum and weight
@@ -106,10 +110,22 @@ for level = 1:levels
         
         % Duplicate edge pixels
         % TODO implement more complicated blurring
-        p_depth(level, :, 1) = p_depth(level, :, 2);
-        p_depth(level, 1, :) = p_depth(level, 2, :);
-        p_depth(level, :, cols_l) = p_depth(level, :, cols_l-1);
-        p_depth(level, rows_l, :) = p_depth(level, rows_l-1, :);
+        % p_depth(level, :, 1) = p_depth(level, :, 3);
+        % p_depth(level, :, 2) = p_depth(level, :, 3);
+        % p_depth(level, 1, :) = p_depth(level, 3, :);
+        % p_depth(level, 2, :) = p_depth(level, 3, :);
+        % p_depth(level, :, cols_l  ) = p_depth(level, :, cols_l-2);
+        % p_depth(level, :, cols_l-1) = p_depth(level, :, cols_l-2);
+        % p_depth(level, rows_l, :) = p_depth(level, rows_l-2, :);
+        % p_depth(level, rows_l-1, :) = p_depth(level, rows_l-2, :);
+        p_depth(level, :, 1) = 0;
+        p_depth(level, :, 2) = 0;
+        p_depth(level, 1, :) = 0;
+        p_depth(level, 2, :) = 0;
+        p_depth(level, :, cols_l  ) = 0;
+        p_depth(level, :, cols_l-1) = 0;
+        p_depth(level, rows_l, :) = 0;
+        p_depth(level, rows_l-1, :) = 0;
 
     end % if level > 1
 

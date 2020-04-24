@@ -19,11 +19,11 @@ samples_path = '../samples';
 addpath(samples_path);
 % filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
-filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/far_move_forward_then_back.tof'];
 % filename = [samples_path '/medium_apt_rotate.tof'];
-% filename = [samples_path '/far_apt_stationary.tof'];
+filename = [samples_path '/far_apt_stationary.tof'];
 % filename = [samples_path '/medium_apt_stationary.tof'];
 
 % Ensure file exists where expected
@@ -115,10 +115,15 @@ kai_est_old = zeros(6,1);
 min_depth = min(min(start_depth));
 max_depth = max(max(start_depth));
 
-
+still_frame = false;
 [path, fname, ext] = fileparts(filename);
-% moviename = [fname '_with_coord.mp4'];
-moviename = [fname '_still_frame.mp4'];
+if still_frame
+    moviename = [fname '_still_frame.mp4'];
+else 
+    moviename = [fname '_with_coord.mp4'];
+end
+fprintf('Writing video to %s, press any key to continue\n\n\n', moviename);
+pause;
 v = VideoWriter(moviename, 'MPEG-4');
 v.FrameRate = constants.fps;
 open(v);
@@ -128,21 +133,29 @@ for frame_index = 2:constants.num_frames
     fprintf('Computing visual odometry on frame %d of %d\n', frame_index, constants.num_frames);
     
     % Read next frame
-    new_depth = raw_depth;
-%     [new_depth, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
+    if still_frame
+        new_depth = raw_depth;
+    else
+        [new_depth, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
+    end
     new_depth = double(new_depth) / 1000;
     
     %% Gaussian pyramid
     
-    % Construct pyramid with new frames
+    % Clean noise from data
     new_depth = fuse_ir_depth(new_depth, ir_frame, ir_max_thresh, ir_min_thresh);
     new_depth = depth_denoise(new_depth, focal_length, denoise_window, denoise_threshold);
-    % Add noise
-    new_depth(new_depth > .001) = new_depth(new_depth > .001) + .00001*rand(size(new_depth(new_depth > .001)));
+    
+    if still_frame
+        % Add noise
+        new_depth(new_depth > .001) = new_depth(new_depth > .001) + .00001*rand(size(new_depth(new_depth > .001)));
+    end
+    
+    % Construct pyramid with new frames
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
-    PLOT_PYRAMID = true;
+    PLOT_PYRAMID = false;
     if PLOT_PYRAMID
         
         % Show starting depth and points
@@ -430,7 +443,9 @@ for frame_index = 2:constants.num_frames
     ylabel('m/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,3);
     plot(frame_index,kai_est(2),'*g');
     ylim([vbot vtop]);
@@ -439,7 +454,9 @@ for frame_index = 2:constants.num_frames
     ylabel('m/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,5);
     plot(frame_index,kai_est(3),'*b');
     ylim([vbot vtop]);
@@ -448,34 +465,42 @@ for frame_index = 2:constants.num_frames
     ylabel('m/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,2);
     plot(frame_index,kai_est(4)*180/pi,'*r');
     ylim([wbot wtop]);
     title('\omega_x estimate');
     xlabel('Frame #');
-    ylabel('\deg/s');
+    ylabel('deg/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,4);
     plot(frame_index,kai_est(5)*180/pi,'*g');
     ylim([wbot wtop]);
     title('\omega_y estimate');
     xlabel('Frame #');
-    ylabel('\deg/s');
+    ylabel('deg/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,6);
     plot(frame_index,kai_est(6)*180/pi,'*b');
     ylim([wbot wtop]);
     title('\omega_z estimate');
     xlabel('Frame #');
-    ylabel('\deg/s');
+    ylabel('deg/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
         % Figure title
         sgtitle('Filtered \xi');
@@ -505,7 +530,9 @@ for frame_index = 2:constants.num_frames
     ylabel('m/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,3);
     plot(frame_index,kai_est_unf(2),'*g');
     ylim([vbot_unf vtop_unf]);
@@ -515,6 +542,9 @@ for frame_index = 2:constants.num_frames
     hold on;
     grid on;
     axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,5);
     plot(frame_index,kai_est_unf(3),'*b');
     ylim([vbot_unf vtop_unf]);
@@ -523,34 +553,43 @@ for frame_index = 2:constants.num_frames
     ylabel('m/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,2);
     plot(frame_index,kai_est_unf(4)*180/pi,'*r');
     ylim([wbot_unf wtop_unf]);
     title('\omega_x estimate');
     xlabel('Frame #');
-    ylabel('\deg/s');
+    ylabel('deg/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,4);
     plot(frame_index,kai_est_unf(5)*180/pi,'*g');
     ylim([wbot_unf wtop_unf]);
     title('\omega_y estimate');
     xlabel('Frame #');
-    ylabel('\deg/s');
+    ylabel('deg/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
     subplot(3,2,6);
     plot(frame_index,kai_est_unf(6)*180/pi,'*b');
     ylim([wbot_unf wtop_unf]);
     title('\omega_z estimate');
     xlabel('Frame #');
-    ylabel('\deg/s');
+    ylabel('deg/s');
     hold on;
     grid on;
-    axis tight;
+    if still_frame
+        axis tight;
+    end
+    
     if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
         % Figure title
         sgtitle('Unfiltered \xi');

@@ -10,9 +10,9 @@ addpath('../optical_flow');
 % From video captured from dragonboard
 samples_path = '../samples';
 addpath(samples_path);
-% filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
+filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
-filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/far_move_forward_then_back.tof'];
 % filename = [samples_path '/medium_apt_rotate.tof'];
@@ -55,14 +55,7 @@ constants.focal_length = focal_length;
 ir_min_thresh = 30;
 ir_max_thresh = 4096;
 
-% Read starting frame
-[depth_frame, ir_frame] = read_tof_frame(fd, constants.frame_size, constants);
 
-% Reduce integer depth (mm) measurements to double (m) measurements
-depth_frame = double(depth_frame) / 1000;
-
-
-%%%%%%%% Start Traversability Estimate Calculation %%%%%%%%
 %% Traversability Estimate Calculation
 
 % Desample to remove noise and speed up computation
@@ -75,7 +68,7 @@ v = VideoWriter(moviename, 'MPEG-4');
 v.FrameRate = constants.fps;
 open(v);
 
-for frame_index = 2:constants.num_frames
+for frame_index = 1:constants.num_frames
     
     fprintf('Computing traversability on frame %d of %d\n', frame_index, constants.num_frames);
     
@@ -90,7 +83,7 @@ for frame_index = 2:constants.num_frames
     % Construct pyramid with new frames
     denoise_window = 6;
     denoise_threshold = .7;
-    new_depth = fuse_ir_depth(new_depth, ir_frame, ir_max_thresh, ir_min_thresh);
+    new_depth = fuse_ir_depth(new_depth, ir_frame, ir_max_thresh, ir_min_thresh, false);
     new_depth = depth_denoise(new_depth, focal_length, denoise_window, denoise_threshold);
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
@@ -142,35 +135,23 @@ for frame_index = 2:constants.num_frames
     distrange = distmin:(distdiff/div):distmax;
     angrange = angmin:(angdiff/div):angmax;
     
+    div = div + 1;
+    
     % Determine which 2D slice the point belongs in
     slicecount = zeros(div,div);
     slicecountquad = zeros(div,div);
     slicecountpolar = zeros(div,div);
     for ii = 1:length(vecpoints)
-        
+
         if vecdepth(ii) > .001
-            
+
             % Identify which bin it should go in
             p = reshape(vecpoints(ii,:), 1, 3);
-            
+
             % Only count as 'obstacle' if it's less than 1 meter above
             % the robot
             if p(2) > -1
-                
-                slicex = floor((p(1) - xmin) / xdiff * div) + 1;
-                slicez = floor((p(3) - zmin) / zdiff * div) + 1;
-                if slicex >= div
-                    slicex = div;
-                end
-                if slicez >= div
-                    slicez = div;
-                end
-                
-                % It belongs in this slice, so count it
-                slicecount(slicex, slicez) = slicecount(slicex, slicez) + 1;
-                slicecountquad(slicex, slicez) = slicecountquad(slicex, slicez) + norm(p).^2;
-                
-                
+
                 % For polar slices
                 slicedist = floor((norm(p) - distmin) / distdiff * div) + 1;
                 p_angle = atan(p(1)/p(3));
@@ -183,54 +164,23 @@ for frame_index = 2:constants.num_frames
                 end
                 slicecountpolar(slicedist, sliceang) = slicecountpolar(slicedist, sliceang) + 1;
 
-%                 slicecountpolar
-%                 p
-%                 pause(.001)
             end
         end
     end
     
-    %% Determine which slices contain obstacles and make a Nice Plot
+    %% Determine which slices contain obstacles
     
-    vfig = figure(1);
-    clf;
-    
-    % Top left plot
-    subplot(2, 2, 1);
-    min_depth = min(min(vecdepth));
-    max_depth = max(max(vecdepth));
-    imshownorm(rawdepthclean, [min_depth max_depth]);
-    xlabel('Depth', 'Color', 'w', 'FontWeight', 'bold');
-    
-    % Top right plot
-    subplot(2, 2, 2);
-    imshownorm(ir_frame);
-    xlabel('IR Intensity', 'Color', 'w', 'FontWeight', 'bold');
-    
-    % Bottom left plot
-    subplot(2, 2, 3);
-    pcshow(vecpoints);
-    title('Point Cloud (front)');
-    view([0 0 -1]);
-    xlabel('x (m)');
-    ylabel('y (m)');
-    zlabel('z (m)');
-    axis([ -4 4 -4 3 0 6]);
-    
-    
-    % Bottom right plot
-    subplot(2, 2, 4);
-    pcshow(vecpoints);
-    title(['Traversable Regions'], 'color', 'w');
-    grid on;
-    xlabel('x (m)');
-    ylabel('y (m)');
-    zlabel('z (m)');
-    
-    upperthreshold = mean(slicecountpolar, 'all') + 1*std(slicecountpolar, 1, 'all');
-    lowerthreshold = mean(slicecountpolar, 'all') - 1*std(slicecountpolar, 1, 'all');
-    hold on;
+    numstd = 1.2;
+    logcount = log(slicecountpolar+1);
+    upperthreshold = exp(mean(logcount, 'all') + numstd*std(logcount, 1, 'all'));
+    lowerthreshold = exp(mean(logcount, 'all') - numstd*std(logcount, 1, 'all'));
     adjustedcount = zeros(div);
+    patch_xdimensions = zeros(4, div*div);
+    patch_zdimensions = zeros(4, div*div);
+    patch_color = zeros(div*div, 1);
+    color_index_red = 1;
+    color_index_green = 2;
+    color_lookup = ["red", "green"];
     for ii = 1:div
         for jj = 1:div
 
@@ -251,17 +201,111 @@ for frame_index = 2:constants.num_frames
             
             % If the region has too many points, plot red, else plot green
             if slicecountpolar(ii, jj) > upperthreshold || slicecountpolar(ii, jj) < lowerthreshold
-                color = 'red';
+                patch_color((ii-1)*div + jj) = color_index_red;
             else
-                color = 'green';
+                patch_color((ii-1)*div + jj) = color_index_green;
             end
-            patch([xlowclose xlowfar xhighfar xhighclose], ymax*ones(1,4), [zlowclose zlowfar zhighfar zhighclose], color);
-            
+            patch_xdimensions(:, (ii-1)*div + jj) = [xlowclose; xlowfar; xhighfar; xhighclose];
+            patch_zdimensions(:, (ii-1)*div + jj) = [zlowclose; zlowfar; zhighfar; zhighclose];
+             
         end
     end
     
+    
+    %% Determine best traversable direction
+    
+    % Keep track of how traversable each direction is
+    traversability_score = ones(div, 1);
+    
+    % Loop through all distance divisions
+    for ii = 1:div
+        % Loop through all angle divisions
+        for jj = 1:div
+
+            distavg = (ii-.5) * distdiff / div + distmin;
+            angavg = (jj-.5) * angdiff / div + angmin;
+
+            if patch_color((ii-1)*div + jj) == color_index_red
+                traversability_score(jj) = traversability_score(jj) - 1/ii;
+            end
+
+        end
+    end
+    
+    % Select most traversable direction
+%     best_direction = find(traversability_score == max(traversability_score), 1);
+    qx = distmin .* sin(angrange);
+    qy = ymin * ones(1, div);
+    qz = distmin .* cos(angrange);
+    qu = traversability_score' .* sin(angrange);
+    qv = zeros(1, div);
+    qw = traversability_score' .* cos(angrange);
+    
+    % Scale and exclude the arrows that are negative
+    quiver_scale = distdiff;
+    arrow_exclude = traversability_score > 0;
+    qx = qx(arrow_exclude);
+    qy = qy(arrow_exclude);
+    qz = qz(arrow_exclude);
+    qu = qu(arrow_exclude);
+    qv = qv(arrow_exclude);
+    qw = qw(arrow_exclude);
+    
+    %% Make a Nice Plot
+    
+    vfig = figure(1);
+    clf;
+    
+    % Top left plot
+    subplot(2, 2, 1);
+    min_depth = min(min(vecdepth));
+    max_depth = max(max(vecdepth));
+    imshownorm(rawdepthclean, [min_depth max_depth]);
+    xlabel('Depth', 'Color', 'w', 'FontWeight', 'bold');
+    
+    % Top right plot
+    subplot(2, 2, 2);
+    imshownorm(ir_frame);
+    xlabel('IR Intensity', 'Color', 'w', 'FontWeight', 'bold');
+    
+    % Bottom left plot
+    subplot(2, 2, 3);
+    % Point cloud
+    pcshow(vecpoints);
+    view([0 -.3 -1]);
+    hold on;
+    grid on;
+    % Traversable/nontraversable patches
+    for ii = 1:div*div
+        patch(patch_xdimensions(:,ii), ymax*ones(4, 1), patch_zdimensions(:,ii), color_lookup(patch_color(ii)));
+    end
+    % Directions with score
+    quiver3(qx, qy, qz, qu, qv, qw, 'AutoScale', 'off', 'LineWidth', 1, 'Color', 'w');
+    title('Point Cloud (front)');
+    xlabel('x (m)');
+    ylabel('y (m)');
+    zlabel('z (m)');
+    axis([ -4 4 -4 3 0 6]);
+    
+    
+    % Bottom right plot
+    subplot(2, 2, 4);
+    % Point cloud
+    pcshow(vecpoints);
     view([0 -1 0]);
-%     pause(.001);
+    grid on;
+    hold on;
+    % Traversable/nontraversable patches
+    for ii = 1:div*div
+        patch(patch_xdimensions(:,ii), ymax*ones(4, 1), patch_zdimensions(:,ii), color_lookup(patch_color(ii)));
+    end
+    % Directions with score
+    quiver3(qx, qy, qz, qu, qv, qw, 'AutoScale', 'off', 'LineWidth', 1, 'Color', 'w');
+    title(['Traversable Regions'], 'color', 'w');
+    xlabel('x (m)');
+    ylabel('y (m)');
+    zlabel('z (m)');
+    axis([ -4 4 -4 3 0 6]);
     
     if exist('sgtitle', 'builtin') || exist('sgtitle', 'file')
         % Figure title
@@ -272,6 +316,14 @@ for frame_index = 2:constants.num_frames
 
     frame = getframe(vfig);
     writeVideo(v, frame);
+    
+    
+    % Log traversability scores to console
+    fprintf('Trav: ');
+    for ii = 1:div
+        fprintf('%4.2f ', traversability_score(ii));
+    end
+    fprintf('\n');
     
     
     %% Histogram of counts
