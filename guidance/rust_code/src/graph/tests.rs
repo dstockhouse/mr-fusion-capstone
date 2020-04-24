@@ -55,15 +55,11 @@ fn graph_to_geo_json_string() {
 fn distance() {
     
     let origin = graph::TangentialPoint {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0
+        vector: Vector3::new(0.0, 0.0, 0.0)
     };
 
     let point = graph::TangentialPoint {
-        x: 1.0,
-        y: 1.0,
-        z: 1.0
+        vector: Vector3::new(1.0, 1.0, 1.0)
     };
 
     let distance = origin.distance(&point);
@@ -82,18 +78,26 @@ fn into_tangential() {
     };
 
     assert_eq!(king_front_entrance.into_tangential(),
-        graph::TangentialPoint{x: 0.0, y: 0.0, z: 0.0}
+        graph::TangentialPoint {
+            vector: Vector3::new(0.0, 0.0, 0.0)
+        }
     )
 
 }
 
 #[test]
 fn tangential_sub() {
-    let origin = &graph::TangentialPoint{x: 0.0, y: 0.0, z: 0.0};
-    let point = &graph::TangentialPoint{x: 1.0, y: 2.0, z: 3.0};
+    let origin = &graph::TangentialPoint {
+        vector: Vector3::new(0.0, 0.0, 0.0)
+    };
+    let point = &graph::TangentialPoint {
+        vector: Vector3::new(1.0, 2.0, 3.0)
+    };
 
     assert_eq!(point - origin,
-        (1.0, 2.0, 3.0)
+        TangentialPoint {
+            vector: Vector3::new(1.0, 2.0, 3.0)
+        }
     )
 }   
 
@@ -108,7 +112,9 @@ fn graph_into_tangential() {
 
     
     assert_eq!(origin.point.tangential, 
-        TangentialPoint{x: 0.0, y: 0.0, z: 0.0}
+        TangentialPoint{
+            vector: Vector3::new(0.0, 0.0, 0.0)
+        }
     );
 
 }
@@ -143,11 +149,15 @@ fn into_tangential_correct_distances() {
 fn edge_initialization() {
     let points = vec![
         Point {
-            tangential: TangentialPoint{x: 0.0, y: 0.0, z: 0.0},
+            tangential: TangentialPoint {
+                vector: Vector3::new(0.0, 0.0, 0.0)
+            },
             gps: GPSPointDeg{lat: -1.0, long: -1.0, height: -1.0} // Unimportant for this test
         } ,
         Point {
-            tangential: TangentialPoint{x: 1.0, y: 1.0, z: 1.0},
+            tangential: TangentialPoint {
+                vector: Vector3::new(1.0, 1.0, 1.0)
+            },
             gps: GPSPointDeg{lat: -1.0, long: -1.0, height: -1.0} // Unimportant for this test
         }
     ];

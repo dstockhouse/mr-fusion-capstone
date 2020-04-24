@@ -1,7 +1,7 @@
 use crate::graph;
 use crate::Error;
 use crate::graph::{MatrixIndex, EdgeIndex, VertexIndex, Vertex, Vertices, Edges};
-use crate::graph::conversions::{IntoTangential, geo_json_string};
+use crate::graph::conversions::{IntoTangential};
 use crate::path_planning::*;
 
 #[test]

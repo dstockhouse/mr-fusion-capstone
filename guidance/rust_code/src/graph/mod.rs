@@ -1,13 +1,13 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::f64;
-use std::ops::Sub;
+use std::ops::{Sub, Mul};
 
 pub mod conversions;
 
 use conversions::{IntoTangential};
 use gpx;
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, Vector3};
 
 // Clone trait only for unit testing
 #[derive(Debug, Clone, PartialEq)]
@@ -17,26 +17,50 @@ pub struct Point {
 }
 
 // Clone Trait only for unit testing
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct TangentialPoint {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64
+    vector: Vector3<f64>,
 }
 
 impl Sub for &TangentialPoint {
-    type Output = (f64, f64, f64);
+    type Output = TangentialPoint;
 
-    fn sub(self, other: Self) -> (f64, f64, f64) {
-        (self.x-other.x, self.y-other.y, self.z-other.z)
+    fn sub(self, other: Self) -> TangentialPoint {
+        TangentialPoint {
+            vector: self.vector - other.vector
+        }
+    }
+}
+
+impl Mul<f64> for TangentialPoint {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        TangentialPoint {
+            vector: self.vector * rhs
+        }
     }
 }
 
 impl TangentialPoint {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        TangentialPoint {
+            vector: Vector3::new(x, y, z)
+        }
+    }
+    pub fn x(&self) -> f64 {
+        self.vector[0]
+    }
+    pub fn y(&self) -> f64 {
+        self.vector[1]
+    }
+    pub fn z(&self) -> f64 {
+        self.vector[2]
+    }
     pub fn distance(&self, other: &Self) -> f64 {
-        let (x, y, z) = other - self;
+        let point = other - self;
 
-        (x.powi(2) + y.powi(2) + z.powi(2)).sqrt()
+        (point.x().powi(2) + point.y().powi(2) + point.z().powi(2)).sqrt()
     }
 }
 
@@ -275,7 +299,7 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph {
     
     let graph = connect_vertices_with_edges(edges, vertices);
 
-    return graph
+    graph
 
 }
 

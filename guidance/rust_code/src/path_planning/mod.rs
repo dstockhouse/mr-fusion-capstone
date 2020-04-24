@@ -90,7 +90,7 @@ impl Graph {
                 (EdgeIndex(index), edge)
             );
         
-        let mut closest_point = TangentialPoint{x: f64::MAX, y: f64::MAX, z: f64::MAX};
+        let mut closest_point = TangentialPoint::new(f64::MAX, f64::MAX, f64::MAX);
         let mut closest_edge_index = None;
 
         for (edge_index, edge) in edges_and_indices {
@@ -103,9 +103,9 @@ impl Graph {
             let points_n_n_plus_1 = point_n.zip(point_n_plus_1);
             for (point_n, point_n_plus_1) in points_n_n_plus_1 {
                 // segmenting points on the line into more points
-                let (start_x, final_x) = (point_n.tangential.x, point_n_plus_1.tangential.x);
-                let (start_y, final_y) = (point_n.tangential.y, point_n_plus_1.tangential.y);
-                let (start_z, final_z) = (point_n.tangential.z, point_n_plus_1.tangential.z);
+                let (start_x, final_x) = (point_n.tangential.x(), point_n_plus_1.tangential.x());
+                let (start_y, final_y) = (point_n.tangential.y(), point_n_plus_1.tangential.y());
+                let (start_z, final_z) = (point_n.tangential.z(), point_n_plus_1.tangential.z());
                 
                 let (x_step, y_step, z_step) = ((final_x - start_x) / steps, 
                                                 (final_y - start_y) / steps,
@@ -115,7 +115,7 @@ impl Graph {
 
                 for _ in 0..steps as u32 {
                     
-                    let temp_point = TangentialPoint{x, y, z};
+                    let temp_point = TangentialPoint::new(x, y, z);
                     let temp_distance_to_robot = temp_point.distance(robot_loc);
                     
                     if temp_distance_to_robot <= ROBOT_RADIUS && 
@@ -132,7 +132,7 @@ impl Graph {
         }
         
         match closest_edge_index {
-            None => return Err(Error::PathPlanningNotOnMap),
+            None => Err(Error::PathPlanningNotOnMap),
             Some(closest_edge_index) => self.connection_matrix_index_from(closest_edge_index)
         }
     }
