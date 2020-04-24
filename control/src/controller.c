@@ -63,8 +63,8 @@ int ControllerCalculateActuation(double delta_heading, bool speed, double *theta
         return 0;
     }
     else if (speed == 0) {
-        *theta_L = 1;
-        *theta_R = -1;
+        *theta_L = 1/RADIUS;
+        *theta_R = -1/RADIUS;
         return 0;
     }
     else {

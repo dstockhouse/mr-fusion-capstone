@@ -12,11 +12,13 @@ Ensure(ControllerCalculateActuation, test_one) {
     double delta_heading = 0;
     bool speed = 1;
 
+    double radius = 0.5524;
+
     double theta_L = 0;
     double theta_R = 0;
 
-    double expected_L_value = 1;
-    double expected_R_value = 1;
+    double expected_L_value = 1/radius;
+    double expected_R_value = 1/radius;
     int expected_result = 0;
 
     int result = ControllerCalculateActuation(delta_heading, speed, &theta_L, &theta_R);
@@ -32,11 +34,13 @@ Ensure(ControllerCalculateActuation, test_two) {
     double delta_heading = 0.0;
     bool speed = 0;
 
+    double radius = 0.5524;
+
     double theta_L = 0.0;
     double theta_R = 0.0;
 
-    double expected_L_value = 1;
-    double expected_R_value = -1;
+    double expected_L_value = 1/radius;
+    double expected_R_value = -1/radius;
     int expected_result = 0;
 
     int result = ControllerCalculateActuation(delta_heading, speed, &theta_L, &theta_R);
