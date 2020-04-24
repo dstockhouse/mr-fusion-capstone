@@ -33,7 +33,8 @@ OBJS = $(foreach src,$(notdir $(SRCS)),$(OBJDIR)/$(src:.c=.o))
 DEPS = $(foreach src,$(notdir $(SRCS)),$(DEPDIR)/$(src:.c=.d))
 
 # Main sources and binaries
-MAINSRC = $(BASENAME)_main.c
+# MAINSRC = $(BASENAME)_main.c
+MAINSRC = $(BASENAME)_test.c
 MAINBASE = $(basename $(MAINSRC))
 MAINOBJ = $(MAINBASE:%=$(OBJDIR)/%.o)
 MAINDEP = $(MAINBASE:%=$(DEPDIR)/%.d)
