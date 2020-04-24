@@ -19,7 +19,7 @@ depth_dim = size(pointCloudAvg);
 rows = depth_dim(1);
 cols = depth_dim(2);
 
-f_inv = cols/(2*tan(0.5*constants.fovh));
+f = cols/(2*tan(0.5*constants.fovh));
 cont = 1;
 
 A = zeros(numValidPoints, 6);
@@ -34,20 +34,29 @@ for u = 2:cols-1
             inv_d = 1/d;
             x = pointCloudAvg(v,u,1);
             y = pointCloudAvg(v,u,2);
-            dycomp = du(v,u) * f_inv * inv_d;
-            dzcomp = dv(v,u) * f_inv * inv_d;
+            dycomp = du(v,u) * f * inv_d;
+            dzcomp = dv(v,u) * f * inv_d;
             tw = weights(v,u);
             
             % Fill matrix
             % This fills in the order (vz, vx, vy, wz, wx, wy)
             % The order may need to be adjusted for the future, but for now axes
             % will just be mislabeled
+            % vz
             A(cont,1) = tw*(1 + dycomp*x*inv_d + dzcomp*y*inv_d);
+            % vx
             A(cont,2) = tw*(-dycomp);
+            % vy
             A(cont,3) = tw*(-dzcomp);
+            
+            % wz
             A(cont,4) = tw*(dycomp*y - dzcomp*x);
+            % wx
             A(cont,5) = tw*(y + dycomp*inv_d*y*x + dzcomp*(y*y*inv_d + d));
+            % wy
             A(cont,6) = tw*(-x - dycomp*(x*x*inv_d + d) - dzcomp*inv_d*y*x);
+            
+            % -Z_t
             B(cont,1) = tw*(-dt(v,u));
             cont = cont+1;
         end

@@ -19,11 +19,11 @@ samples_path = '../samples';
 addpath(samples_path);
 % filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
-% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/far_move_forward_then_back.tof'];
 % filename = [samples_path '/medium_apt_rotate.tof'];
-filename = [samples_path '/far_apt_stationary.tof'];
+% filename = [samples_path '/far_apt_stationary.tof'];
 % filename = [samples_path '/medium_apt_stationary.tof'];
 
 % Ensure file exists where expected
@@ -370,7 +370,7 @@ for frame_index = 2:constants.num_frames
     ax.YColor = [.85 .85 .85];
     ax.ZColor = [.85 .85 .85];
     ax.GridColor = [.85 .85 .85];
-    title(['Estimated Position (' num2str(norm(cam_pos), '%.2f') 'm displaced)'], 'color', 'w');
+    title(['Estimated Motion (' num2str(norm(cam_pos), '%.2f') 'm displaced)'], 'color', 'w');
     view([0.01 0.1 -1]);
     axis([-1.2 1.2 -1.2 1.2 -1.2 1.2]);
     grid on;

@@ -35,14 +35,20 @@ dt = differentials(:,:,3);
 % Measurement
 focal_length = 2 * tan(0.5 * constants.fovh) / cols;
 f = focal_length;
-f_inv = 1/f;
-kz2 = (1.425e-5)^2 / 25;
 
-% Linearization
-kduv = 20e-5;
-kdt = kduv / constants.fps^2;
-k2duv = 5e-6;
-k2dt = 5e-6;
+% Error (approximation) constants
+% kduv = 20e-5;
+% kdt = kduv / constants.fps^2;
+kduvt = 200;
+
+% k2duv = 5e-6;
+k2duv = 5;
+
+% k2dt = 5e-6;
+k2dt = 5;
+
+% kz2 = (1.425e-5)^2 / 25; % One approximation
+kz2 = 0.01;
 
 % Preallocation
 weights = zeros(rows, cols);
@@ -58,8 +64,6 @@ for u = 2:(cols-1)
             y = pointCloudAvg(v, u, 2);
             z = pointCloudAvg(v, u, 3);
             
-            d = z;
-            inv_d = 1/z;
             z2 = z^2;
             z4 = z2^2;
             
@@ -87,8 +91,8 @@ for u = 2:(cols-1)
             
             %% Linearization error
             % Renamed from example code:
-            %   du_old = ini_du
-            %   du_new = final_du
+            %   du_old -> ini_du
+            %   du_new -> final_du
             du_old = pointCloudOld(v, u + 1, 3) - pointCloudOld(v, u - 1, 3);
             dv_old = pointCloudOld(v + 1, u, 3) - pointCloudOld(v - 1, u, 3);
             du_new = pointCloudNew(v, u + 1, 3) - pointCloudNew(v, u - 1, 3);
@@ -103,8 +107,7 @@ for u = 2:(cols-1)
             dvu = dv(v, u + 1) - dv(v, u - 1);
             
             sigma_l =...
-                kdt * dt(v, u)^2 +...
-                kduv * (du(v, u)^2 + dv(v, u)^2) + ...
+                kduvt * (dt(v, u)^2 +du(v, u)^2 + dv(v, u)^2) + ...
                 k2dt * (dut^2 + dvt^2) +...
                 k2duv * (duu^2 + dvv^2 + dvu^2);
 

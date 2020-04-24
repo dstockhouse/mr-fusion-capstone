@@ -110,14 +110,6 @@ for level = 1:levels
         
         % Duplicate edge pixels
         % TODO implement more complicated blurring
-        % p_depth(level, :, 1) = p_depth(level, :, 3);
-        % p_depth(level, :, 2) = p_depth(level, :, 3);
-        % p_depth(level, 1, :) = p_depth(level, 3, :);
-        % p_depth(level, 2, :) = p_depth(level, 3, :);
-        % p_depth(level, :, cols_l  ) = p_depth(level, :, cols_l-2);
-        % p_depth(level, :, cols_l-1) = p_depth(level, :, cols_l-2);
-        % p_depth(level, rows_l, :) = p_depth(level, rows_l-2, :);
-        % p_depth(level, rows_l-1, :) = p_depth(level, rows_l-2, :);
         p_depth(level, :, 1) = 0;
         p_depth(level, :, 2) = 0;
         p_depth(level, 1, :) = 0;
