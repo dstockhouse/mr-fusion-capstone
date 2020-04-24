@@ -27,8 +27,13 @@
 #include <math.h>
 
 int llh_to_xyz(double* llh, double* r_e__e_c);
+int ECEF_llh_to_tan(double* llh, double* r_e__t_b, double** C_e__t);
+int ECEF_xyz_to_tan(double* xyz, double* r_e__t_b, double** C_e__t);
+int llh_to_C_e__n(double* llh, double** C_e__n);
+int invert(double** Out, double** In);
+int mtimes(double** Mat_3_3, double* Mat_3_1, double* Out);
 
-
+#endif
 
 
 
