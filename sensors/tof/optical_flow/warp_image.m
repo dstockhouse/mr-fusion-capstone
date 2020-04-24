@@ -50,21 +50,7 @@ for i=1:cols
        z = pointCloud(j,i,3);
        if z > 0
 
-           % In vector form: r(x,y,z) = (w {cross} r) + v
-	   % The below can be done with a standard matrix multiplication in matlab
-	   % warped_r = transformation * [x; y; z; 1];
-	   % x_w     = warped_r(1);
-	   % y_w     = warped_r(2);
-	   % depth_w = warped_r(3);
-
            % Transfrom point to warped reference frame
-	   %%%% IMPORTANT: If we keep the expanded matrix arithmetic, we need to swap z, x, y to match x, y, z instead
-%            depth_w = transformation(1,1).*z + transformation(1,2).*x...
-%                + transformation(1,3).*y + transformation(1,4);
-%            x_w = transformation(2,1).*z + transformation(2,2).*x...
-%                + transformation(2,3).*y + transformation(2,4);
-%            y_w = transformation(3,1).*z + transformation(3,2).*x...
-%                + transformation(3,3).*y + transformation(3,4);
            warped_r = transformation * [x; y; z; 1];
            x_w     = warped_r(1);
            y_w     = warped_r(2);
@@ -76,7 +62,7 @@ for i=1:cols
            if (uwarp >= 0) && (uwarp < (cols-1)) && (vwarp >= 0)...
                    && (vwarp < (rows-1))
               % Contribute the warped pixels to the surrounding ones
-              uwarp_l = floor(uwarp);              % WHAT ARE THESE
+              uwarp_l = floor(uwarp);             
               uwarp_r = uwarp_l + 1;
               vwarp_d = floor(vwarp);
               vwarp_u = vwarp_d + 1;
