@@ -53,7 +53,7 @@ COVS = $(foreach src,$(SRCS),$(COVDIR)/$(notdir $(src)).gcov)
 
 # Compiler flags
 CC = gcc
-CFLAGS = -g -Wall -L$(SYSDIR)
+CFLAGS = -g -Wall -lm -L$(SYSDIR)
 LIBS = $(SYSBASE)
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
