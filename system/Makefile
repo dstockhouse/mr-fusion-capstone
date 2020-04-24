@@ -45,6 +45,10 @@ COVS = $(foreach src,$(SRCS),$(COVDIR)/$(notdir $(src)).gcov)
 # Compiler flags
 CC = gcc
 CFLAGS = -g -Wall --coverage -shared -fPIC
+DEFPREFIX = -DMRFUS_CONFIG_
+DEFINES = DEBUG
+#DEFINES += DEPLOY
+DEFFLAGS = $(addprefix $(DEFPREFIX),$(DEFINES))
 LIBS =
 LIBFLAGS = $(foreach lib,$(LIBS),-l$(lib))
 INCFLAGS = $(foreach inc,$(INCDIR),-iquote $(inc))
@@ -100,7 +104,7 @@ $(BINDIR)/%.so: $(OBJDIR)/%.o $(OBJS) | $(BINDIR)
 %.o: %.c
 $(OBJDIR)/%.o: $(DEPDIR)/%.d
 $(OBJDIR)/%.o: %.c | $(OBJDIR) $(DEPDIR)
-	$(CC) $(CFLAGS) $(DEPFLAGS) $(INCFLAGS) -c $< -o $@ $(LIBFLAGS)
+	$(CC) $(CFLAGS) $(DEFFLAGS) $(DEPFLAGS) $(INCFLAGS) -c $< -o $@ $(LIBFLAGS)
 	@$(POSTCOMPILE)
 
 # Rule to generate coverage analysis files

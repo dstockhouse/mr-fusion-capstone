@@ -1,10 +1,10 @@
 /****************************************************************************
  *
  * File:
- *      navigation_run.h
+ *      vn200_run.c
  *
  * Description:
- *      Function header for navigation_run thread
+ *      Implementation of the vn200 hardware interface control flow
  *
  * Author:
  *      David Stockhouse
@@ -14,10 +14,12 @@
  *
  ***************************************************************************/
 
-#ifndef NAVIGATION_RUN_H
-#define NAVIGATION_RUN_H
+#include "navigation.h"
 
-int navigation_run(NAVIGATION_PARAMS *navigation);
+int vn200_run(NAVIGATION_PARAMS *navigation) {
 
-#endif // NAVIGATION_RUN_H
+    // VN200 hardware interface control flow operations
+
+	return 0;
+}
 

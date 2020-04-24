@@ -1,10 +1,10 @@
 /****************************************************************************
  *
  * File:
- *      navigation_run.h
+ *      vn200_run.c
  *
  * Description:
- *      Function header for navigation_run thread
+ *      Function header for vn200_run thread
  *
  * Author:
  *      David Stockhouse
@@ -14,10 +14,13 @@
  *
  ***************************************************************************/
 
-#ifndef NAVIGATION_RUN_H
-#define NAVIGATION_RUN_H
+#ifndef VN200_RUN_H
+#define VN200_RUN_H
 
-int navigation_run(NAVIGATION_PARAMS *navigation);
+#include "navigation.h"
 
-#endif // NAVIGATION_RUN_H
+int vn200_run(NAVIGATION_PARAMS *navigation);
+
+#endif // VN200_RUN_H
+
 

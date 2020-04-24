@@ -12,7 +12,7 @@
 #include "tcp.h"
 
 #define IP_ADDR     "127.0.0.1"
-#define CHILD_EXE   "./control_main.elf"
+#define CHILD_EXE   "./navigation_main.elf"
 
 int main(int argc, char **argv) {
 
@@ -43,13 +43,13 @@ int main(int argc, char **argv) {
 
     } else {
 
-        int gSock, nSock;
+        int gSock, cSock, ipSock;
         int attempt = 0, maxAttempts = 10;
 
         // usleep(100000);
 
         // Set up TCP servers
-        gSock = TCPServerInit(IP_ADDR, CONTROL_TCP_PORT);
+        gSock = TCPServerInit(IP_ADDR, NAVIGATION_TCP_PORT);
         TCPSetNonBlocking(gSock);
 
         attempt = 0;
@@ -60,14 +60,22 @@ int main(int argc, char **argv) {
         } while (attempt < maxAttempts && rc != 0 && errno == EBUSY);
 
 
-        nSock = TCPServerInit(IP_ADDR, CONTROL_TCP_PORT);
-        TCPSetNonBlocking(nSock);
+        cSock = TCPClientInit();
 
         do {
             attempt++;
-            rc = TCPServerTryAccept(nSock);
+            rc = TCPClientTryConnect(cSock, IP_ADDR, CONTROL_TCP_PORT);
             usleep(100000);
-        } while (attempt < maxAttempts && rc != 0 && errno == EBUSY);
+        } while (attempt < maxAttempts && rc != 0 && errno == ECONNREFUSED);
+
+
+        ipSock = TCPClientInit();
+
+        do {
+            attempt++;
+            rc = TCPClientTryConnect(ipSock, IP_ADDR, IMAGEPROC_TCP_PORT);
+            usleep(100000);
+        } while (attempt < maxAttempts && rc != 0 && errno == ECONNREFUSED);
 
 
         // Wait for child to complete

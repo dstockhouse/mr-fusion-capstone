@@ -25,11 +25,12 @@
 #define L_DEBUG     1
 #define L_INFO      2
 
-#ifdef MRFUS_CONFIG_DEBUG
+// #ifdef MRFUS_CONFIG_DEBUG
+// #define CONTROL_DEBUG_L_MASK    L_DEBUG
+// #else
+// #define CONTROL_DEBUG_L_MASK    L_INFO
+// #endif
 #define CONTROL_DEBUG_L_MASK    L_DEBUG
-#else
-#define CONTROL_DEBUG_L_MASK    L_INFO
-#endif
 
 #define DEBUG_OUT_PRINTF
 #undef DEBUG_OUT_SYSLOG

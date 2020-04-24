@@ -66,50 +66,6 @@ typedef enum {
 	VN200_PACKET_CONTENTS_TYPE_OTHER
 } VN200_PACKET_CONTENTS_TYPE;
 
-#if 0
-// A packet from the VN200 which may either be GPS, IMU, or other data.
-// Includes the raw data in a buffer and after parsing
-typedef struct {
-
-	int startIndex; // Buffer offset for start of packet data
-	int endIndex;   // Buffer offset for end of complete packet data
-	// The end index is only set when entire packet data is available
-
-	// Enum indicating type of data
-	VN200_PACKET_CONTENTS_TYPE contentsType;
-
-	GPS_DATA GPSData; // Parsed GPS data (if packet is GPS data)
-	IMU_DATA IMUData; // Parsed IMU data (if packet is IMU data)
-
-	int isParsed;     // Bool indicating that the raw data has been parsed
-	double timestamp; // Timestamp when packet start was read from UART
-	struct timespec timestamp_ts;
-
-	// Not yet implemented
-	// semaphore_t *sem;  // Pointer to a semaphore (to use if multithreaded)
-
-} VN200_PACKET;
-
-
-// Large enough to not worry about overrunning
-#define VN200_PACKET_RING_BUFFER_SIZE 256
-#define VN200_PACKET_RING_BUFFER_MOD(N) MOD(N, VN200_PACKET_RING_BUFFER_SIZE)
-
-// Input buffer for data of multiple packets
-typedef struct {
-
-	BYTE_BUFFER *buf; // Pointer to buffer for input packet data
-
-	// Buffer of packets
-	VN200_PACKET packets[VN200_PACKET_RING_BUFFER_SIZE];
-
-	int start; // Index of first valid packet element
-	int end;   // Index after last valid element (to add next)
-	           // Buffer is full if start == end - 1
-
-} VN200_PACKET_RING_BUFFER;
-#endif
-
 typedef struct {
 
 	int fd; // UART file descriptor

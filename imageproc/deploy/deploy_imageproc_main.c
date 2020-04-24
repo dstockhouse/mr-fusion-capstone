@@ -12,7 +12,7 @@
 #include "tcp.h"
 
 #define IP_ADDR     "127.0.0.1"
-#define CHILD_EXE   "./control_main.elf"
+#define CHILD_EXE   "./imageproc_main.elf"
 
 int main(int argc, char **argv) {
 
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         // usleep(100000);
 
         // Set up TCP servers
-        gSock = TCPServerInit(IP_ADDR, CONTROL_TCP_PORT);
+        gSock = TCPServerInit(IP_ADDR, IMAGEPROC_TCP_PORT);
         TCPSetNonBlocking(gSock);
 
         attempt = 0;
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
         } while (attempt < maxAttempts && rc != 0 && errno == EBUSY);
 
 
-        nSock = TCPServerInit(IP_ADDR, CONTROL_TCP_PORT);
+        nSock = TCPServerInit(IP_ADDR, IMAGEPROC_TCP_PORT);
         TCPSetNonBlocking(nSock);
 
         do {
