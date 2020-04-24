@@ -9,16 +9,17 @@ AfterEach(ControllerCalculateActuation) {}
 
 Ensure(ControllerCalculateActuation, test_one) {
     // Setup (heading of zero and a speed of one)
-    float delta_heading = 0;
+    double delta_heading = 0;
     bool speed = 1;
 
-    float theta_L = 0;
-    float theta_R = 0;
+    double delta_heading_previous_sum = 0.0;
+    double theta_L = 0;
+    double theta_R = 0;
 
-    float expected_L_value = 1;
-    float expected_R_value = 1;
+    double expected_L_value = 1;
+    double expected_R_value = 1;
 
-    float result = ControllerCalculateActuation(delta_heading, speed, &theta_L, &theta_R);
+    int result = ControllerCalculateActuation(delta_heading, speed, &delta_heading_previous_sum, &theta_L, &theta_R);
 
     // Assert that both theta values equal 1
     assert_that(expected_L_value, is_equal_to(theta_L));
@@ -27,16 +28,17 @@ Ensure(ControllerCalculateActuation, test_one) {
 
 Ensure(ControllerCalculateActuation, test_two) {
     // Setup (heading of zero and a speed of zero to turn on the spot)
-    float delta_heading = 0;
+    double delta_heading = 0.0;
     bool speed = 0;
 
-    float theta_L = 0;
-    float theta_R = 0;
+    double theta_L = 0.0;
+    double theta_R = 0.0;
+    double delta_heading_previous_sum = 0.0;
 
-    float expected_L_value = 1;
-    float expected_R_value = -1;
+    double expected_L_value = 1;
+    double expected_R_value = -1;
 
-    float result = ControllerCalculateActuation(delta_heading, speed, &theta_L, &theta_R);
+    int result = ControllerCalculateActuation(delta_heading, speed, &delta_heading_previous_sum, &theta_L, &theta_R);
 
     // Assert that theta_L equals 1 and theta_R equals -1
     assert_that(expected_L_value, is_equal_to(theta_L));

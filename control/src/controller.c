@@ -37,7 +37,7 @@
  * 	On success, returns 0
  *	On failure, returns a negative number 
  */
-int ControllerCalculateActuation(float delta_heading, bool speed, float *theta_L, float *theta_R) {
+int ControllerCalculateActuation(double delta_heading, bool speed, double *delta_heading_previous_sum, double *theta_L, double *theta_R) {
 
     // If no values are received, return as failure
     if (theta_L == NULL || theta_R == NULL) {
@@ -45,14 +45,16 @@ int ControllerCalculateActuation(float delta_heading, bool speed, float *theta_L
         return -1;
     }
 
-    float P = KP * delta_heading; // proportional controller segment
-    float I = KI * delta_heading; // integral controller segment
+    double integral = *delta_heading_previous_sum;
+
+    double P = KP * delta_heading;                                 // proportional controller segment
+    double I = KI * (delta_heading + integral); // integral controller segment
 
     if (speed == 1) {
-        float omega = P + I; // controller block
+        double omega = P + I; // controller block
 
-        float vL = 1.0 - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
-        float vR = 1.0 + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
+        double vL = 1.0 - omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
+        double vR = 1.0 + omega * HALF_DRIVE_TRAIN / (2 * RADIUS);
 
         *theta_L = vL/RADIUS;
         *theta_R = vR/RADIUS;
@@ -64,9 +66,11 @@ int ControllerCalculateActuation(float delta_heading, bool speed, float *theta_L
         return 0;
     }
     else {
-        printf("\n Error! Invalid input received. \n");
+        printf(" \n Error! Invalid input received. \n ");
         return -1;
     }
+
+    *delta_heading_previous_sum+=delta_heading;
 
 } // ControllerCalculateActuation(float, float *, float *)
 
