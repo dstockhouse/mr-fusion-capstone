@@ -1,31 +1,191 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Map Project</title>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-      integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-      crossorigin=""
-    />
-    <script
-      src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-      integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-      crossorigin=""
-    ></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  </head>
-  <body>
-    <div id="mapid"></div>
-  </body>
-  <style>
-    #mapid {
-      height: 100vh;
+<html>
+    <head>
+
+        <title>Mr. Fusion Mobile Robot</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+
+
+
+    </head>
+
+    <body>
+        <div id="mapid"></div>
+    </body>
+    <style>
+#mapid {
+    height: 100vh;
+}
+    </style>
+    </body>
+
+    <!--<div id="mapid" style="width: 600px; height: 400px;"></div>-->
+    <script>
+
+        console.log('start');
+
+function loadJSON(callback) {
+
+    var xobj = new XMLHttpRequest();
+    xobj.overrideMimeType("application/json");
+    console.log('Starting HTTP GET');
+    xobj.onreadystatechange = function () {
+        if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            console.log('Successful request');
+            callback(xobj.responseText);
+        }
+    };
+    xobj.open('GET', 'decode-map.php', true);
+    // xobj.open('GET', 'map.json', true);
+    xobj.send();
+}
+
+function fetchPath(latlng1, latlng2, callback) {
+
+    var xobj = new XMLHttpRequest();
+    xobj.overrideMimeType("application/json");
+    console.log('Starting HTTP GET');
+    xobj.onreadystatechange = function () {
+        if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            console.log('Successful request');
+            callback(xobj.responseText);
+        }
+    };
+    var requrl = 'path.php?s='+latlng1.lng.toString()+','+latlng1.lat.toString()+'&d='+latlng2.lng.toString()+','+latlng2.lat.toString();
+    console.log('Requesting path from: ' + requrl);
+    xobj.open('GET', requrl, true);
+    // xobj.open('GET', 'map.json', true);
+    xobj.send();
+}
+
+console.log('map init');
+
+var mymap = L.map('mapid').setView([34.616, -112.449], 18);
+
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+    '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+    'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    id: 'mapbox.streets'
+}).addTo(mymap);
+
+// Handle click events
+var clicknum = 0;
+var pathsource;
+var pathdest;
+var pathjson;
+var pathjsonlayer;
+var popup1 = L.popup();
+var popup2 = L.popup();
+mymap.on('click', function(e) {
+
+    console.log('Click ' + clicknum.toString() + ' at ' + e.latlng.toString());
+
+    // Decide what to do based on how many clicks have happened
+    if (clicknum == 0) {
+
+        clicknum = 1;
+
+        pathsource = e.latlng;
+        popup1.setLatLng(e.latlng)
+            .setContent('Source: ' + pathsource.lat.toString() + ' N, ' + pathsource.lng.toString() + ' E')
+            .openOn(mymap);
+
+    } else if (clicknum == 1) {
+
+        clicknum = 2;
+
+        pathdest = e.latlng;
+        var contentstring = 'Dest: ' + pathdest.lat.toString() + ' N, ' + pathdest.lng.toString() + ' E';
+        console.log(contentstring);
+        popup2.setLatLng(pathdest)
+            .setContent(contentstring)
+            .openOn(mymap);
+
+        // Plan path
+        console.log('Fetching path');
+        fetchPath(pathsource, pathdest, function(data) {
+            console.log('loading path json');
+            console.log(data);
+            pathjson = JSON.parse(data);
+            console.log('finished parsing path data');
+            console.log(pathjson);
+
+
+            mapjsonlayer.remove();
+            pathjsonlayer = L.geoJSON(pathjson, { filter: function(feature, layer) {
+                if (feature.id[0].includes("Point")) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            }).addTo(mymap);
+        });
+    } else {
+
+        clicknum = 0;
+        pathjsonlayer.remove();
+        mapjsonlayer.addTo(mymap);
     }
-  </style>
-  <script src="./map-setup.js" type="text/javascript"></script>
+});
+
+// Fetch map JSON
+var mapjson;
+var mapjsonlayer;
+console.log('fetch JSON');
+loadJSON(function(data) {
+    console.log('loading map json');
+    // console.log(data);
+    mapjson = JSON.parse(data);
+    console.log('finished parsing map data');
+    console.log(mapjson);
+
+    /*
+for(var i = 0; i < mapjson.features.length; i++) {
+    if (mapjson.features[i].id.includes("Point")) {
+        delete mapjson.features[i];
+    }
+}
+     */
+
+    // Trim unimportant points
+    /*
+        for(var i = 0; i < mapjson.features.length; i++) {
+                if (mapjson.features[i].id.includes("Point")) {
+                        mapjson.features.splice(i, 1);
+                        i--;
+                }
+        }
+     */
+
+    // L.geoJSON(mapjson, { filter: function(feature, layer) { return true; } }).addTo(mymap);
+
+    mapjsonlayer = L.geoJSON(mapjson, { filter: function(feature, layer) {
+        if (feature.id[0].includes("Point")) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    }).addTo(mymap);
+    // L.geoJSON(data).addTo(mymap);
+    // console.log(data);
+});
+
+    </script>
+
+
+
 </html>
 
