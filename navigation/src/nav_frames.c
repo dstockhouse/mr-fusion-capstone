@@ -30,8 +30,26 @@ int llh_to_xyz(double* llh, double* r_e__e_c) {
     return 1;
 }
 
+int xyz_to_llh(double* xyz, double* llh) {
+    double rr = 0;
+    double R_e = RADIUS;
+    double sin_Lat;
+
+    xyz[2] = 0;
+
+    llh[1] = atan2(xyz[1], xyz[0]);
+    rr = sqrt(pow(xyz[0],2) + pow(xyz[1],2));
+    for(int i = 0; i<10; i++) {
+        sin_Lat = xyz[2]/((1-exp(2))*R_e + xyz[2]);
+	xyz[0] = atan((xyz[2]+exp(2)*R_e*sin_Lat)/rr);
+	R_e = RADIUS/sqrt(1-exp(2)*pow(sin_Lat,2));
+	xyz[2] = rr/cos(xyz[0] - R_e);
+    }
+}
+
 int ECEF_llh_to_tan(double* llh, double* r_t__t_b, double** C_e__t) {
     // Convert from ECEF llh to 
+    double llh_origin[3] = {LAT_ORIGIN, LONG_ORIGIN, HEIGHT_ORIGIN};
     double r_e__e_t[3];
     double r_e__e_b[3];
     double r_e__t_b[3];
@@ -40,7 +58,7 @@ int ECEF_llh_to_tan(double* llh, double* r_t__t_b, double** C_e__t) {
     int rv = 0;
 
     // Determine the tangential xyz location 
-    rv = llh_to_xyz(llh, r_e__e_t);
+    rv = llh_to_xyz(llh_origin, r_e__e_t);
     rv = llh_to_xyz(llh, r_e__e_b);
     for(int i = 0; i<3; i++) {
         r_e__t_b[i] = r_e__e_b[i] - r_e__e_t[i];
@@ -54,8 +72,27 @@ int ECEF_llh_to_tan(double* llh, double* r_t__t_b, double** C_e__t) {
     return 1;
 }
 
-int ECEF_xyz_to_tan(double* xyz, double* r_e__t_b, double** C_e__t) {
+int ECEF_xyz_to_tan(double* r_e__e_b, double* r_t__t_b, double** C_e__t) { 
+    double llh_origin[3] = {LAT_ORIGIN, LONG_ORIGIN, HEIGHT_ORIGIN};
+    double llh[3];
+    double r_e__e_t[3];
+    double r_e__t_b[3];
+    double C_e__n[3][3];
+    double C_n__e[3][3];
+    int rv = 0;
 
+    // Determine the tangential xyz location 
+    rv = llh_to_xyz(llh_origin, r_e__e_t);
+    rv = xyz_to_llh(r_e__e_b, llh);
+    for(int i = 0; i<3; i++) {
+        r_e__t_b[i] = r_e__e_b[i] - r_e__e_t[i];
+    }
+
+    // Determine the tangential rotation matrix
+    rv = llh_to_C_e__n(llh, C_e__n);
+    rv = invert(C_n__e, C_e__n);
+    rv = mtimes(C_n__e, r_e__t_b, r_t__t_b);
+    C_e__t = C_e__n;
     return 1;
 }
 
