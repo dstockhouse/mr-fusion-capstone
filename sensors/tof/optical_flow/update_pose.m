@@ -18,9 +18,4 @@ v_t = new_att * v_b;
 dt = 1/constants.fps;
 new_pos = old_pos + v_t*dt;
 
-% rotation = old_pose(1:3, 1:3);
-
-% v_tan = rotation * kai_est(1:3);
-% w_tan = rotation * kai_est(4:6);
-
 end
