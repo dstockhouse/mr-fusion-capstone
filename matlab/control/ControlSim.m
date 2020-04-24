@@ -9,7 +9,7 @@ function [theta_L, theta_R] = ControlSim(delta_heading, speed)
 % Outputs: theta_L - angular velocity of left wheel in rad/sec
 %          theta_R - angular velocity of right wheel in rad/sec
 % Author: Connor Rockwell, Joy Fucella, Duncan Patel
-% Last Modified: 4/05/2020
+% Last Modified: 4/22/2020
 %--------------------------------------------------------------------------
 
 %--------------------------------------------------------------------------
@@ -38,34 +38,26 @@ end
 %--------------------------------------------------------------------------
 % Define controller
 %--------------------------------------------------------------------------
-Kp = 4;             % proportional controller constant
-Ki = 0.2;             % integral controller constant
-Kd = 0.7;          % derivative controller constant
+Kp = 4;          % proportional controller constant
+Ki = 0.2;        % integral controller constant
 
 if Vsys == 0
     delta_heading_previous_sum = 0;
 end
 
-% PID controller parameters
+% PI controller components
 P = Kp*delta_heading;
 I = Ki*(delta_heading + delta_heading_previous_sum);
-D = Kd*(delta_heading - delta_heading_previous)*time_step;
 
-if Vsys == 0                  % Set wheel velocities manually if a system 
-    theta_L = 1;              % velocity of 0 is received
-    theta_R = -1;
+omega = P + I; % PI controller block
     
-else
-    omega = P; % PID controller block
-    
-    vL = Vsys - omega*L/(2*r); % linear velocity of left wheel
-    vR = Vsys + omega*L/(2*r); % linear velocity of right wheel
+vL = Vsys - omega*L/(2*r); % linear velocity of left wheel
+vR = Vsys + omega*L/(2*r); % linear velocity of right wheel
 
-    theta_L = vL/r;            % angular velocity of left wheel
-    theta_R = vR/r;            % angular velocity of right wheel
-end
+theta_L = vL/r;            % angular velocity of left wheel
+theta_R = vR/r;            % angular velocity of right wheel
 
-delta_heading_previous = delta_heading;
+% Update cumulative error
 delta_heading_previous_sum = delta_heading_previous_sum + delta_heading;
 
 end % End of function
