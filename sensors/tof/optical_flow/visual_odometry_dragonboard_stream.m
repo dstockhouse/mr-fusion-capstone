@@ -19,11 +19,11 @@ samples_path = '../samples';
 addpath(samples_path);
 % filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
-% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/far_move_forward_then_back.tof'];
 % filename = [samples_path '/medium_apt_rotate.tof'];
-filename = [samples_path '/far_apt_stationary.tof'];
+% filename = [samples_path '/far_apt_stationary.tof'];
 % filename = [samples_path '/medium_apt_stationary.tof'];
 
 % Ensure file exists where expected
@@ -155,7 +155,7 @@ for frame_index = 2:constants.num_frames
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
-    PLOT_PYRAMID = false;
+    PLOT_PYRAMID = true;
     if PLOT_PYRAMID
         
         % Show starting depth and points

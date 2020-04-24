@@ -23,9 +23,6 @@ cols = depth_dim(2);
 % Unpack SE(3) rigid transformation into se(3) vector
 transformationVector = trans2kai(cumulativeTransformation * constants.fps);
 
-% kai = velocity state [vx, vy, vz, wx, wy, wz]'
-kai_level = kai_est - transformationVector;
-
 % Split up the input differentials
 du = differentials(:,:,1);
 dv = differentials(:,:,2);
@@ -53,7 +50,7 @@ for u = 2:(cols-1)
         
         % Only compute if it has a nonzero depth value at the point
         if pointCloudAvg(v, u, 3) > 0.01
-
+            
             x = pointCloudAvg(v, u, 1);
             y = pointCloudAvg(v, u, 2);
             z = pointCloudAvg(v, u, 3);
@@ -63,27 +60,9 @@ for u = 2:(cols-1)
             z2 = z^2;
             z4 = z2^2;
             
-            
             %% Measurement error
-            % Directly from Jaimez work
-            % 
-            % var44 = kz2 * z4 * constants.fps^2;
-            % var55 = kz2 * z4 * 0.25;
-            % var66 = var55;
-            % 
-            % j4 = 1;
-            %
-            % j5 = x * inv_d * inv_d * f_inv * (kai_level(1) + y * kai_level(5) - x * kai_level(6)) + ...
-            %     inv_d * f_inv * (-kai_level(2) - z * kai_level(6) + y * kai_level(4));
-            %
-            % j6 = y * inv_d * inv_d * f_inv * (kai_level(1) + y * kai_level(5) - x * kai_level(6)) + ...
-            %     inv_d * f_inv * (-kai_level(3) + z * kai_level(5) - x * kai_level(4));
-            %
-            % sigma_m = j4^2 * var44 + j5^2 * var55 + j6^2 * var66;
-
             % Easier method
             sigma_m = kz2 * z^4;
-            
             
             %% Linearization error
             % Renamed from example code:
