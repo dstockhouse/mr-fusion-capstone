@@ -293,9 +293,6 @@ for frame_index = 2:constants.num_frames
         kai_est = reshape(p_kai(image_level,:),6,1);
         
         %% Filter velocity
-        %     p_kai(image_level, :) = filter_velocity();
-%         p_transformations(image_level,:,:) = kai2trans(p_kai(image_level, :)');
-        %     p_transformations(image_level,:,:) = eye(4);
         p_kai_unfiltered(image_level,:) = kai_est;
         kai_est_unf = kai_est;
         p_transformations_unfiltered(image_level,:,:) = kai2trans(reshape(p_kai_unfiltered(image_level,:), 6, 1));

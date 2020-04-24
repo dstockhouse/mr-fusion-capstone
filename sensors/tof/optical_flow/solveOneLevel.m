@@ -61,17 +61,13 @@ B = B(1:cont-1,:);
 % Solve the linear system of equations using weighted least squares
 AtA = A' * A;
 AtB = A' * B;
-% var = linsolve(AtA,AtB);
-var = A \ B;
+kai = A \ B; % Update Velocity
 
 % Covariance matrix calc
 res = -B;
 for k=1:6
-    res = res + var(k) * A(:,k);
+    res = res + kai(k) * A(:,k);
 end
 est_cov = (1/(numValidPoints - 6))*inv(AtA)*norm(res,2)^2; % Might just be norm(res)^2
-
-% Update velocity
-kai = var;
 
 end
