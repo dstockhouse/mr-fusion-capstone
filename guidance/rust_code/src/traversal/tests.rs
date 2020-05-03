@@ -7,10 +7,10 @@ use super::*;
 
 #[test]
 fn new_proximity_line() {
-    let robot_loc = TangentialPoint::new(0.0, 1.2, 0.0);
+    let prev_point = TangentialPoint::new(0.0, 1.2, 0.0);
     let next_point = TangentialPoint::new(2.0, 1.0, 0.0);
     
-    let proximity_line = ProximityLine::new(&robot_loc, &next_point);
+    let proximity_line = ProximityLine::new(&prev_point, &next_point);
 
     assert!(
         proximity_line.m > 9.9 &&
@@ -23,10 +23,10 @@ fn new_proximity_line() {
 
 #[test]
 fn horizontal_proximity_line() {
-    let robot_loc = TangentialPoint::new(0.0, 1.0, 0.0);
+    let prev_point = TangentialPoint::new(0.0, 1.0, 0.0);
     let next_point = TangentialPoint::new(0.0, 3.0, 0.0);
 
-    let proximity_line = ProximityLine::new(&robot_loc, &next_point);
+    let proximity_line = ProximityLine::new(&prev_point, &next_point);
 
     assert_eq!(proximity_line.m, 0.0);
 }
@@ -35,10 +35,10 @@ fn horizontal_proximity_line() {
 fn vertical_proximity_line() {
     use std::f64;
 
-    let robot_loc = TangentialPoint::new(0.0, 1.0, 0.0);
+    let prev_point = TangentialPoint::new(0.0, 1.0, 0.0);
     let next_point = TangentialPoint::new(2.0, 1.0, 0.0);
 
-    let proximity_line = ProximityLine::new(&robot_loc, &next_point);
+    let proximity_line = ProximityLine::new(&prev_point, &next_point);
 
     assert_eq!(proximity_line.m, f64::NEG_INFINITY);
 }

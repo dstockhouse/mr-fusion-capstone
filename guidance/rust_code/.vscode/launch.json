@@ -52,7 +52,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Test intialize_from_gpx_file_single_edge",
+            "name": "Test intialize_from_gpx_file",
             "cargo": {
                 "args": [
                     "test",
@@ -67,7 +67,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["initialize_from_kml_file_single_edge"],
+            "args": ["initialize_from_gpx_file"],
             "cwd": "${workspaceFolder}"
         },
 
