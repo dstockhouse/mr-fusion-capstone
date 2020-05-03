@@ -47,8 +47,10 @@ jobs:
       - sudo dpkg -i ~/Downloads/cgreen_1.2.0_amd64.deb
     compiler: gcc
     script: 
-      - cd ./system && make test
-      - make
-      - cd ../control && make test
+      - cd ./system && make
+      - sudo make test
       - cd ../navigation && make test
+      - cd ../control && make test
+      - cd ../imageproc && make test
+    after_success: 
       - cd .. && bash <(curl -s https://codecov.io/bash)

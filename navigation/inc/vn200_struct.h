@@ -29,17 +29,17 @@
 typedef struct {
 	double time;      // 0: Time of the week in seconds
 	uint16_t week;    // 1: GPS week
-	uint8_t GpsFix;   // 2: GPS fix type. See table below.
+	uint8_t GpsFix;   // 2: GPS fix type. 03 means locked.
 	uint8_t NumSats;  // 3: Number of GPS satellites used in solution.
-	double Latitude;  // 4: Latitude in degrees.
-	double Longitude; // 5: Longitude in degrees.
-	double Altitude;  // 6: Altitude above ellipsoid. (WGS84)
-	float NedVelX;    // 7: Velocity measurement in north direction.
-	float NedVelY;    // 8: Velocity measurement in east direction.
-	float NedVelZ;    // 9: Velocity measurement in down direction.
-	float NorthAcc;   // 10: North position accuracy estimate. (North)
-	float EastAcc;    // 11: East position accuracy estimate. (East)
-	float VertAcc;    // 12: Vertical position accuracy estimate. (Down)
+	double PosX;      // 4: ECEF X position in meters.
+	double PosY;      // 5: ECEF Y position in meters.
+	double PosZ;      // 6: ECEF Z position in meters.
+	float VelX;       // 7: Velocity measurement in ECEF X direction.
+	float VelY;       // 8: Velocity measurement in ECEF Y direction.
+	float VelZ;       // 9: Velocity measurement in ECEF Z direction.
+	float PosAccX;    // 10: ECEF X position accuracy estimate.
+	float PosAccY;    // 11: ECEF Y position accuracy estimate.
+	float PosAccZ;    // 12: ECEF Z position accuracy estimate.
 	float SpeedAcc;   // 13: Speed accuracy estimate.
 	float TimeAcc;    // 14: Time accuracy estimate.  
 
@@ -65,50 +65,6 @@ typedef enum {
 	VN200_PACKET_CONTENTS_TYPE_IMU,
 	VN200_PACKET_CONTENTS_TYPE_OTHER
 } VN200_PACKET_CONTENTS_TYPE;
-
-#if 0
-// A packet from the VN200 which may either be GPS, IMU, or other data.
-// Includes the raw data in a buffer and after parsing
-typedef struct {
-
-	int startIndex; // Buffer offset for start of packet data
-	int endIndex;   // Buffer offset for end of complete packet data
-	// The end index is only set when entire packet data is available
-
-	// Enum indicating type of data
-	VN200_PACKET_CONTENTS_TYPE contentsType;
-
-	GPS_DATA GPSData; // Parsed GPS data (if packet is GPS data)
-	IMU_DATA IMUData; // Parsed IMU data (if packet is IMU data)
-
-	int isParsed;     // Bool indicating that the raw data has been parsed
-	double timestamp; // Timestamp when packet start was read from UART
-	struct timespec timestamp_ts;
-
-	// Not yet implemented
-	// semaphore_t *sem;  // Pointer to a semaphore (to use if multithreaded)
-
-} VN200_PACKET;
-
-
-// Large enough to not worry about overrunning
-#define VN200_PACKET_RING_BUFFER_SIZE 256
-#define VN200_PACKET_RING_BUFFER_MOD(N) MOD(N, VN200_PACKET_RING_BUFFER_SIZE)
-
-// Input buffer for data of multiple packets
-typedef struct {
-
-	BYTE_BUFFER *buf; // Pointer to buffer for input packet data
-
-	// Buffer of packets
-	VN200_PACKET packets[VN200_PACKET_RING_BUFFER_SIZE];
-
-	int start; // Index of first valid packet element
-	int end;   // Index after last valid element (to add next)
-	           // Buffer is full if start == end - 1
-
-} VN200_PACKET_RING_BUFFER;
-#endif
 
 typedef struct {
 

@@ -94,7 +94,7 @@ int VN200IMUPacketParse(unsigned char *buf, int len, IMU_DATA *data) {
     logDebug(L_VDEBUG, "\n\n");
 
     // Copy string into local variable
-    strncpy(currentPacket, &(buf[0]), len);
+    strncpy(currentPacket, (char *)&(buf[0]), len);
 
     // Parse out values (all doubles)
     rc = sscanf(currentPacket, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",

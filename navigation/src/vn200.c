@@ -145,7 +145,7 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
  */
 int VN200Poll(VN200_DEV *dev) {
 
-    int numToRead, numRead, rc, ioctl_status;
+    int numToRead, numRead, rc;
     unsigned char uartData[BYTE_BUFFER_LEN];
 
     // Exit on error if invalid pointer
@@ -164,6 +164,7 @@ int VN200Poll(VN200_DEV *dev) {
     // completely necessary check, it can be skipped if not found.
 #ifdef FIONREAD
     // Check if how many bytes of UART data available
+    int ioctl_status;
     rc = ioctl(dev->fd, FIONREAD, &ioctl_status);
     if (rc) {
         logDebug(L_INFO, "%s: VN200Poll: ioctl() failed to fetch FIONREAD\n", strerror(errno));
@@ -450,7 +451,7 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
         LogInit(&(dev->logFileGPSParsed), logFileDirName, "VN200_GPS", LOG_FILEEXT_CSV);
 
         // Write header to CSV data
-        logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,lat,lon,alt,velx,vely,velz,nacc,eacc,vacc,sacc,tacc,timestamp\n");
+        logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,posx,posy,posz,velx,vely,velz,xacc,yacc,zacc,sacc,tacc,timestamp\n");
         LogUpdate(&(dev->logFileGPSParsed), logBuf, logBufLen);
 
     }

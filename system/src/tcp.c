@@ -53,7 +53,7 @@
  */
 int TCPClientInit() {
 
-    int sock_fd;
+    int sock_fd, rc;
 
     // Create bare socket
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -62,10 +62,16 @@ int TCPClientInit() {
         return sock_fd;
     }
 
-    // Configure socket options
-    // Leaving this as a reminder to investigate further, but not yet using
-    // int socketOption;
-    // setsockopt(sock_fd, SOL_SOCKET, SO_OPTION, &socketOption, sizeof(int));
+    // Configure socket options to allow reusing addresses
+    int socketOption = 1;
+    rc = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &socketOption, sizeof(int));
+    if (rc != 0) {
+        logDebug(L_INFO, "Unable to set socket option SO_REUSEADDR: %s\n", strerror(errno));
+    }
+    rc = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEPORT, &socketOption, sizeof(int));
+    if (rc != 0) {
+        logDebug(L_INFO, "Unable to set socket option SO_REUSEPORT: %s\n", strerror(errno));
+    }
 
     // Return file descriptor for socket
     return sock_fd;
@@ -166,8 +172,16 @@ int TCPServerInit(char *ipAddr, int port) {
         return sock_fd;
     }
 
-    // Configure socket options
-    // setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &socketOption, sizeof(int));
+    // Configure socket options to allow reusing addresses
+    int socketOption = 1;
+    rc = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &socketOption, sizeof(int));
+    if (rc != 0) {
+        logDebug(L_INFO, "Unable to set socket option SO_REUSEADDR: %s\n", strerror(errno));
+    }
+    rc = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEPORT, &socketOption, sizeof(int));
+    if (rc != 0) {
+        logDebug(L_INFO, "Unable to set socket option SO_REUSEPORT: %s\n", strerror(errno));
+    }
 
     // Configure socket address
     // AF_INET = Address Family InterNet
