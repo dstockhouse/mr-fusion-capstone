@@ -34,6 +34,7 @@ unsigned char VN200CalculateChecksum(unsigned char data[], unsigned int length) 
     return cksum;
 }
 
+/* From VN200 documentation. Used for binary messages, so keeping around in case
 // Calculates the 16-bit CRC for the given ASCII or binary message.
 unsigned short VN200CalculateCRC(unsigned char data[], unsigned int length) {
 
@@ -50,4 +51,5 @@ unsigned short VN200CalculateCRC(unsigned char data[], unsigned int length) {
 
     return crc;
 }
+*/
 
