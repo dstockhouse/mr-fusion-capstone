@@ -5,4 +5,4 @@ main:
 	cd rust_code && cargo run
 
 test:
-	cd rust_code && cargo test
+	cd rust_code && cargo test -- --test-threads=1
