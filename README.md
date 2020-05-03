@@ -127,7 +127,7 @@ cargo run
 To build and run the guidance executable with unit tests, enter
 
 ```
-cargo test
+cargo test -- --test-threads=1
 ```
 
 ### Automated Tests

@@ -6,7 +6,7 @@ debug: | guidance_main.elf
 	cd rust_code && cargo build && ln -fs target/debug/rust_code guidance_main.elf
 
 test:
-	cd rust_code && cargo test
+	cd rust_code && cargo test -- --test-threads=1
 
 release: | guidance_main.elf
 	cd rust_code && cargo build --release && ln -fs target/release/rust_code guidance_main.elf
