@@ -23,7 +23,7 @@
 
 /**** Function KangarooInit ****
  *
- * Determines how fast to drive each of the motors based on the input heading
+ * 
  *
  * Arguments: 
  * 	dev - Pointer to Kangaroo object to initialize

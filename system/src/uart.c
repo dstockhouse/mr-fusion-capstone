@@ -182,6 +182,11 @@ int UARTSetBaud(int fd, int baud) {
             cfsetispeed(&uartOptions, B57600);
             cfsetospeed(&uartOptions, B57600);
             break;
+        case 9600:
+            uartOptions.c_cflag |= B9600;
+            cfsetispeed(&uartOptions, B9600);
+            cfsetospeed(&uartOptions, B9600);
+            break;
         default:
             logDebug(L_INFO, "Unexpected baud rate: %d. Exiting\n", baud);
             close(fd);
