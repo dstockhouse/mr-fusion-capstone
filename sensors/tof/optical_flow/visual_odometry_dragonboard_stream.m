@@ -3,14 +3,6 @@
 
 clear; clc; close all;
 
-% Notes to complete before IDR:
-%
-% * Make slides for the visual odometry algorithm, as a flow chart, set of
-%   steps as in the paper, and talk about what we implement here
-% * Make this into a depth movie where the point cloud and depth/IR/points plot
-%   is combined with some representation of the velocity. Maybe plot a moving
-%   XYZ coordinate axis that shows where we believe the camera to be
-% * Discuss the pitfalls of the depth map output and discuss fusing it with IR
 
 %% Read image file
 addpath('../samples');
@@ -19,10 +11,10 @@ samples_path = '../samples';
 addpath(samples_path);
 % filename = [samples_path '/far_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/far_noise_reduce_60_linear_move.tof'];
-filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
+% filename = [samples_path '/medium_noise_reduce_60_rotate.tof'];
 % filename = [samples_path '/medium_noise_reduce_60_linear_move.tof'];
 % filename = [samples_path '/far_move_forward_then_back.tof'];
-% filename = [samples_path '/medium_apt_rotate.tof'];
+filename = [samples_path '/medium_apt_rotate.tof'];
 % filename = [samples_path '/far_apt_stationary.tof'];
 % filename = [samples_path '/medium_apt_stationary.tof'];
 
@@ -155,7 +147,7 @@ for frame_index = 2:constants.num_frames
     [p_depth_new, p_points_new] = gaussian_pyramid(new_depth, gaussian_levels, constants);
     
     % Plot the pyramid
-    PLOT_PYRAMID = true;
+    PLOT_PYRAMID = false;
     if PLOT_PYRAMID
         
         % Show starting depth and points
@@ -348,8 +340,7 @@ for frame_index = 2:constants.num_frames
     
     % Bottom left plot
     subplot(2, 2, 3);
-    p_exclude = reshape(p_points_new(1,:,:,:), constants.rows, constants.cols, 3);
-    pcshow(p_exclude);
+    pcshow(reshape(p_points_new(1,:,:,:), constants.rows, constants.cols, 3));
     title('Point Cloud (front)');
     view([0 0 -1]);
     xlabel('x (m)');
