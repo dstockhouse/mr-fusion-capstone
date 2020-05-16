@@ -93,34 +93,47 @@ int main(int argc, char **argv) {
     command = "2,units798mm=420lines\r\n";
     UARTWrite(fd, command, strlen(command));
 
+    printw("Arrow keys to change speed and direction.\n");
+    printw("Space to stop the robot (slowly)\n");
+    printw("'q' to quit the program\n");
+    printw("Any other key halts motion immediately\n\n");
+
     // Loop Until ending
     int loopContinue = 1;
     double speed = 0.0, rotation = 0.0;
+    double filtspeed = 0.0, filtrotation = 0.0;
     while (loopContinue) {
 
         // Get single character input from user
         int input = getch();
-        flushinp();
+        // flushinp();
 
-        speed = 0.0;
-        rotation = 0.0;
+        // speed = 0.0;
+        // rotation = 0.0;
 
         switch (input) {
 
             // Linear speed control
             case KEY_UP:
-                speed = 0.5;
+                speed += 0.2;
                 break;
             case KEY_DOWN:
-                speed = -0.5;
+                speed -= 0.2;
                 break;
 
             // Angular speed control
             case KEY_LEFT:
-                rotation = 0.25;
+                rotation += 0.2;
                 break;
             case KEY_RIGHT:
-                rotation = -0.25;
+                rotation -= 0.2;
+                break;
+
+            case ' ':
+            case KEY_STAB:
+            case KEY_END:
+                speed = 0;
+                rotation = 0;
                 break;
 
             case 'q':
@@ -128,20 +141,44 @@ int main(int argc, char **argv) {
                 loopContinue = 0;
                 break;
 
+            case ERR:
+                // No input
+                break;
+
             default:
+                filtspeed = 0;
+                filtrotation = 0;
+                speed = 0;
+                rotation = 0;
                 break;
         }
 
+        if (speed > 0.8) {
+            speed = 0.8;
+        } else if (speed < -0.8) {
+            speed = -0.8;
+        }
+        if (rotation > 0.8) {
+            rotation = 0.8;
+        } else if (rotation < -0.8) {
+            rotation = -0.8;
+        }
+
+        // Apply a low pass filter
+        int filtersize = 3;
+        filtspeed = filtspeed * (filtersize-1) / filtersize + speed / filtersize;
+        filtrotation = filtrotation * (filtersize-1) / filtersize + rotation / filtersize;
+
         // Calculate speed to drive each motor
-        int m1speed = (int)(speed * 1000 - rotation * 500);
-        int m2speed = (int)(speed * 1000 + rotation * 500);
+        int m1speed = (int)(filtspeed * 1000 - filtrotation * 500);
+        int m2speed = (int)(filtspeed * 1000 + filtrotation * 500);
 
         printw("  S: %.3f  R: %.3f   M1: %d   M2: %d                          \r",
-                speed, rotation, m1speed, m2speed);
+                filtspeed, filtrotation, m1speed, m2speed);
 
         // Drive motors at that speed
-        setSpeed(fd, 1, m1speed);
-        setSpeed(fd, 2, m2speed);
+        setSpeed(fd, 1, -m1speed);
+        setSpeed(fd, 2, -m2speed);
 
     } // while (loopContinue)
 
@@ -174,6 +211,7 @@ int cursesInit() {
     noecho();       // Don't echo input to screen
     notimeout(stdscr, TRUE);    // No delay after pressing escape
     keypad(stdscr, TRUE);   // Allow special characters
+    halfdelay(1);   // Delay 1/10th second for each character
 
     return 0;
 
