@@ -30,7 +30,7 @@
 #include "config.h"
 #include "buffer.h"
 #include "logger.h"
-#include "debuglog.h"
+#include "utils.h"
 #include "uart.h"
 #include "vn200_crc.h"
 #include "vn200_gps.h"
@@ -118,13 +118,6 @@ int VN200BaseInit(VN200_DEV *dev, char *devname, int baud) {
     BufferEmpty(&(dev->inbuf));
     BufferEmpty(&(dev->outbuf));
 
-#if 0 // TODO REMOVE
-    // Initialize packet ring buffer
-    dev->ringbuf.start = 0;
-    dev->ringbuf.end = 0;
-    dev->ringbuf.buf = &(dev->inbuf);
-#endif
-
     return 0;
 
 } // VN200BaseInit(VN200_DEV *)
@@ -176,7 +169,7 @@ int VN200Poll(VN200_DEV *dev) {
 #endif
 
     // Calculate length and pointer to proper position in array
-    numToRead = BYTE_BUFFER_LEN - BufferLength(&(dev->inbuf));
+    numToRead = BYTE_BUFFER_MAX_LEN - BufferLength(&(dev->inbuf));
 
     logDebug(L_DEBUG, "Attempting to read %d bytes from uart device...\n", numToRead);
 

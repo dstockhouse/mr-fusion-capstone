@@ -18,7 +18,8 @@
  *
  ***************************************************************************/
 
-#include "debuglog.h"
+#include "config.h"
+#include "utils.h"
 
 #include "logger.h"
 

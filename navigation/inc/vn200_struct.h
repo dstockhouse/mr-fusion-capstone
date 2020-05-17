@@ -71,11 +71,11 @@ typedef struct {
 	int fd; // UART file descriptor
 
 	BYTE_BUFFER inbuf;  // Input data buffer
-	BYTE_BUFFER outbuf;     // Output data buffer
+	BYTE_BUFFER outbuf; // Output data buffer
 
-	LOG_FILE logFile; // Raw data log file
-	LOG_FILE logFileGPSParsed; // Parsed GPS data log file
-	LOG_FILE logFileIMUParsed; // Parsed IMU data log file
+	LOG_FILE logFile;           // Raw data log file
+	LOG_FILE logFileGPSParsed;  // Parsed GPS data log file
+	LOG_FILE logFileIMUParsed;  // Parsed IMU data log file
 
 	int baud; // Baud rate
 	int fs; // Sampling Frequency

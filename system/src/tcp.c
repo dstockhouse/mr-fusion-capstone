@@ -34,7 +34,8 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
-#include "debuglog.h"
+#include "config.h"
+#include "utils.h"
 
 #include "tcp.h"
 

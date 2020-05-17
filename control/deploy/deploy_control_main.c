@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "debuglog.h"
+#include "utils.h"
 #include "tcp.h"
 
 #define IP_ADDR     "127.0.0.1"

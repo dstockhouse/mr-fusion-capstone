@@ -395,7 +395,7 @@ Ensure(Buffer, catches_invalid_accesses) {
     assert_that(rc, is_equal_to(-1));
 
     rc = BufferCopy(NULL, NULL, 0, 0);
-    assert_that(rc, is_equal_to(-1));
+    assert_that(rc, is_equal_to(0));
 
     // Bounds rejection
     rc = BufferAddArray(&buf, data, BYTE_BUFFER_MAX_LEN);

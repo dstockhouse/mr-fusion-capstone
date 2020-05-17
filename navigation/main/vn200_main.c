@@ -25,7 +25,6 @@
 #include "utils.h"
 #include "buffer.h"
 #include "logger.h"
-#include "debuglog.h"
 #include "uart.h"
 
 #include "VN200.h"

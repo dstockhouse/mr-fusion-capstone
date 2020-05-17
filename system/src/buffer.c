@@ -27,7 +27,8 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include "debuglog.h"
+#include "config.h"
+#include "utils.h"
 
 #include "buffer.h"
 
@@ -263,7 +264,7 @@ int BufferCopy(BYTE_BUFFER *buf, unsigned char *dest, int start, int num) {
     // Exit if buffer pointer invalid
     if (buf == NULL || dest == NULL) {
         // Invalid buffer
-        return -1;
+        return 0;
     }
 
     // Copy no elements if inputs are negative

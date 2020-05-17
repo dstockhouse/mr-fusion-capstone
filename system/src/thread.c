@@ -27,7 +27,8 @@
 #include <pthread.h>
 #include <sched.h>
 
-#include "debuglog.h"
+#include "config.h"
+#include "utils.h"
 
 #include "thread.h"
 

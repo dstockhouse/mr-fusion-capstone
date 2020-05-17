@@ -33,7 +33,7 @@
 #include <sys/stat.h>
 
 #include "config.h"
-#include "debuglog.h"
+#include "utils.h"
 #include "buffer.h"
 #include "logger.h"
 #include "uart.h"

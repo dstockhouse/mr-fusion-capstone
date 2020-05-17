@@ -26,7 +26,7 @@
 
 // Custom library headers
 #include "config.h"
-#include "debuglog.h"
+#include "utils.h"
 #include "tcp.h"
 #include "thread.h"
 

@@ -31,7 +31,7 @@
  ***************************************************************************/
 
 #include "config.h"
-#include "debuglog.h"
+#include "utils.h"
 
 #include "uart.h"
 
