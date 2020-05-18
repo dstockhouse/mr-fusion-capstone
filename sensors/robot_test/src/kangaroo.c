@@ -223,11 +223,11 @@ int KangarooPoll(KANGAROO_DEV *dev) {
     // Calculate length and pointer to proper position in array
     numToRead = BYTE_BUFFER_MAX_LEN - BufferLength(&(dev->inbuf));
 
-    logDebug(L_VDEBUG, "Attempting to read %d bytes from UART device...\n", numToRead);
+    logDebug(L_VVDEBUG, "Attempting to read %d bytes from UART device...\n", numToRead);
 
     // Read without blocking from UART device
     numRead = UARTRead(dev->fd, uartData, numToRead);
-    logDebug(L_DEBUG, "\tRead %d\n", numRead);
+    logDebug(L_VVDEBUG, "\tRead %d\n", numRead);
 
     rc = BufferAddArray(&(dev->inbuf), uartData, numRead);
 
@@ -344,7 +344,7 @@ int KangarooParse(KANGAROO_DEV *dev, KANGAROO_PACKET *packet) {
     getTimestamp(NULL, &(packet->timestamp));
 
     // Return number successfully parsed
-    return i;
+    return packetStart;
 
 } // KangarooParse(KANGAROO_DEV *, KANGAROO_PACKET *)
 
@@ -402,9 +402,7 @@ int KangarooConsume(KANGAROO_DEV *dev, int num) {
         return -1;
     }
 
-    logDebug(L_VDEBUG, "Attempting to consume %d bytes\n", num);
     num = BufferRemove(&(dev->inbuf), num);
-    logDebug(L_VDEBUG, "Consumed %d bytes, %d remaining.\n", num, BufferLength(&(dev->inbuf)));
 
     return num;
 

@@ -32,7 +32,6 @@ typedef struct {
     int fd;
 
 	BYTE_BUFFER inbuf;
-	BYTE_BUFFER outbuf;
 
     LOG_FILE logFile;
     LOG_FILE logFileParsed;
@@ -46,6 +45,7 @@ typedef enum {
     KPT_SPEED
 } KANGAROO_PACKET_TYPE;
 
+// Input packet containing the type and data
 typedef struct {
 
     int channel;
@@ -69,8 +69,6 @@ int KangarooParse(KANGAROO_DEV *dev, KANGAROO_PACKET *packet);
 int KangarooLogOdometry(KANGAROO_DEV *dev, int lPos, int rPos, double timestamp);
 
 int KangarooConsume(KANGAROO_DEV *dev, int num);
-
-int KangarooFlushInput(KANGAROO_DEV *dev);
 
 int KangarooCommand(KANGAROO_DEV *dev, char *buf, int num, int sendChk);
 

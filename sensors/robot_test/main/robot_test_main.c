@@ -4,46 +4,112 @@
  * 	kangaroo_main.c
  *
  * Description:
- *	Tests the Kangaroo functionality
+ *	Tests the Kangaroo device functionality
  * 
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 05/03/2020
+ * 	Last edited 05/17/2020
  *
  ***************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
 #include <errno.h>
-
-// Use ncurses library
-// #include <ncurses.h>
 
 #include "config.h"
 #include "utils.h"
 #include "buffer.h"
 #include "logger.h"
 #include "uart.h"
+#include "thread.h"
 
 #include "kangaroo.h"
 
-// #define KANGAROO_DEVNAME "/dev/ttyAMA0"
+int odometryContinue = 1;
 
-int setSpeed(int fd, int motor, int speed) {
+void *odometry_run(void *param) {
 
-    char command[512];
+    KANGAROO_PACKET packet;
+    int rc;
 
-    int len = snprintf(command, 512, "%d,s%d\r\n", motor, speed);
+    // Input parameter is the initialized kangaroo device
+    KANGAROO_DEV *dev = (KANGAROO_DEV *) param;
 
-    int rc = UARTWrite(fd, command, len);
+    int lPos, rPos, newRawOdometry = 0, numConsumed;
+    double lTimestamp, rTimestamp;
 
-    return rc;
+    printf("  Starting odometry thread\n");
+
+    while (odometryContinue) {
+
+        rc = KangarooPoll(dev);
+        if (rc < 0) {
+            logDebug(L_INFO, "Kangaroo Read thread failed to poll UART Device: %s\n",
+                    strerror(errno));
+        }
+
+        do {
+
+            numConsumed = 0;
+
+            rc = KangarooParse(dev, &packet);
+            if (rc < 0) {
+                logDebug(L_INFO, "Kangaroo Read thread failed to parse bytes from packet: %s\n",
+                        strerror(errno));
+            } else {
+
+                rc = KangarooConsume(dev, rc);
+                if (rc < 0) {
+                    logDebug(L_INFO, "Failed to consume bytes\n");
+                } else {
+                    numConsumed = rc;
+                }
+
+                if (packet.valid && packet.type == KPT_POS) {
+                    if (packet.channel == LEFT_MOTOR_INDEX) {
+                        lPos = packet.data;
+                        lTimestamp = packet.timestamp;
+                        newRawOdometry = 1;
+                    } else if (packet.channel == RIGHT_MOTOR_INDEX) {
+                        rPos = packet.data;
+                        rTimestamp = packet.timestamp;
+                        newRawOdometry = 1;
+                    }
+                } else {
+                    // Unexpected packet type
+                }
+
+                // If packets have a similar timestamp, then assume they are the same
+                if (newRawOdometry) {
+                    newRawOdometry = 0;
+
+                    // If less than 50 ms different, assume they are the same reading
+                    if (fabs(lTimestamp - rTimestamp) < 0.05) {
+
+                        // Log to file
+                        rc = KangarooLogOdometry(dev, lPos, rPos, MIN(lTimestamp, rTimestamp));
+                        if (rc < 0) {
+                            logDebug(L_INFO, "Unable to log odometry data to file\n");
+                        }
+                    }
+                }
+
+            } // if/else parse succeeded
+
+        } while (numConsumed > 0);
+
+    } // while (odometryContinue)
+
+    printf("  Ending odometry thread\n");
+
+    return (void *) 0;
 }
 
 int main(int argc, char **argv) {
@@ -69,7 +135,7 @@ int main(int argc, char **argv) {
     }
 
     // Initialize serial device
-    rc = KangarooInit(&dev, devname, NULL, 9600);
+    rc = KangarooInit(&dev, devname, "log", 9600);
     if (rc != 0) {
         logDebug(L_INFO, "Failed to initialize UART device '%s'\n", devname);
         return rc;
@@ -79,6 +145,26 @@ int main(int argc, char **argv) {
     printf("Space to stop the robot (slowly)\n");
     printf("'q' to quit the program\n");
     printf("Any other key halts motion immediately\n\n");
+
+
+    // Dispatch reader thread at highest priority
+    pthread_attr_t odometryAttr;
+    pthread_t odometryThread;
+
+    rc = ThreadAttrInit(&odometryAttr, 0);
+    if (rc < 0) {
+        logDebug(L_INFO, "Failed to set thread attributes: %s\n",
+                strerror(errno));
+        return 1;
+    }
+    rc = ThreadCreate(&odometryThread, &odometryAttr, &odometry_run, (void *) &dev);
+    if (rc < 0) {
+        logDebug(L_INFO, "Failed to start odometry thread: %s\n",
+                strerror(errno));
+        return 1;
+    }
+
+    usleep(100000);
 
     // Loop Until ending
     int loopContinue = 1;
@@ -184,18 +270,32 @@ int main(int argc, char **argv) {
         int m1speed = (int)(filtspeed * 1000 - filtrotation * 500);
         int m2speed = (int)(filtspeed * 1000 + filtrotation * 500);
 
-        printf("  S: %.3f  R: %.3f   M1: %4d   M2: %4d      \r",
+        printf("  S: %.3f  R: %.3f  M1: %4d  M2: %4d     \r",
                 filtspeed, filtrotation, m1speed, m2speed);
 
         // Drive motors at that speed
         KangarooCommandSpeed(&dev, -m1speed, -m2speed);
 
+        // Request to receive an odometry reading
+        KangarooRequestPosition(&dev);
+
+        // Delay for the loop to run more slowly
         struct timespec delaytime;
         delaytime.tv_sec = 0;
         delaytime.tv_nsec = 20000000; // 20 ms
         nanosleep(&delaytime, NULL);
 
     } // while (loopContinue)
+
+    odometryContinue = 0;
+
+    printf("\n\nAttempting to join reader thread...\n");
+    do {
+
+        rc = ThreadTryJoin(odometryThread, NULL);
+        usleep(100000);
+
+    } while (rc != 0 && errno == EBUSY);
 
     // Clean up serial device
     KangarooDestroy(&dev);
