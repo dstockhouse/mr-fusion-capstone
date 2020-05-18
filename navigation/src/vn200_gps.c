@@ -84,9 +84,6 @@ int VN200GPSInit(VN200_DEV *dev, char *devname, int fs) {
  */
 int VN200GPSPacketParse(unsigned char *buf, int len, GPS_DATA *data) {
 
-    // 1K Should be enough for a single packet
-    const int PACKET_BUF_SIZE = 1024;
-    char currentPacket[PACKET_BUF_SIZE];
     int i, rc;
 
     // Exit on error if invalid pointer
@@ -99,17 +96,18 @@ int VN200GPSPacketParse(unsigned char *buf, int len, GPS_DATA *data) {
         return -2;
     }
 
-    logDebug(L_VDEBUG, "\n\n%s - Data in buffer:\n", __func__);
-    for(i = 0; i < len; i++) {
-        logDebug(L_VDEBUG, "%c", buf[i]);
-    }
-    logDebug(L_VDEBUG, "\n\n");
+    // Get a timestamp for the data
+    // (not completely accurate but should be within ~100ms)
+    getTimestamp(NULL, &(data->timestamp));
 
-    // Copy string into local variable
-    strncpy(currentPacket, (char *)&(buf[0]), len);
+    logDebug(L_VVDEBUG, "\n\n%s - Data in buffer:\n", __func__);
+    for(i = 0; i < len; i++) {
+        logDebug(L_VVDEBUG, "%c", buf[i]);
+    }
+    logDebug(L_VVDEBUG, "\n\n");
 
     // Scan for fields in packet string
-    rc = sscanf(currentPacket, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f",
+    rc = sscanf((char *) buf, "%lf,%hd,%hhd,%hhd,%lf,%lf,%lf,%f,%f,%f,%f,%f,%f,%f,%f",
             &(data->time), &(data->week), &(data->GpsFix), &(data->NumSats),
             &(data->PosX), &(data->PosY), &(data->PosZ),
             &(data->VelX), &(data->VelY), &(data->VelZ),
@@ -133,7 +131,7 @@ int VN200GPSLogParsed(LOG_FILE *log, GPS_DATA *data) {
     int logBufLen;
 
     // Log parsed data to file in CSV format
-    logBufLen = snprintf(logBuf, 512, "%.6lf,%hd,%hhd,%hhd,%.8lf,%.8lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.11f,%.9lf\n",
+    logBufLen = snprintf(logBuf, 512, "%.4lf,%hd,%hhd,%hhd,%.3lf,%.3lf,%.3lf,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.2e,%.4lf\n",
             data->time, data->week, data->GpsFix, data->NumSats,
             data->PosX, data->PosY, data->PosZ,
             data->VelX, data->VelY, data->VelZ,

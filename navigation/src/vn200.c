@@ -39,51 +39,6 @@
 #include "vn200.h"
 
 
-/**** Function getTimestamp ****
- *
- * Gets a system timestamp as a double and struct timespec
- * Only one of the arguments need not be null
- *
- * Arguments: 
- * 	ts - Pointer to struct timespec to be used in gettime function
- * 	td - Pointer to double to store processed timestamp
- *
- * Return value:
- *	On success, returns 0
- *	On failure, returns a negative number
- */
-int getTimestamp(struct timespec *ts, double *td) {
-
-    int rc;
-
-    // Used by gettime if input timespec pointer is null
-    struct timespec lts;
-
-    if (ts == NULL && td == NULL) {
-        return -2;
-    }
-
-    // Set to local timespec if input is NULL
-    if (ts == NULL) {
-        ts = &lts;
-    }
-
-    // Get system time
-    rc = clock_gettime(CLOCK_REALTIME, ts);
-    if (rc) {
-        return rc;
-    }
-
-    // Return (by reference) time as double
-    if (td != NULL) {
-        *td = ((double) ts->tv_sec) + ((double) ts->tv_nsec) / 1000000000;
-    }
-
-    return 0;
-
-} // getTimestamp(struct timespec *, double *)
-
-
 /**** Function VN200BaseInit ****
  *
  * Initializes a VN200 IMU/GPS before it is setup for either functionality.
@@ -165,17 +120,17 @@ int VN200Poll(VN200_DEV *dev) {
         // return -3;
     }
 
-    logDebug(L_DEBUG, "%d bytes available from UART device...\n", ioctl_status);
+    logDebug(L_VVDEBUG, "%d bytes available from UART device...\n", ioctl_status);
 #endif
 
     // Calculate length and pointer to proper position in array
     numToRead = BYTE_BUFFER_MAX_LEN - BufferLength(&(dev->inbuf));
 
-    logDebug(L_DEBUG, "Attempting to read %d bytes from uart device...\n", numToRead);
+    logDebug(L_VDEBUG, "Attempting to read %d bytes from uart device...\n", numToRead);
 
     // Read without blocking from UART device
     numRead = UARTRead(dev->fd, uartData, numToRead);
-    logDebug(L_DEBUG, "\tRead %d\n", numRead);
+    logDebug(L_VDEBUG, "\tRead %d\n", numRead);
 
     rc = BufferAddArray(&(dev->inbuf), uartData, numRead);
 

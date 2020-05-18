@@ -240,7 +240,6 @@ int UARTRead(int uart_fd, unsigned char *buf, int length) {
 
     // Attempt to read from UART device at most length bytes
     numRead = read(uart_fd, buf, length);
-    // printf("UARTRead: read %d chars\n", numRead);
     if (numRead < 0) {
         logDebug(L_INFO, "%s: UARTread read() failed for UART device\n", strerror(errno));
     }

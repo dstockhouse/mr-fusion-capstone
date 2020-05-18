@@ -197,27 +197,27 @@ int main(int argc, char **argv) {
                     break;
 
                 // Linear speed control
-                case 'A':
+                case 'A': // Up arrow
                     if (escapeMode) {
                         speed += 0.2;
                         escapeMode = 0;
                     }
                     break;
-                case 'B':
+                case 'B': // Down arrow
                     if (escapeMode) {
                         speed -= 0.2;
                         escapeMode = 0;
                     }
                     break;
 
-                    // Angular speed control
-                case 'C':
+                // Angular speed control
+                case 'C': // Left arrow
                     if (escapeMode) {
                         rotation += 0.2;
                         escapeMode = 0;
                     }
                     break;
-                case 'D':
+                case 'D': // Right arrow
                     if (escapeMode) {
                         rotation -= 0.2;
                         escapeMode = 0;
@@ -288,6 +288,7 @@ int main(int argc, char **argv) {
     } // while (loopContinue)
 
     odometryContinue = 0;
+    usleep(100000);
 
     printf("\n\nAttempting to join reader thread...\n");
     do {

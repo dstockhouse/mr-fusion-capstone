@@ -72,9 +72,6 @@ int VN200IMUInit(VN200_DEV *dev, char *devname, int fs) {
  */
 int VN200IMUPacketParse(unsigned char *buf, int len, IMU_DATA *data) {
 
-    // 1K Should be enough for a single packet
-    const int PACKET_BUF_SIZE = 1024;
-    char currentPacket[PACKET_BUF_SIZE];
     int i, rc;
 
     // Exit on error if invalid pointer
@@ -87,17 +84,18 @@ int VN200IMUPacketParse(unsigned char *buf, int len, IMU_DATA *data) {
         return -2;
     }
 
-    logDebug(L_VDEBUG, "\n\n%s - Data in buffer:\n", __func__);
-    for(i = 0; i < len; i++) {
-        logDebug(L_VDEBUG, "%c", buf[i]);
-    }
-    logDebug(L_VDEBUG, "\n\n");
+    // Get a timestamp for the data
+    // (not completely accurate but should be within ~100ms)
+    getTimestamp(NULL, &(data->timestamp));
 
-    // Copy string into local variable
-    strncpy(currentPacket, (char *)&(buf[0]), len);
+    logDebug(L_VVDEBUG, "\n\n%s - Data in buffer:\n", __func__);
+    for(i = 0; i < len; i++) {
+        logDebug(L_VVDEBUG, "%c", buf[i]);
+    }
+    logDebug(L_VVDEBUG, "\n\n");
 
     // Parse out values (all doubles)
-    rc = sscanf(currentPacket, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+    rc = sscanf((char *) buf, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
             &(data->compass[0]), &(data->compass[1]), &(data->compass[2]),
             &(data->accel[0]), &(data->accel[1]), &(data->accel[2]),
             &(data->gyro[0]), &(data->gyro[1]), &(data->gyro[2]),

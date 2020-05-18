@@ -1,197 +1,357 @@
-/****************************************************************************
+/***************************************************************************\
  *
  * File:
- *      navigation_main.c
+ * 	vn200_main.c
  *
  * Description:
- *      Main function for the navigation subsystem
- *
+ *	Tests the VN200 combined functionality (rolling back refactoring)
+ * 
  * Author:
- *      David Stockhouse
+ * 	David Stockhouse
  *
  * Revision 0.1
- *      Last edited 04/23/2020
+ * 	Last edited 2/15/2020
  *
  ***************************************************************************/
 
-// Standard headers
-#include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
+#include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <termios.h>
+#include <errno.h>
 
-// Socket constants
-#include <netinet/in.h>
-
-// Thread management
-#include <sched.h>
-
-// Custom library headers
 #include "config.h"
 #include "utils.h"
-#include "tcp.h"
+#include "buffer.h"
+#include "logger.h"
+#include "uart.h"
 #include "thread.h"
 
-// Subsystem library headers
-#include "navigation.h"
-#include "navigation_run.h"
-#include "vn200_run.h"
-
-int main(int argc, char** argv) {
-
-    int rc;
-
-    // Object containing parameters for subsystem operation
-    // See navigation.h for definition
-    NAVIGATION_PARAMS navigation;
-
-    logDebug(L_DEBUG, "Navigation: Starting navigation process...\n\n");
+#include "vn200.h"
+#include "vn200_crc.h"
+#include "vn200_gps.h"
+#include "vn200_imu.h"
 
 
-    /**** Serial interfaces ****/
+// Stores received packet data temporarily, immediately after parsing
+// Also used to share data between threads (unsafe but temporary behavior)
+GPS_DATA gps_packet;
+IMU_DATA imu_packet;
 
-    logDebug(L_DEBUG, "Navigation: Initializing serial interfaces...\n");
-
-    logDebug(L_INFO, "Navigation:   Skipping serial interface initialization\n");
-
-    // VN200Init(&(navigation.vn200), VN200_DEV, 50, 115200, VN200_INIT_BOTH);
-
-    // VN200 GPS & IMU (UART)
-    //   Init data modes
-    //   Set to output data continuously
+int vn200Continue = 1;
 
 
-    /**** Network interfaces ****/
+void *vn200test_run(void *param) {
 
-    logDebug(L_DEBUG, "Navigation: Initializing network interfaces...\n");
+    int i, rc;
 
-    // Initialize socket file descriptors
-    navigation.guidance_sock = -1;
-    navigation.control_sock = -1;
-    navigation.imageproc_sock = -1;
-    int gSock = TCPClientInit();
-    int cSock = TCPServerInit(NAVIGATION_IP_ADDR, CONTROL_TCP_PORT);
-    TCPSetNonBlocking(cSock);
-    int ipSock = TCPServerInit(NAVIGATION_IP_ADDR, IMAGEPROC_TCP_PORT);
-    TCPSetNonBlocking(ipSock);
+    // Input parameter is the initialized kangaroo device
+    VN200_DEV *dev = (VN200_DEV *) param;
 
-    if (gSock == -1 || cSock == -1 || ipSock == -1) {
-        logDebug(L_INFO, "Navigation: Failed to initialize navigation sockets: %s\n", strerror(errno));
+    logDebug(L_INFO, "  Starting vn200 thread\n");
+
+    while (vn200Continue) {
+
+        // Read/parse counters
+        int numRead, numParsed = 0, numConsumed = 0;
+
+        // Poll the device for any input data (non-blocking, unlike linux service call poll (2))
+        numRead = VN200Poll(dev);
+        logDebug(L_VDEBUG, "Read %d bytes from UART\n", numRead);
+
+        // Loop until all input data has been parsed
+        do { // while data left to parse
+
+            // Store checksums
+            unsigned char chkOld, chkNew;
+
+            // Determine start of first packet in buffer (starts on '$' character)
+            int packetStart;
+            for (packetStart = 0;
+                    packetStart < BufferLength(&(dev->inbuf)) && BufferIndex(&(dev->inbuf), packetStart) != '$'; packetStart++) {
+                // Loop until $ found
+            }
+
+            // Determine end of first packet (data ends on '*' character, then has 2 character checksum)
+            int chkStartIndex;
+            for (chkStartIndex = packetStart; chkStartIndex < BufferLength(&(dev->inbuf)) - 3 && BufferIndex(&(dev->inbuf), chkStartIndex) != '*'; chkStartIndex++) {
+                // Loop until * found
+            }
+
+            // Only parse the packet if there was a complete packet
+            if (BufferIndex(&(dev->inbuf), chkStartIndex) == '*') {
+
+                // Read received checksum from input buffer
+                unsigned char chkReadData[2];
+                BufferCopy(&(dev->inbuf), chkReadData, chkStartIndex + 1, 2);
+                int chkLength = sscanf((char *) chkReadData, "%hhX", &chkOld);
+
+                // Compute checksum of data (everything between $ and *, both excluded)
+                int chkComputeLength = chkStartIndex - packetStart - 1;
+                {
+                    unsigned char chkComputeData[chkComputeLength + 1];
+                    BufferCopy(&(dev->inbuf), chkComputeData, packetStart + 1, chkComputeLength);
+                    chkNew = VN200CalculateChecksum(chkComputeData, chkComputeLength);
+
+                    // Useful to keep around for debugging checksum, disable when not using
+                    logDebug(L_VVDEBUG, "Read checksum from index %d (%c) to %d (%c)\n",
+                            chkStartIndex + 1, BufferIndex(&(dev->inbuf), chkStartIndex + 1),
+                            chkStartIndex + chkLength + 1, BufferIndex(&(dev->inbuf), chkStartIndex + chkLength + 1));
+                    logDebug(L_VVDEBUG, "Computed checksum from index %d (%c) to %d (%c)\n",
+                            packetStart + 1, BufferIndex(&(dev->inbuf), packetStart + 1),
+                            chkStartIndex,
+                            BufferIndex(&(dev->inbuf), chkStartIndex));
+                    logDebug(L_VVDEBUG, "  Full packet data:\n    ");
+                    int i;
+                    for (i = 0; i < chkComputeLength; i++) {
+                        logDebug(L_VVDEBUG, "%c", (char) chkComputeData[i]);
+                    }
+                    logDebug(L_VVDEBUG, "\n\n");
+
+                } // Temporary block for computing checksum on stack
+
+
+                // Verify checksums match
+                if (chkNew != chkOld) {
+                    // Checksum failed, don't parse but skip to next packet
+                    logDebug(L_INFO, "Checksum failed: Read %02X but computed %02X\n", chkOld, chkNew);
+
+                    // Signal to consume the packet anyway, it's garbage data
+                    numParsed = chkStartIndex + 2;
+
+                } else {
+
+                    // Search for end of packet ID (ex. VNIMU), starts after first comma
+                    const int packetIDMaxLength = 16;
+                    unsigned char packetIDString[packetIDMaxLength];
+                    for (i = packetStart;
+                            i < chkStartIndex
+                            && i - packetStart < packetIDMaxLength
+                            && BufferIndex(&(dev->inbuf), i) != ',';
+                            i++) {
+                        // Loop until comma is reached, copy ID string into buffer
+                        packetIDString[i - packetStart] = BufferIndex(&(dev->inbuf), i);
+                    }
+
+                    // Length of packet ID string is the number travelled
+                    int packetIDLength = i - packetStart;
+
+                    // Ignore intro $VN*** ID, data starts after the comma
+                    int packetDataStart = i + 1;
+                    int packetLen = chkStartIndex - packetDataStart;
+
+                    /**** Determine type of packet and parse accordingly ****/
+
+                    // Packet is a GPS packet
+                    if (packetIDLength == 6 && !strncmp((char *) packetIDString, "$VNGPE", packetIDLength)) {
+
+                        /****************************** Note: This needs to be updated to parse VNGPE packets instead of VNGPS
+                         ******************************/
+
+                        unsigned char packetDataBuf[packetLen + 1];
+                        BufferCopy(&(dev->inbuf), packetDataBuf, packetDataStart, packetLen);
+
+                        // Print ID for debugging
+                        logDebug(L_VDEBUG, "Found a GPS Packet at index %d: %c%c%c%c%c%c\n",
+                                packetStart,
+                                BufferIndex(&(dev->inbuf), packetStart),
+                                BufferIndex(&(dev->inbuf), packetStart+1),
+                                BufferIndex(&(dev->inbuf), packetStart+2),
+                                BufferIndex(&(dev->inbuf), packetStart+3),
+                                BufferIndex(&(dev->inbuf), packetStart+4),
+                                BufferIndex(&(dev->inbuf), packetStart+5));
+
+                        // Parse as GPS packet
+                        rc = VN200GPSPacketParse(packetDataBuf, packetLen, &gps_packet);
+
+                        // Eventually do something with timestamps
+                        // gps_packet.timestamp = packet->timestamp;
+
+                        // Check return code to ensure parsing succeeded, else remove packet anyway
+                        if (rc > 0) {
+                            numParsed = rc;
+
+                            // Log the parsed data to a file
+                            VN200GPSLogParsed(&(dev->logFileGPSParsed), &gps_packet);
+
+                            // Print data
+                            logDebug(L_VDEBUG, "GPS packet data:\n"
+                                    "\tX: %f\n"
+                                    "\tY: %f\n"
+                                    "\tZ: %f\n",
+                                    gps_packet.PosX,
+                                    gps_packet.PosY,
+                                    gps_packet.PosZ);
+                        } else {
+                            numParsed = chkStartIndex + 2;
+                        }
+
+                        // Packet is an IMU packet
+                    } else if (packetIDLength == 6 && !strncmp((char *) packetIDString, "$VNIMU", packetIDLength)) {
+
+                        unsigned char packetDataBuf[packetLen + 1];
+                        BufferCopy(&(dev->inbuf), packetDataBuf, packetDataStart, packetLen);
+
+                        logDebug(L_VDEBUG, "Found an IMU Packet at index %d: %c%c%c%c%c%c\n",
+                                packetStart,
+                                BufferIndex(&(dev->inbuf), packetStart),
+                                BufferIndex(&(dev->inbuf), packetStart+1),
+                                BufferIndex(&(dev->inbuf), packetStart+2),
+                                BufferIndex(&(dev->inbuf), packetStart+3),
+                                BufferIndex(&(dev->inbuf), packetStart+4),
+                                BufferIndex(&(dev->inbuf), packetStart+5));
+
+                        // Parse as IMU packet
+                        rc = VN200IMUPacketParse(packetDataBuf, packetLen, &imu_packet);
+
+                        if (rc > 0) {
+                            numParsed = rc;
+
+                            // Log the parsed data to a file
+                            VN200IMULogParsed(&(dev->logFileIMUParsed), &imu_packet);
+
+                            // Print parsed data
+                            logDebug(L_VDEBUG, "IMU packet data:\n"
+                                    "\tAccel: %f, %f, %f\n"
+                                    "\tGyro: %f, %f, %f\n"
+                                    "\tCompass: %f, %f, %f\n",
+                                    imu_packet.accel[0],
+                                    imu_packet.accel[1],
+                                    imu_packet.accel[2],
+                                    imu_packet.gyro[0],
+                                    imu_packet.gyro[1],
+                                    imu_packet.gyro[2],
+                                    imu_packet.compass[0],
+                                    imu_packet.compass[1],
+                                    imu_packet.compass[2]);
+                        } else {
+                            numParsed = chkStartIndex + 2;
+                        }
+
+                    } else {
+
+                        // Packet is unknown type or improperly formatted
+                        logDebug(L_INFO, "Packet type unknown\n");
+
+                    } // Parsed packet type
+
+                } // Checksum pass
+
+                // If errors uncaught, remove some bytes anyway to move on to next packet
+                if (numParsed <= 0) {
+                    numParsed = 3;
+                }
+
+                // Remove bytes from buffer
+                numConsumed = VN200Consume(dev, numParsed);
+                logDebug(L_VDEBUG, "Consumed %d bytes (%d req) from buffer\n", numConsumed, numParsed);
+
+            } else {
+                numConsumed = 0;
+            }
+
+        } while (numConsumed > 0);
+
+    } // while (vn200Continue)
+
+    printf("  Ending VN20 thread\n");
+
+    return (void *) 0;
+}
+
+int main(int argc, char **argv) {
+
+    int i, rc;
+
+    // Instances of structure variables
+    VN200_DEV dev;
+
+    // Use logDebug(L_DEBUG, ...) just like printf
+    // Debug levels are L_INFO, L_DEBUG, L_VDEBUG
+    logDebug(L_INFO, "Initializing...\n");
+
+    // Set nonblocking input mode for user control
+    setStdinNoncanonical(1);
+
+    char *devname;
+    if (argc > 1) {
+        devname = argv[1];
+    } else {
+        devname = VN200_DEVNAME;
     }
 
-    // Loop until both sockets are connected
-    const int MAX_CONNECT_ATTEMPTS = 10000;
-    int gConnected = 0, cConnected = 0, ipConnected = 0, numTries = 0; 
-    while (!(gConnected && cConnected && ipConnected) && numTries < MAX_CONNECT_ATTEMPTS) {
+    // Initialize VN200 device at 50Hz sample frequency, baud rate, for both IMU and GPS packets
+    VN200Init(&dev, devname, 50, VN200_BAUD, VN200_INIT_MODE_BOTH);
 
-        // Count attempt number
-        numTries++;
+    // Force into both IMU and GPE concurrent output mode
+    char *command = "VNWRG,06,248";
+    VN200Command(&dev, command, strlen(command), 0);
 
-        // Attempt to connect to guidance (if not already connected)
-        if (!gConnected) {
+    // Clear any received data from input buffer
+    // (could instead verify confirmation message was received)
+    VN200FlushOutput(&dev);
 
-            logDebug(L_DEBUG, "Navigation: Attempting to connect to guidance at %s:%d\n", GUIDANCE_IP_ADDR, NAVIGATION_TCP_PORT);
-            rc = TCPClientTryConnect(gSock, GUIDANCE_IP_ADDR, NAVIGATION_TCP_PORT);
-            if (rc != -1) {
-                logDebug(L_INFO, "Navigation: Successful TCP connection to guidance\n");
-                gConnected = 1;
-                navigation.guidance_sock = gSock;
-            } else if (errno == ECONNREFUSED) {
-                logDebug(L_DEBUG, "Navigation: Unsuccessful connection to guidance, will try again\n");
-                // Delay to give other end a chance to start
-                usleep(10000);
-            } else {
-                logDebug(L_INFO, "Navigation: Could not connect to guidance: %s\n", strerror(errno));
-            }
+    // Dispatch reader thread at highest priority
+    pthread_attr_t vn200Attr;
+    pthread_t vn200Thread;
+
+    rc = ThreadAttrInit(&vn200Attr, 0);
+    if (rc < 0) {
+        logDebug(L_INFO, "Failed to set thread attributes: %s\n",
+                strerror(errno));
+        return 1;
+    }
+    rc = ThreadCreate(&vn200Thread, &vn200Attr, &vn200test_run, (void *) &dev);
+    if (rc < 0) {
+        logDebug(L_INFO, "Failed to start VN200 thread: %s\n",
+                strerror(errno));
+        return 1;
+    }
+
+    usleep(100000);
+
+    printf("Press any key to end\n\n");
+
+    // Loop Until ending
+    int loopContinue = 1;
+    while (loopContinue) {
+
+        // Get input from user nonblocking
+        char input[16];
+        rc = read(STDIN_FILENO, input, 16);
+
+        if (rc > 0) {
+            loopContinue = 0;
         }
 
-        // Attempt to connect to control (if not already connected)
-        if (!cConnected) {
+        printf("  fx: %.3f  fy: %.3f  fz: %.3f\n",
+                imu_packet.accel[0], imu_packet.accel[1], imu_packet.accel[2]);
 
-            logDebug(L_DEBUG, "Navigation: Attempting to accept connection from control at port %d\n", CONTROL_TCP_PORT);
-            rc = TCPServerTryAccept(cSock);
-            if (rc != -1) {
-                logDebug(L_INFO, "Navigation: Successful TCP connection to control\n");
-                cConnected = 1;
-                navigation.control_sock = rc;
-            } else if (errno == EAGAIN) {
-                logDebug(L_DEBUG, "Navigation: Unsuccessful connection to control, will try again\n");
-                // Delay to give other end a chance to start
-                usleep(10000);
-            } else {
-                logDebug(L_INFO, "Navigation: Could not connect to control: %s\n", strerror(errno));
-            }
-        }
+        printf("  X: %.6f  Y: %.6f  Z: %.6f\r\033[A",
+                gps_packet.PosX, gps_packet.PosY, gps_packet.PosZ);
 
-        // Attempt to connect to image processing (if not already connected)
-        if (!ipConnected) {
+    } // while (loopContinue)
 
-            logDebug(L_DEBUG, "Navigation: Attempting to accept connection from image processing at port %d\n", IMAGEPROC_TCP_PORT);
-            rc = TCPServerTryAccept(ipSock);
-            if (rc != -1) {
-                logDebug(L_INFO, "Navigation: Successful TCP connection to image processing\n");
-                ipConnected = 1;
-                navigation.imageproc_sock = rc;
-            } else if (errno == EAGAIN) {
-                logDebug(L_DEBUG, "Navigation: Unsuccessful connection to image processing, will try again\n");
-                // Delay to give other end a chance to start
-                usleep(10000);
-            } else {
-                logDebug(L_INFO, "Navigation: Could not connect to image processing: %s\n", strerror(errno));
-            }
-        }
+    vn200Continue = 0;
+    usleep(100000);
 
-    } // while (!connected && tries remaining)
-
-    // Too many attempts to establish connection
-    if (numTries >= MAX_CONNECT_ATTEMPTS) {
-        logDebug(L_INFO, "Navigation: Exceeded maximum number of TCP connection attempts (%d)\n", MAX_CONNECT_ATTEMPTS);
-        logDebug(L_INFO, "Navigation: TCP connections failed, exiting\n");
-        return -1;
-    }
-
-
-    /**** Threads ****/
-
-    logDebug(L_DEBUG, "Navigation: Starting subsystem threads...\n");
-
-    // For now, only dispatch navigation thread. Will dispatch hardware interface
-    // threads when they are ready
-    pthread_attr_t navigationThreadAttr /*, vn200ThreadAttr*/;
-    pthread_t navigationThread /*, vn200Thread*/;
-    int navigationReturn /*, vn200Return*/;
-
-    // Initialize thread attributes
-    // ThreadAttrInit(&vn200ThreadAttr, 0);
-    rc = ThreadAttrInit(&navigationThreadAttr, 1);
-    if (rc == -1) {
-        logDebug(L_INFO, "Navigation: Failed to initialize navigation thread attributes: %s\n", strerror(errno));
-    }
-
-    // Dispatch threads, give configuration object as argument
-    // ThreadCreate(&vn200ThreadAttr, &vn200ThreadAttr, &vn200_run, (void *)&navigation);
-    rc = ThreadCreate(&navigationThread, &navigationThreadAttr,
-            (void *(*)(void *)) &navigation_run, (void *)&navigation);
-    if (rc == -1) {
-        logDebug(L_INFO, "Navigation: Failed to dispatch navigation thread: %s\n", strerror(errno));
-    }
-
-    logDebug(L_DEBUG, "Navigation: Threads initialized\n");
-
-    // Join threads
-    int i = 0;
+    printf("\n\nAttempting to join reader thread...\n");
     do {
+
+        rc = ThreadTryJoin(vn200Thread, NULL);
         usleep(100000);
-        rc = ThreadTryJoin(navigationThread, &navigationReturn);
-        i++;
-    } while (i < 10 && rc != 0 && errno == EBUSY);
 
-    logDebug(L_DEBUG, "Navigation: Successfully joined threads.\n");
-    logDebug(L_INFO, "\nNavigation: Closing application.\n");
+    } while (rc != 0 && errno == EBUSY);
 
-    // Safely shutdown the application
+    // Clean up device, for completeness
+    VN200Destroy(&dev);
+
+    // Restore terminal mode
+    setStdinNoncanonical(0);
+
     return 0;
 
-} // main()
+}
 

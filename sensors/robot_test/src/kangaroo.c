@@ -158,14 +158,14 @@ int KangarooRequestPosition(KANGAROO_DEV *dev) {
 
     unsigned char *command;
 
-    command = (unsigned char *) "1,getp";
+    command = (unsigned char *) "1,getp\r\n";
     rc = UARTWrite(dev->fd, command, strlen((char *) command));
     if (rc < 0) {
         logDebug(L_INFO, "Failed to request speed from motor 1: %s\n",
                 strerror(errno));
         return -2;
     }
-    command = (unsigned char *) "2,getp";
+    command = (unsigned char *) "2,getp\r\n";
     rc = UARTWrite(dev->fd, command, strlen((char *) command));
     if (rc < 0) {
         logDebug(L_INFO, "Failed to request speed from motor 2: %s\n",
@@ -217,7 +217,7 @@ int KangarooPoll(KANGAROO_DEV *dev) {
         // return -3;
     }
 
-    logDebug(L_DEBUG, "%d bytes available from UART device...\n", ioctl_status);
+    logDebug(L_VVDEBUG, "%d bytes available from UART device...\n", ioctl_status);
 #endif
 
     // Calculate length and pointer to proper position in array
@@ -227,8 +227,8 @@ int KangarooPoll(KANGAROO_DEV *dev) {
 
     // Read without blocking from UART device
     numRead = UARTRead(dev->fd, uartData, numToRead);
-    logDebug(L_VVDEBUG, "\tRead %d\n", numRead);
 
+    // Add to serial device input buffer
     rc = BufferAddArray(&(dev->inbuf), uartData, numRead);
 
     if (rc != numRead) {
