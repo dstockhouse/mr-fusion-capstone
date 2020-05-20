@@ -98,6 +98,9 @@ int encoder_run(CONTROL_PARAMS *control) {
 
             } // if/else parse succeeded
 
+            // Sleep 1ms to prevent starving processor
+            usleep(100);
+
         } while (numConsumed > 0);
 
     } // while (encoder_continueRunning)

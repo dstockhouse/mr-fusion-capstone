@@ -30,4 +30,5 @@ imageproc:
 
 deploy: deploy.c
 	gcc -coverage -o deploy deploy.c -Lsystem -lsystem -iquote system/inc
+	sudo ./deploy
 

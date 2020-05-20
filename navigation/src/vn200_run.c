@@ -259,6 +259,9 @@ int vn200_run(NAVIGATION_PARAMS *navigation) {
 
         } while (numConsumed > 0);
 
+        // Short delay to prevent starving processor
+        usleep(100);
+
     } // while (vn200_continueRunning)
 
     printf("\n\n  Ending VN200 thread\n");

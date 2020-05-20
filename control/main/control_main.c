@@ -67,50 +67,53 @@ int main(int argc, char **argv) {
     control.guidance_sock = -1;
     control.navigation_sock = -1;
 
-    // See skeleton_control_main for proper and complete tcp initialization
-    logDebug(L_DEBUG, "Control: Attempting to connect to guidance at %s:%d\n", GUIDANCE_IP_ADDR, CONTROL_TCP_PORT);
-    int gSock = TCPClientInit();
-    if (gSock == -1) {
-        logDebug(L_INFO, "Control: Failed to initialize control sockets: %s\n", strerror(errno));
-    }
-
-    // Loop until all sockets are connected
-    const int MAX_CONNECT_ATTEMPTS = 100;
-    int gConnected = 0, numTries = 0; 
-    while (!gConnected && numTries < MAX_CONNECT_ATTEMPTS) {
-
-        // Count attempt number
-        numTries++;
-
-        // Attempt to connect to guidance (if not already connected)
-        if (!gConnected) {
-
-            rc = TCPClientTryConnect(gSock, GUIDANCE_IP_ADDR, CONTROL_TCP_PORT);
-            if (rc != -1) {
-                logDebug(L_INFO, "Control: Successful TCP connection to guidance\n");
-                gConnected = 1;
-                control.guidance_sock = gSock;
-            } else if (errno == ECONNREFUSED) {
-                logDebug(L_DEBUG, "Control: Unsuccessful connection to guidance, will try again\n");
-                // Delay to give other end a chance to start
-                usleep(100000);
-            } else {
-                logDebug(L_INFO, "Control: Could not connect to guidance: %s\n", strerror(errno));
-            }
+    if (!interactiveMode) {
+        // See skeleton_control_main for proper and complete tcp initialization
+        logDebug(L_DEBUG, "Control: Attempting to connect to guidance at %s:%d\n", GUIDANCE_IP_ADDR, CONTROL_TCP_PORT);
+        int gSock = TCPClientInit();
+        if (gSock == -1) {
+            logDebug(L_INFO, "Control: Failed to initialize control sockets: %s\n", strerror(errno));
         }
 
-    } // while (!connected && tries remaining)
+        // Loop until all sockets are connected
+        const int MAX_CONNECT_ATTEMPTS = 100;
+        int gConnected = 0, numTries = 0; 
+        while (!gConnected && numTries < MAX_CONNECT_ATTEMPTS) {
 
-    // Too many attempts to establish connection
-    if (numTries >= MAX_CONNECT_ATTEMPTS) {
+            // Count attempt number
+            numTries++;
 
-        logDebug(L_INFO, "Control: Exceeded maximum number of TCP connection attempts (%d)\n", MAX_CONNECT_ATTEMPTS);
+            // Attempt to connect to guidance (if not already connected)
+            if (!gConnected) {
 
-        TCPClose(gSock);
+                rc = TCPClientTryConnect(gSock, GUIDANCE_IP_ADDR, CONTROL_TCP_PORT);
+                if (rc != -1) {
+                    logDebug(L_INFO, "Control: Successful TCP connection to guidance\n");
+                    gConnected = 1;
+                    control.guidance_sock = gSock;
+                } else if (errno == ECONNREFUSED) {
+                    logDebug(L_DEBUG, "Control: Unsuccessful connection to guidance, will try again\n");
+                    // Delay to give other end a chance to start
+                    usleep(100000);
+                } else {
+                    logDebug(L_INFO, "Control: Could not connect to guidance: %s\n", strerror(errno));
+                }
+            }
 
-        // Since we couldn't connect, assume user has terminal
-        interactiveMode = 1;
+        } // while (!connected && tries remaining)
+
+        // Too many attempts to establish connection
+        if (numTries >= MAX_CONNECT_ATTEMPTS) {
+
+            logDebug(L_INFO, "Control: Exceeded maximum number of TCP connection attempts (%d)\n", MAX_CONNECT_ATTEMPTS);
+
+            TCPClose(gSock);
+
+            // Since we couldn't connect, assume user has terminal
+            interactiveMode = 1;
+        }
     }
+
 
     // Get configuration ID's for this run (start time and numeric key)
     if (interactiveMode) {
@@ -173,6 +176,7 @@ int main(int argc, char **argv) {
             } else {
                 numReceived += rc;
 
+/*
                 if (rc > 0) {
                     for (i = 0; i < numReceived; i++) {
                         if (i < 4) {
@@ -183,6 +187,7 @@ int main(int argc, char **argv) {
                     }
                     logDebug(L_INFO, "\n");
                 }
+*/
 
                 if (numReceived >= 16) {
 
@@ -200,7 +205,7 @@ int main(int argc, char **argv) {
                 }
             }
             getTimestamp(NULL, &waitEndTime);
-            printf("%0.1lf\r", waitEndTime - waitStartTime);
+            // printf("%0.1lf\r", waitEndTime - waitStartTime);
         } while (!messageReceived && numReceived < 512 && ((waitEndTime - waitStartTime) < MAX_TCP_WAIT));
 
         if (!messageReceived) {
@@ -256,7 +261,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    usleep(100000);
+    // Delay before starting operation
+    sleep(2);
 
     if (interactiveMode) {
         printf("Arrow keys to change speed and direction.\n");
@@ -272,11 +278,14 @@ int main(int argc, char **argv) {
     BufferEmpty(&tcpBuf);
 
     // Loop Until ending
-    int loopContinue = 1;
+    int loopContinue = 1, loopCount = 0;;
     double speed = 0.0, rotation = 0.0;
     double filtspeed = 0.0, filtrotation = 0.0;
     int escapeMode = 0;
     while (loopContinue) {
+
+        // Keep track of how many loops we execute
+        loopCount++;
 
         if (interactiveMode) {
             // Get input from user nonblocking
@@ -371,9 +380,17 @@ int main(int argc, char **argv) {
                 int numParsed = 0;
                 if (BufferLength(&tcpBuf) >= 4) {
 
-                    // Parse any known message from received bytes
                     int i;
-                    for (i = 0; i <= BufferLength(&tcpBuf) - 4; i++) {
+                    logDebug(L_VDEBUG, "Control: Buffer contents: ");
+                    for (i = 0; i < BufferLength(&tcpBuf); i++) {
+                        logDebug(L_VDEBUG, "%c ", BufferIndex(&tcpBuf, i));
+                    }
+                    logDebug(L_VDEBUG, "\n");
+
+                    // Parse any known message from received bytes
+                    int increment;
+                    for (i = 0; i <= BufferLength(&tcpBuf) - 4; i += increment) {
+                        increment = 1;
 
                         if (BufferIndex(&tcpBuf, i  ) == 's' &&
                             BufferIndex(&tcpBuf, i+1) == 't' &&
@@ -385,7 +402,7 @@ int main(int argc, char **argv) {
                             loopContinue = 0;
 
                             numParsed = i + 4;
-                            i += 4;
+                            increment = 4;
 
                         } else if (BufferIndex(&tcpBuf, i  ) == 'c' &&
                                    BufferIndex(&tcpBuf, i+1) == 't' &&
@@ -393,13 +410,14 @@ int main(int argc, char **argv) {
                                    BufferIndex(&tcpBuf, i+3) == 'x') {
 
                             // Halt motion
+                            logDebug(L_INFO, "Control: Received halt command from guidance\n");
                             filtspeed = 0;
                             filtrotation = 0;
                             speed = 0;
                             rotation = 0;
 
                             numParsed = i + 4;
-                            i += 4;
+                            increment = 4;
 
                         } else if (BufferIndex(&tcpBuf, i  ) == 'c' &&
                                    BufferIndex(&tcpBuf, i+1) == 't' &&
@@ -407,13 +425,14 @@ int main(int argc, char **argv) {
                                    BufferIndex(&tcpBuf, i+3) == 's') {
 
                             // Speed command
+                            logDebug(L_DEBUG, "Control: Received speed command from guidance\n");
                             if (BufferLength(&tcpBuf) >= i + 12) {
                                 unsigned char tempBuf[8];
                                 BufferCopy(&tcpBuf, tempBuf, i + 4, 8);
                                 memcpy(&speed, tempBuf, 8);
 
                                 numParsed = i + 12;
-                                i += 12;
+                                increment = 12;
                             }
 
                         } else if (BufferIndex(&tcpBuf, i  ) == 'c' &&
@@ -422,19 +441,25 @@ int main(int argc, char **argv) {
                                    BufferIndex(&tcpBuf, i+3) == 'r') {
 
                             // Rotation command
+                            logDebug(L_DEBUG, "Control: Received rotation command from guidance\n");
                             if (BufferLength(&tcpBuf) >= i + 12) {
                                 unsigned char tempBuf[8];
                                 BufferCopy(&tcpBuf, tempBuf, i + 4, 8);
                                 memcpy(&rotation, tempBuf, 8);
 
                                 numParsed = i + 12;
-                                i += 12;
+                                increment = 12;
                             }
                         }
-
-                        // Remove those bytes from the buffer
-                        BufferRemove(&tcpBuf, numParsed);
                     }
+
+                    // Remove those bytes from the buffer
+                    logDebug(L_DEBUG, "Removing %d/%d: ", numParsed, BufferLength(&tcpBuf));
+                    for (i = 0; i < BufferLength(&tcpBuf); i++) {
+                        logDebug(L_DEBUG, "%c", BufferIndex(&tcpBuf, i));
+                    }
+                    logDebug(L_DEBUG, "\n");
+                    BufferRemove(&tcpBuf, numParsed);
 
                 }
 
@@ -465,13 +490,14 @@ int main(int argc, char **argv) {
         // Drive motors at that speed
         KangarooCommandSpeed(&(control.kangaroo), -m1speed, -m2speed);
 
-        // Request to receive an odometry reading
-        KangarooRequestPosition(&(control.kangaroo));
-
-        if (interactiveMode) {
-            printf("  S: %.3f  R: %.3f  M1: %4d  M2: %4d     \r",
-                    filtspeed, filtrotation, m1speed, m2speed);
+        if (loopCount % 5 == 0) {
+            // Request to receive an odometry reading
+            KangarooRequestPosition(&(control.kangaroo));
         }
+
+        // Print message for the parent process
+        logDebug(L_INFO, "  S: %.3f  R: %.3f  M1: %4d  M2: %4d     \r",
+                filtspeed, filtrotation, m1speed, m2speed);
 
         // Delay for the loop to run more slowly
         struct timespec delaytime;

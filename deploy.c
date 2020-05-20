@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
     } // else
 
 
+    int useImageproc = 0;
 
     int nSock, cSock, ipSock;
     int attempt = 0, maxAttempts = 20;
@@ -110,14 +111,18 @@ int main(int argc, char **argv) {
             }
         }
 
-        if (ipUnconnected) {
-            rc = TCPServerTryAccept(ipSock);
-            usleep(100000);
-            if (rc >= 0) {
-                ipUnconnected = 0;
-                ipSock = rc;
-                logDebug(L_INFO, "SUCCESSFUL TCP CONNECTION TO IMAGEPROC\n");
+        if (useImageproc) {
+            if (ipUnconnected) {
+                rc = TCPServerTryAccept(ipSock);
+                usleep(100000);
+                if (rc >= 0) {
+                    ipUnconnected = 0;
+                    ipSock = rc;
+                    logDebug(L_INFO, "SUCCESSFUL TCP CONNECTION TO IMAGEPROC\n");
+                }
             }
+        } else {
+            ipUnconnected = 0;
         }
 
     } while (attempt < maxAttempts && (nUnconnected || cUnconnected || ipUnconnected));
@@ -167,12 +172,14 @@ int main(int argc, char **argv) {
         logDebug(L_INFO, "SENT INIT MESSAGE TO CONTROL: ");
     }
 
-    rc = TCPWrite(ipSock, (unsigned char *) tcpBuf, 16);
-    if (rc < 16) {
-        logDebug(L_INFO, "FAILED TO SEND INIT MESSAGE TO IMAGEPROC (%d): %s\n",
-                rc, strerror(errno));
-    } else {
-        logDebug(L_INFO, "SENT INIT MESSAGE TO IMAGEPROC: ");
+    if (useImageproc) {
+        rc = TCPWrite(ipSock, (unsigned char *) tcpBuf, 16);
+        if (rc < 16) {
+            logDebug(L_INFO, "FAILED TO SEND INIT MESSAGE TO IMAGEPROC (%d): %s\n",
+                    rc, strerror(errno));
+        } else {
+            logDebug(L_INFO, "SENT INIT MESSAGE TO IMAGEPROC: ");
+        }
     }
 
     // Delay to let subsystems start operation
@@ -194,6 +201,7 @@ int main(int argc, char **argv) {
         // speed = 0.0;
         // rotation = 0.0;
 
+        int speedChange = 0;
         for (i = 0; i < rc; i++) {
             switch (input[i]) {
 
@@ -207,12 +215,14 @@ int main(int argc, char **argv) {
                     if (escapeMode) {
                         speed += 0.2;
                         escapeMode = 0;
+                        speedChange = 1;
                     }
                     break;
                 case 'B': // Down arrow
                     if (escapeMode) {
                         speed -= 0.2;
                         escapeMode = 0;
+                        speedChange = 1;
                     }
                     break;
 
@@ -221,18 +231,21 @@ int main(int argc, char **argv) {
                     if (escapeMode) {
                         rotation += 0.2;
                         escapeMode = 0;
+                        speedChange = 1;
                     }
                     break;
                 case 'D': // Right arrow
                     if (escapeMode) {
                         rotation -= 0.2;
                         escapeMode = 0;
+                        speedChange = 1;
                     }
                     break;
 
                 case ' ':
                     speed = 0;
                     rotation = 0;
+                    speedChange = 1;
                     break;
 
                 case 'q':
@@ -247,7 +260,11 @@ int main(int argc, char **argv) {
                     break;
 
                 default:
-                    strncpy(tcpBuf, "ctlx", 4);
+                    rc = TCPWrite(cSock, (unsigned char *) "ctlx", 4);
+                    if (rc < 4) {
+                        logDebug(L_INFO, "FAILED TO SEND HALT MESSAGE TO CONTROL (%d): %s\n",
+                                rc, strerror(errno));
+                    }
                     speed = 0;
                     rotation = 0;
                     escapeMode = 0;
@@ -267,33 +284,37 @@ int main(int argc, char **argv) {
         }
 
         // Send speed and rotation commands
-        strncpy(tcpBuf, "ctls", 4);
-        memcpy((unsigned char *) &(tcpBuf[4]), &speed, 8);
-        rc = TCPWrite(cSock, tcpBuf, 12);
-        if (rc < 12) {
-            logDebug(L_INFO, "FAILED TO SEND SPEED MESSAGE TO CONTROL (%d): %s\n",
-                    rc, strerror(errno));
-        }
-        strncpy(tcpBuf, "ctlr", 4);
-        memcpy((unsigned char *) &(tcpBuf[4]), &rotation, 8);
-        rc = TCPWrite(cSock, tcpBuf, 12);
-        if (rc < 12) {
-            logDebug(L_INFO, "FAILED TO SEND ROTATION MESSAGE TO CONTROL (%d): %s\n",
-                    rc, strerror(errno));
+        if (speedChange) {
+
+            strncpy(tcpBuf, "ctls", 4);
+            memcpy((unsigned char *) &(tcpBuf[4]), &speed, 8);
+            rc = TCPWrite(cSock, tcpBuf, 12);
+            if (rc < 12) {
+                logDebug(L_INFO, "FAILED TO SEND SPEED MESSAGE TO CONTROL (%d): %s\n",
+                        rc, strerror(errno));
+            }
+            strncpy(tcpBuf, "ctlr", 4);
+            memcpy((unsigned char *) &(tcpBuf[4]), &rotation, 8);
+            rc = TCPWrite(cSock, tcpBuf, 12);
+            if (rc < 12) {
+                logDebug(L_INFO, "FAILED TO SEND ROTATION MESSAGE TO CONTROL (%d): %s\n",
+                        rc, strerror(errno));
+            }
         }
 
-        logDebug(L_INFO, "  S: %.3f  R: %.3f   \r", speed, rotation);
+        // Let control print this information
+        // logDebug(L_INFO, "  S: %.3f  R: %.3f   \r", speed, rotation);
 
         // Delay for the loop to run more slowly
         struct timespec delaytime;
         delaytime.tv_sec = 0;
         delaytime.tv_nsec = 20000000; // 20 ms
         nanosleep(&delaytime, NULL);
-
-        // Print data capture duration
-        getTimestamp(NULL, &endTime);
-        logDebug(L_INFO, "%.1lf\r", endTime);
     }
+
+    // Print data capture duration
+    getTimestamp(NULL, &endTime);
+    logDebug(L_INFO, "CAPTURED FOR %.1lf seconds\r", endTime - startTime);
 
     // Send stop message
     rc = TCPWrite(nSock, (unsigned char *) "stop", 4);
@@ -312,12 +333,14 @@ int main(int argc, char **argv) {
         logDebug(L_INFO, "SENT STOP MESSAGE TO CONTROL\n");
     }
 
-    rc = TCPWrite(ipSock, (unsigned char *) "stop", 4);
-    if (rc < 4) {
-        logDebug(L_INFO, "FAILED TO SEND STOP MESSAGE TO IMAGEPROC (%d): %s\n",
-                rc, strerror(errno));
-    } else {
-        logDebug(L_INFO, "SENT STOP MESSAGE TO IMAGEPROC\n");
+    if (useImageproc) {
+        rc = TCPWrite(ipSock, (unsigned char *) "stop", 4);
+        if (rc < 4) {
+            logDebug(L_INFO, "FAILED TO SEND STOP MESSAGE TO IMAGEPROC (%d): %s\n",
+                    rc, strerror(errno));
+        } else {
+            logDebug(L_INFO, "SENT STOP MESSAGE TO IMAGEPROC\n");
+        }
     }
 
     setStdinNoncanonical(0);

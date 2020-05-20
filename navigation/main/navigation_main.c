@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
     vn200_continueRunning = 0;
     usleep(100000);
 
-    printf("\n\nAttempting to join VN200 reader thread...\n");
+    printf("\n\nNavigation: Attempting to join VN200 reader thread...\n");
     int notJoined = 1;
     do {
 
@@ -335,6 +335,7 @@ int main(int argc, char **argv) {
 
         if (rc == 0 || (rc == -1 && errno != EBUSY)) {
             notJoined = 0;
+            printf("Navigation: Joined...\n");
         }
 
     } while (notJoined);
