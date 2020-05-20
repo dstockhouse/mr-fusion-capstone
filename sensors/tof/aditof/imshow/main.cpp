@@ -143,12 +143,6 @@ int main(int argc, char *argv[]) {
     ir_buffer.resize(BUFFER_SIZE);
     name_buffer.resize(BUFFER_SIZE);
 
-    // Create runtime directory
-    char dirname[64];
-    snprintf(dirname, 64, "RUN_%09d", (unsigned int) gettime(NULL));
-    mkdir(dirname, 0777);
-    chdir(dirname);
-
     System system;
     status = system.initialize();
     if (status != Status::OK) {
@@ -205,6 +199,9 @@ int main(int argc, char *argv[]) {
     aditof::CameraDetails cameraDetails;
     camera->getDetails(cameraDetails);
     int cameraRange = cameraDetails.maxDepth;
+    int irRange = 4096;
+    double desired_fps = 8.0;
+
     aditof::Frame frame;
 
     const int smallSignalThreshold = 80;
@@ -214,15 +211,22 @@ int main(int argc, char *argv[]) {
     cam96tof1Specifics->setNoiseReductionThreshold(smallSignalThreshold);
     cam96tof1Specifics->enableNoiseReduction(true);
 
+
+    // Create runtime directory
+    char dirname[128];
+    snprintf(dirname, 128, "TOF_PNG_md%d_mi%d_st%d_%09d",
+		    cameraRange, irRange, smallSignalThreshold,
+		    (unsigned int) gettime(NULL));
+    mkdir(dirname, 0777);
+    chdir(dirname);
+
+    printf("Saving images to '%s'\n", dirname);
+
     // Start imwrite thread
     std::thread saveThread(imageSaveThread);
 
     // cv::namedWindow("Depth Image", cv::WINDOW_AUTOSIZE);
     // cv::namedWindow("IR Image", cv::WINDOW_AUTOSIZE);
-
-    double startTime = gettime(NULL);
-    double trueStartTime = startTime;
-    double newTime;
 
     // Set stdin nonblocking
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
@@ -236,12 +240,17 @@ int main(int argc, char *argv[]) {
     tty.c_cc[VTIME] = 1;
     tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 
+    double startTime = gettime(NULL);
+    double trueStartTime = startTime;
+    double newTime;
+
     int i = 0;
     int num_seconds = 5;
     int num_frames = 30 * num_seconds;
     char input = 0, rc = 0;
     // while (i < num_frames) {
     // while (startTime < (trueStartTime + num_seconds)) {
+    printf("Press space to exit\n");
     while (input != ' ') {
     // while (cv::waitKey(1) != 27 &&
     //        getWindowProperty("Depth Image", cv::WND_PROP_AUTOSIZE) >= 0 &&
@@ -256,6 +265,14 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Could not request frame!";
             return 0;
         }
+
+	struct timespec newTime_ts;
+	newTime = gettime(&newTime_ts);
+
+	double timestep = newTime - startTime;
+	double elapsed = newTime - trueStartTime;
+
+	startTime = newTime;
 
         /* Convert from frame to depth mat */
         cv::Mat depthmat;
@@ -275,9 +292,9 @@ int main(int argc, char *argv[]) {
 
         /* Distance factor */
         // double distance_scale = 255.0 / cameraRange;
-        // double ir_scale = 255.0 / 4096;
+        // double ir_scale = 255.0 / irRange;
         double distance_scale = 65535.0 / cameraRange;
-        double ir_scale = 65535.0 / 4096;
+        double ir_scale = 65535.0 / irRange;
 
         /* Convert from raw values to values that opencv can understand */
         depthmat.convertTo(depthmat, CV_16U, distance_scale);
@@ -301,14 +318,6 @@ int main(int argc, char *argv[]) {
 	// snprintf(filename, 64, "ir_%d.%s", i, ext);
 	// cv::imwrite(filename, irmat);
 	// cv::imwrite(filename, irmat, saveParams);
-
-	struct timespec newTime_ts;
-	newTime = gettime(&newTime_ts);
-
-	double timestep = newTime - startTime;
-	double elapsed = newTime - trueStartTime;
-
-	startTime = newTime;
 
 	// Put images into ring buffers to be saved by other thread
 	char filename[64];
@@ -336,8 +345,10 @@ int main(int argc, char *argv[]) {
 	printf("Captured frame %d @ %.2f fps (avg %.2f) [%s]\n",
 			i, 1/(timestep), i/(newTime - trueStartTime), filename);
 
+	newTime = gettime(&newTime_ts);
+	elapsed = newTime - trueStartTime;
+
 	// Determine time to wait
-	double desired_fps = 8.0;
 	double delay_time = i/desired_fps - elapsed;
 	if (delay_time > 0.0) {
 		struct timespec delay_ts;
