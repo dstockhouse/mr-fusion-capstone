@@ -50,11 +50,11 @@ int main(int argc, char** argv) {
 
     logDebug(L_DEBUG, "Control: Initializing serial interfaces...\n");
 
-    rc = LogInit(&(control.kangaroo_log), "log", "KANGAROO", LOG_FILEEXT_LOG);
+    rc = LogInit(&(control.kangaroo_log), "log", "KANGAROO", NULL, 0, LOG_FILEEXT_LOG);
     if (rc < 0) {
         logDebug(L_INFO, "Control: Failed to initialize kangaroo log file (%d)\n", rc);
     }
-    rc = LogInit(&(control.encoder_log), "log", "ENCODER", LOG_FILEEXT_LOG);
+    rc = LogInit(&(control.encoder_log), "log", "ENCODER", NULL, 0, LOG_FILEEXT_LOG);
     if (rc < 0) {
         logDebug(L_INFO, "Control: Failed to initialize encoder log file (%d)\n", rc);
     }

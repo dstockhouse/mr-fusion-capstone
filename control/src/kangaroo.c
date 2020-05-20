@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "config.h"
+
 #include "utils.h"
 
 #include "kangaroo.h"
@@ -45,11 +47,11 @@ int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName) {
 
     // Default to common RPi serial device name
     if (devName == NULL) {
-        devName = KANGAROO_DEVNAME;
+        // devName = KANGAROO_DEVNAME;
     }
 
     // Initialize UART device
-    dev->fd = UARTInit(devname, baud);
+    // dev->fd = UARTInit(devName, baud);
     if (dev->fd < 0) {
         logDebug(L_INFO, "Couldn't initialize Kangaroo motion controller UART device\n");
         return -2;

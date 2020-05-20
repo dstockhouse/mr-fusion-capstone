@@ -118,15 +118,6 @@ int main(int argc, char **argv) {
         interactiveMode = 1;
     }
 
-/*  Unnecessary for client socket
-    // Set socket to nonblocking
-    rc = TCPSetNonBlocking(navigation.guidance_sock);
-    if (rc < 0) {
-        logDebug(L_INFO, "Navigation: Failed to set socket nonblocking: %s\n",
-                strerror(errno));
-    }
-*/
-
     // Get configuration ID's for this run (start time and numeric key)
     if (interactiveMode) {
 

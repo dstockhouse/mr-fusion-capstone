@@ -77,8 +77,8 @@ int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName, int baud,
     BufferEmpty(&(dev->inbuf));
 
     // Initialize log file for raw and parsed received data
-    LogInit(&(dev->logFile), logDirName, "KANGAROO", LOG_FILEEXT_LOG, initTime, key);
-    LogInit(&(dev->logFileParsed), logDirName, "ODOMETRY_K", LOG_FILEEXT_CSV), initTime, key;
+    LogInit(&(dev->logFile), logDirName, "KANGAROO", initTime, key, LOG_FILEEXT_LOG);
+    LogInit(&(dev->logFileParsed), logDirName, "ODOMETRY_K", initTime, key, LOG_FILEEXT_CSV);
 
     // Parsed CSV file header
     char *logBuf = "l_dist_mm,r_dist_mm,timestamp\n";

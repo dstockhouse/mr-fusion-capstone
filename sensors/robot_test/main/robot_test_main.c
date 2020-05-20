@@ -114,6 +114,7 @@ void *odometry_run(void *param) {
 
 int main(int argc, char **argv) {
 
+    int interactiveMode = 0;
     int i, rc;
     double startTime;
 
@@ -136,7 +137,7 @@ int main(int argc, char **argv) {
     }
 
     // Initialize serial device
-    rc = KangarooInit(&dev, devname, "log", 9600);
+    rc = KangarooInit(&dev, devname, "log", 9600, &startTime, 0);
     if (rc != 0) {
         logDebug(L_INFO, "Failed to initialize UART device '%s'\n", devname);
         return rc;

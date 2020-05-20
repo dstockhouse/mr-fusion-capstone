@@ -34,7 +34,7 @@ typedef struct {
 
 } KANGAROO_DEV;
 
-int KangarooInit(KANGAROO_DEV *dev);
+int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName);
 
 #endif // __KANGAROO_H
 
