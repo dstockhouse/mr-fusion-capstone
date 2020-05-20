@@ -10,10 +10,15 @@
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 2/20/2019
+ * 	Last edited 02/20/2019
  *
  * Revision 0.2
- * 	Last edited 2/13/2020
+ * 	Last edited 02/13/2020
+ *
+ * Revision 0.3
+ * 	Last edited 05/18/2020
+ * 	Moved generateFilename and mkdir_p to utils
+ * 	Adapted to more general definition for mkdir_p
  *
  ***************************************************************************/
 
@@ -24,11 +29,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-
-// To use localtime_r from generateFilename
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE
-#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -49,10 +49,8 @@ typedef struct {
 	time_t timestamp;
 } LOG_FILE;
 
-int generateFilename(char *buf, int bufSize, time_t *time, 
-		const char *dir, const char *pre, const char *ext);
-
-int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext);
+int LogInit(LOG_FILE *logFile, const char *dir, const char *pre,
+        time_t *logtime, unsigned key, int ext);
 
 int LogUpdate(LOG_FILE *logFile, const char *buf, int length);
 

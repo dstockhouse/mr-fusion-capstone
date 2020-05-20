@@ -27,6 +27,12 @@ typedef struct {
     // Serial device file descriptors
     VN200_DEV vn200;
 
+    // Time zero for all logging
+    double startTime;
+
+    // Key to identify log files
+    unsigned key;
+
 } NAVIGATION_PARAMS;
 
 #endif // __NAVIGATION_H

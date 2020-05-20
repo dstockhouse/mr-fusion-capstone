@@ -28,3 +28,6 @@ imageproc:
 	make -C imageproc
 	cp imageproc/imageproc_main.elf .
 
+deploy:
+	gcc -coverage -o deploy deploy.c -Lsystem -lsystem -iquote system/inc
+

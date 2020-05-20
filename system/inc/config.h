@@ -56,5 +56,10 @@
 #define CONTROL_TCP_PORT        31401
 #define IMAGEPROC_TCP_PORT      31403
 
+// Eventually ports need to change to support more diversity of deployments:
+// Ports that are used for communication between every pair of subsystems
+// We could be re-using more ports than this, but using a distinct port
+// for each pair allows deploying multiple subsystems on the same processor
+
 #endif // MR_FUSION_SYSTEM_CONFIG
 

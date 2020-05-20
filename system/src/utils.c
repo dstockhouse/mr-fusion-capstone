@@ -262,3 +262,118 @@ void setStdinNoncanonical(int set) {
 
 } // setStdinNoncanonical(int)
 
+
+/**** Function generateFilename ****
+ *
+ * Generate a timestamped filename that matches the format 
+ * "pre_mm.dd.yyyy_hh-mm-ss.ext" in the directory "dir"
+ *
+ * Arguments:
+ * 	buf     - String buffer to hold generated string
+ * 	bufSize - Length of buffer, will not write past this length
+ * 	dir     - String directory name to include in filename. Must end with /
+ * 	pre     - Prefix to put at start of new filename
+ * 	suf     - Numeric 4-byte suffix to put at end of new filename
+ * 	ext     - Extension to put at end of new filename
+ *
+ * Return value:
+ * 	Returns the number of characters written to buf (length of new string)
+ */
+int generateFilename(char *buf, int bufSize, time_t *filetime, 
+        const char *dir, const char *pre, unsigned suf, const char *ext) {
+
+    // Length of filename generated
+    int charsWritten;
+
+    struct timespec randseed;
+    // Different time source
+    // clock_gettime(CLOCK_MONOTONIC_RAW, &randseed);
+    clock_gettime(CLOCK_MONOTONIC, &randseed);
+    srand(randseed.tv_sec + randseed.tv_nsec);
+
+    // Time variables
+    struct tm currentTime;
+    time_t ltime;
+    if(filetime == NULL) {
+        ltime = time(NULL);
+        filetime = &ltime;
+    }
+
+    // Get current time in UTC
+    localtime_r(filetime, &currentTime);
+
+    // Create filename using date/time and input string
+    charsWritten = snprintf(buf, bufSize, 
+            "%s/%s-%02d.%02d.%04d_%02d-%02d-%02d_%08x.%s",
+            dir, pre,
+            currentTime.tm_mon + 1,
+            currentTime.tm_mday,
+            currentTime.tm_year + 1900,
+            currentTime.tm_hour,
+            currentTime.tm_min,
+            currentTime.tm_sec,
+            suf,
+            ext);
+
+    // Return length of the new string
+    return charsWritten;
+
+} // generateFilename(char *, int, time_t, char *, char *, char *)
+
+
+/**** Function mkdir_p ****
+ *
+ * Implementation of mkdir -p using system service calls, adapted from
+ * https://gist.github.com/JonathonReinhart/8c0d90191c38af2dcadb102c4e202950
+ *
+ * Arguments:
+ * 	pathname - String path to the directory to create
+ * 	mode     - Directory access mode (permissions) for mkdir
+ *
+ * Return value:
+ * 	On success, returns 0, otherwise returns -1 and sets errno
+ */
+int mkdir_p(const char *pathname, mode_t mode) {
+
+    int pathnamelen, rc;
+    char localpathname[PATH_MAX], *dir;
+
+    // Ensure pathname length is small enough
+    pathnamelen = strlen(pathname);
+    if(pathnamelen > PATH_MAX - 1) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+
+    // Copy to local string to allow (temp) modifications
+    strcpy(localpathname, pathname);
+
+    for(dir = localpathname + 1; *dir != '\0'; dir++) {
+
+        // If end of directory, mkdir everything before this
+        if(*dir == '/') {
+
+            // Temporarily terminate string here
+            *dir = '\0';
+
+            rc = mkdir(localpathname, mode);
+            if(rc && errno != EEXIST) {
+                return rc;
+            }
+
+            // Restore
+            *dir = '/';
+        }
+
+    } // for
+
+    // Make final directory
+    rc = mkdir(pathname, mode);
+    if(rc && errno != EEXIST) {
+        return rc;
+    }
+
+    return 0;
+
+} // int mkdir_p(const char *, mode_t)
+

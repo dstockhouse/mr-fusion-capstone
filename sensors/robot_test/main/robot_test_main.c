@@ -115,6 +115,7 @@ void *odometry_run(void *param) {
 int main(int argc, char **argv) {
 
     int i, rc;
+    double startTime;
 
     // Serial device object
     KANGAROO_DEV dev;

@@ -56,7 +56,8 @@ typedef struct {
 
 } KANGAROO_PACKET;
 
-int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName, int baud);
+int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName, int baud,
+        time_t *initTime, unsigned key);
 
 int KangarooCommandSpeed(KANGAROO_DEV *dev, int lSpeed, int rSpeed);
 

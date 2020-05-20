@@ -247,3 +247,37 @@ Ensure(TCPInterface, send_message_client_to_server) {
 
 }
 
+Ensure(TCPInterface, send_message_server_to_client) {
+
+    // Use function above to set up proper connection, without assertions
+    setup_sockets(0);
+
+    unsigned char outmsg[256], inmsg[256];
+    strcpy(outmsg, "Howdy client");
+    int msglen = strlen(outmsg);
+
+    // Send message
+    rc = TCPWrite(server_fd, outmsg, msglen);
+    assert_that(rc, is_equal_to(msglen));
+
+    // Pause 10ms
+    usleep(10000);
+
+    // Check if input data is available
+    struct pollfd fds;
+    fds.fd = client_fd;
+    fds.events = POLLIN;
+    rc = poll(&fds, 1, 1);
+    assert_that(rc, is_equal_to(1));
+    assert_that(fds.revents & POLLIN, is_true);
+
+    // Receive message
+    rc = TCPRead(client_fd, inmsg, 256);
+    assert_that(rc, is_equal_to(msglen));
+    assert_that(outmsg[0], is_equal_to(inmsg[0]));
+    assert_that(outmsg[1], is_equal_to(inmsg[1]));
+    assert_that(outmsg[rc-2], is_equal_to(inmsg[rc-2]));
+    assert_that(outmsg[rc-1], is_equal_to(inmsg[rc-1]));
+
+}
+

@@ -23,6 +23,7 @@
 
 #include "config.h"
 
+#include "utils.h"
 #include "logger.h"
 
 // Name of test context
@@ -56,7 +57,7 @@ Ensure(Logger, generate_filename_and_mkdir_p) {
     char filename[LOG_FILENAME_LENGTH];
     int length, rc;
 
-    length = generateFilename(filename, LOG_FILENAME_LENGTH, NULL, "bld/test", "LOGTEST", "d");
+    length = generateFilename(filename, LOG_FILENAME_LENGTH, NULL, "bld/test", "LOGTEST", 0, "d");
     assert_that(length, is_equal_to(strlen(filename)));
 
     rc = mkdir_p(filename, 0777);
@@ -70,7 +71,7 @@ Ensure(Logger, successful_init) {
     int length, rc;
     LOG_FILE logger;
 
-    rc = LogInit(&logger, "bld/test", "LOGTEST", LOG_FILEEXT_LOG);
+    rc = LogInit(&logger, "bld/test", "LOGTEST", NULL, 0, LOG_FILEEXT_LOG);
     assert_that(rc, is_equal_to(0));
 
     // Test if the file exists
@@ -89,7 +90,7 @@ Ensure(Logger, successful_update) {
     int length, rc;
     LOG_FILE logger;
 
-    rc = LogInit(&logger, "bld/test", "LOGTEST", LOG_FILEEXT_LOG);
+    rc = LogInit(&logger, "bld/test", "LOGTEST", NULL, 0, LOG_FILEEXT_LOG);
     assert_that(rc, is_equal_to(0));
 
     const char *message = "howdy";

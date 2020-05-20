@@ -40,7 +40,7 @@
 // Device initialization modes
 #define VN200_INIT_MODE_GPS 1
 #define VN200_INIT_MODE_IMU 2
-#define VN200_INIT_MODE_BOTH (VN200_INIT_MODE_GPS|VN200_INIT_MODE_IMU)
+#define VN200_INIT_MODE_BOTH (VN200_INIT_MODE_GPS | VN200_INIT_MODE_IMU)
 
 
 int VN200BaseInit(VN200_DEV *dev, char *devname, int baud);
@@ -53,11 +53,10 @@ int VN200FlushInput(VN200_DEV *dev);
 
 int VN200Command(VN200_DEV *dev, char *buf, int num, int sendChk);
 
-int VN200FlushOutput(VN200_DEV *dev);
-
 int VN200Destroy(VN200_DEV *dev);
 
-int VN200Init(VN200_DEV *dev, char *devname, int baud, int fs, int mode);
+int VN200Init(VN200_DEV *dev, char *devname, char *logDirName, int fs, int baud, int mode,
+        time_t *initTime, unsigned key);
 
 #endif
 

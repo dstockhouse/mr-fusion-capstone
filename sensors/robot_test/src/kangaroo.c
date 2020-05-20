@@ -33,26 +33,37 @@
  * Initializes a kangaroo device
  *
  * Arguments: 
- * 	dev - Pointer to Kangaroo object to initialize
+ * 	dev        - Pointer to Kangaroo object to initialize
+ * 	devName    - Name of device file to initialize
+ * 	logDirName - Name of directory to create log file
+ * 	initTime   - Timestamp to put on log directory and files
+ * 	key        - Numeric key to identify log files together
  *
  * Return value:
  * 	On success, returns 0
  *	On failure, returns a negative number 
  */
-int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName, int baud) {
+int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName, int baud,
+        time_t *initTime, unsigned key) {
 
     if (dev == NULL) {
         return -1;
     }
 
-    // Default to save log in current directory
+    // Default to save log in directory named log
     if (logDirName == NULL) {
-        logDirName = ".";
+        logDirName = "log";
     }
 
     // Default to common RPi serial device name
     if (devName == NULL) {
         devName = KANGAROO_DEVNAME;
+    }
+
+    time_t initTimeTemp;
+    if (initTime == NULL) {
+        initTimeTemp = time(NULL);
+        initTime = &initTimeTemp;
     }
 
     // Initialize UART device
@@ -66,8 +77,8 @@ int KangarooInit(KANGAROO_DEV *dev, char *devName, char *logDirName, int baud) {
     BufferEmpty(&(dev->inbuf));
 
     // Initialize log file for raw and parsed received data
-    LogInit(&(dev->logFile), logDirName, "KANGAROO", LOG_FILEEXT_LOG);
-    LogInit(&(dev->logFileParsed), logDirName, "ODOMETRY_K", LOG_FILEEXT_CSV);
+    LogInit(&(dev->logFile), logDirName, "KANGAROO", LOG_FILEEXT_LOG, initTime, key);
+    LogInit(&(dev->logFileParsed), logDirName, "ODOMETRY_K", LOG_FILEEXT_CSV), initTime, key;
 
     // Parsed CSV file header
     char *logBuf = "l_dist_mm,r_dist_mm,timestamp\n";

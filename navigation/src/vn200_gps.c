@@ -48,17 +48,20 @@
  * Initializes a VN200 UART device for GPS functionality
  *
  * Arguments: 
- * 	dev     - Pointer to VN200_DEV instance to initialize
- * 	fs      - Sampling frequency to initialize the module to
- * 	devname - Name of the UART device (set NULL to use default)
+ * 	dev        - Pointer to VN200_DEV instance to initialize
+ * 	fs         - Sampling frequency to initialize the module to
+ * 	devname    - Name of the UART device (set NULL to use default)
+ * 	logDirName - Name of the directory to log to
+ * 	initTime   - Timestamp to put on log directory and files
+ * 	key        - Numeric key to identify log files together
  *
  * Return value:
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int VN200GPSInit(VN200_DEV *dev, char *devname, int fs) {
+int VN200GPSInit(VN200_DEV *dev, char *devname, char *logDirName, int fs, time_t *initTime, unsigned key) {
 
-    return VN200Init(dev, devname, fs, VN200_BAUD, VN200_INIT_MODE_GPS);
+    return VN200Init(dev, devname, logDirName, fs, VN200_BAUD, VN200_INIT_MODE_GPS, initTime, key);
 
 } // VN200GPSInit(VN200_DEV *, char *, int)
 

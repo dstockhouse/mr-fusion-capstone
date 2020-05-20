@@ -4,17 +4,23 @@
  * 	logger.c
  *
  * Description:
- * 	Sets up a binary or text log file timestamped at open
+ * 	Utilities to create and manage a log file in a consistent manner.
+ * 	These functions are wrappers around POSIX basic file I/O
  *
  * Author:
  * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 2/20/2019
+ * 	Last edited 02/20/2019
  *
  * Revision 0.2
  * 	Added function to flush log file
- * 	Last edited 2/13/2020
+ * 	Last edited 02/13/2020
+ *
+ * Revision 0.3
+ * 	Last edited 05/18/2020
+ * 	Moved generateFilename and mkdir_p to utils
+ * 	Adapted to more general definition for mkdir_p
  *
  ***************************************************************************/
 
@@ -33,119 +39,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-/**** Function generateFilename ****
- *
- * Generate a timestamped filename that matches the format 
- * "pre_mm.dd.yyyy_hh-mm-ss.ext" in the directory "dir"
- *
- * Arguments:
- * 	buf     - String buffer to hold generated string
- * 	bufSize - Length of buffer, will not write past this length
- * 	dir     - String directory name to include in filename. Must end with /
- * 	pre     - Prefix to put at start of new filename
- * 	ext     - Extension to put at end of new filename
- *
- * Return value:
- * 	Returns the number of characters written to buf (length of new string)
- */
-int generateFilename(char *buf, int bufSize, time_t *filetime, 
-        const char *dir, const char *pre, const char *ext) {
-
-    // Length of filename generated
-    int charsWritten;
-
-    struct timespec randseed;
-    // Different time source
-    // clock_gettime(CLOCK_MONOTONIC_RAW, &randseed);
-    clock_gettime(CLOCK_MONOTONIC, &randseed);
-    srand(randseed.tv_sec + randseed.tv_nsec);
-
-    // Time variables
-    struct tm currentTime;
-    time_t ltime;
-    if(filetime == NULL) {
-        ltime = time(NULL);
-        filetime = &ltime;
-    }
-
-    // Get current time in UTC
-    localtime_r(filetime, &currentTime);
-
-    // Create filename using date/time and input string
-    charsWritten = snprintf(buf, bufSize, 
-            "%s/%s-%02d.%02d.%04d_%02d-%02d-%02d_%d.%s",
-            dir, pre,
-            currentTime.tm_mon + 1,
-            currentTime.tm_mday,
-            currentTime.tm_year + 1900,
-            currentTime.tm_hour,
-            currentTime.tm_min,
-            currentTime.tm_sec,
-            rand(),
-            ext);
-
-    // Return length of the new string
-    return charsWritten;
-
-} // generateFilename(char *, int, time_t, char *, char *, char *)
-
-
-/**** Function mkdir_p ****
- *
- * Implementation of mkdir -p using system service calls, adapted from
- * https://gist.github.com/JonathonReinhart/8c0d90191c38af2dcadb102c4e202950
- *
- * Arguments:
- * 	pathname - String path to the directory to create
- * 	mode     - Directory access mode (permissions) for mkdir
- *
- * Return value:
- * 	On success, returns 0, otherwise returns -1 and sets errno
- */
-int mkdir_p(const char *pathname, mode_t mode) {
-
-    int pathnamelen, rc;
-    char localpathname[PATH_MAX], *dir;
-
-    // Ensure pathname length is small enough
-    pathnamelen = strlen(pathname);
-    if(pathnamelen > PATH_MAX - 1) {
-        errno = ENAMETOOLONG;
-        return -1;
-    }
-
-    // Copy to local string to allow (temp) modifications
-    strcpy(localpathname, pathname);
-
-    for(dir = localpathname + 1; *dir != '\0'; dir++) {
-
-        // If end of directory, mkdir everything before this
-        if(*dir == '/') {
-
-            // Temporarily terminate string here
-            *dir = '\0';
-
-            rc = mkdir(localpathname, mode);
-            if(rc && errno != EEXIST) {
-                return rc;
-            }
-
-            // Restore
-            *dir = '/';
-        }
-
-    } // for
-
-    // Make final directory
-    rc = mkdir(pathname, mode);
-    if(rc && errno != EEXIST) {
-        return rc;
-    }
-
-    return 0;
-
-} // int mkdir_p(const char *, mode_t)
-
 
 /**** Function LogInit ****
  *
@@ -160,13 +53,18 @@ int mkdir_p(const char *pathname, mode_t mode) {
  * Return value:
  * 	On success, returns 0, otherwise returns a negative number
  */
-int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
+int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, time_t *logtime, unsigned key, int ext) {
 
     int rc;
     char extString[8];
 
     // Get seconds since epoch
-    logFile->timestamp = time(NULL);
+    time_t tempTime;
+    if (logtime == NULL) {
+        tempTime = time(NULL);
+        logtime = &tempTime;
+    }
+    logFile->timestamp = *logtime;
 
     // Determine filename extension, default is log
     switch(ext) {
@@ -190,7 +88,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
 
     // Generate filename for the log file
     logFile->filenameLength = generateFilename(logFile->filename, LOG_FILENAME_LENGTH, 
-            &(logFile->timestamp), dir, pre, extString);
+            &(logFile->timestamp), dir, pre, key, extString);
     if(logFile->filenameLength == LOG_FILENAME_LENGTH) {
         logDebug(L_INFO, "Filename too long, using %s\n", logFile->filename);
     }
@@ -217,7 +115,7 @@ int LogInit(LOG_FILE *logFile, const char *dir, const char *pre, int ext) {
     // Return 0 on success
     return 0;
 
-} // LogInit(LOG_FILE *, char *, char *, int)
+} // LogInit(LOG_FILE *, char *, char *, time_t *, unsigned, int)
 
 
 /**** Function LogUpdate ****

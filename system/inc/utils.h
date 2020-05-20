@@ -22,6 +22,8 @@
 #define __UTILS_H
 
 #include <time.h> // For struct timespec
+#include <sys/stat.h>
+#include <sys/types.h> // For mkdir arguments
 
 // MIN/MAX macro definition
 #define MAX(S,T) ((S)>(T)?(S):(T))
@@ -39,6 +41,13 @@ void logDebug(int debuglevel, const char *fmt, ...);
 
 // Sets std input to noncanonical mode
 void setStdinNoncanonical(int set);
+
+// Generates a filename of a consistent form
+int generateFilename(char *buf, int bufSize, time_t *time, 
+		const char *dir, const char *pre, unsigned suf, const char *ext);
+
+// Emulates mkdir -p, nested directory, doesn't fail if it already exists
+int mkdir_p(const char *pathname, mode_t mode);
 
 #endif // __UTILS_H
 

@@ -59,7 +59,7 @@ int TCPClientInit() {
     // Create bare socket
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd == -1) {
-        logDebug(L_INFO, "%s: Failed to create client socket\n", strerror(errno));
+        logDebug(L_VDEBUG, "%s: Failed to create client socket\n", strerror(errno));
         return sock_fd;
     }
 
@@ -116,7 +116,7 @@ int TCPClientTryConnect(int sock_fd, char *ipAddr, int port) {
     // pton = string to network address
     rc = inet_pton(AF_INET, ipAddr, &(socketAddress.sin_addr));
     if (rc == -1) {
-        logDebug(L_INFO, "%s: Failed to convert IP address for TCP client (%s)\n", 
+        logDebug(L_INFO, "Failed to convert IP address for TCP client (%s): %s\n", 
                 ipAddr, strerror(errno));
         return rc;
     }
@@ -309,7 +309,12 @@ int TCPRead(int sock_fd, unsigned char *buf, int length) {
     numRead = recv(sock_fd, buf, length, MSG_DONTWAIT);
     logDebug(L_VVDEBUG, "TCPRead: received %d chars\n", numRead);
     if (numRead < 0) {
-        logDebug(L_INFO, "%s: TCPRead recv() failed for TCP socket\n", strerror(errno));
+        if (errno == EAGAIN) {
+            // Tell the application that no data was received
+            numRead = 0;
+        } else {
+            logDebug(L_INFO, "%s: TCPRead recv() failed for TCP socket\n", strerror(errno));
+        }
     }
 
     // Return number of bytes successfully read into buffer
@@ -346,7 +351,7 @@ int TCPWrite(int sock_fd, unsigned char *buf, int length) {
     //      Don't generate a SIGPIPE signal if the connection is broken
     numWritten = send(sock_fd, buf, length, MSG_DONTWAIT | MSG_NOSIGNAL);
     if (numWritten < 0) {
-        logDebug(L_INFO, "%s: TCPWrite send() failed for TCP socket\n", strerror(errno));
+        logDebug(L_VDEBUG, "%s: TCPWrite send() failed for TCP socket\n", strerror(errno));
     }
 
     // Return number of bytes successfully read into buffer
@@ -372,7 +377,7 @@ int TCPClose(int sock_fd) {
 
     rc = close(sock_fd);
     if (rc == -1) {
-        logDebug(L_INFO, "%s: TCPClose Couldn't close socket with fd = %d\n", strerror(errno), sock_fd);
+        logDebug(L_VDEBUG, "%s: TCPClose Couldn't close socket with fd = %d\n", strerror(errno), sock_fd);
     }
 
     return rc;

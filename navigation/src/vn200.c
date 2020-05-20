@@ -258,58 +258,13 @@ int VN200Command(VN200_DEV *dev, char *cmd, int num, int sendChk) {
 
     } // if (sendChk)
 
-    // Add command string to output buffer
-    BufferAddArray(&(dev->outbuf), (unsigned char *) buf, numWritten);
-
-    logDebug(L_VDEBUG, "Output buffer contents: \n");
-    for (i = 0; i < dev->outbuf.length; i++) {
-        logDebug(L_VDEBUG, "%02X", dev->outbuf.buffer[i]);
-    }
-    logDebug(L_VDEBUG, "\n");
-
-    // Send output buffer to UART
-    numWritten = VN200FlushOutput(dev);
+    // Write command to UART device
+    UARTWrite(dev->fd, (unsigned char *) buf, numWritten);
+    // logDebug(L_INFO, "VN200Command: %s", buf);
 
     return numWritten;
 
 } // VN200Command(VN200_DEV &, char *, int, int)
-
-
-/**** Function VN200FlushOutput ****
- *
- * Writes out data from VN200_DEV struct output buffer to the UART PHY
- *
- * Arguments: 
- * 	dev - Pointer to VN200_DEV instance to modify
- *
- * Return value:
- *	On success, returns number of bytes written
- *	On failure, returns a negative number
- */
-int VN200FlushOutput(VN200_DEV *dev) {
-
-    int numWritten, i;
-
-    // Ensure valid pointers
-    if (dev == NULL) {
-        return -1;
-    }
-
-    // Write output buffer to UART
-    numWritten = UARTWrite(dev->fd, dev->outbuf.buffer, dev->outbuf.length);
-
-    logDebug(L_VDEBUG, "Output: \n");
-    for (i = 0; i < dev->outbuf.length; i++) {
-        logDebug(L_VDEBUG, "%c", dev->outbuf.buffer[i]);
-    }
-    logDebug(L_VDEBUG, "\n");
-
-    // Remove the data from the output buffer
-    BufferRemove(&(dev->outbuf), numWritten);
-
-    return numWritten;
-
-} // VN200FlushOutput(VN200_DEV &)
 
 
 /**** Function VN200Destroy ****
@@ -345,23 +300,27 @@ int VN200Destroy(VN200_DEV *dev) {
  * Initializes a VN200 UART device for both GPS and IMU functionality
  *
  * Arguments: 
- * 	dev     - Pointer to VN200_DEV instance to initialize
- * 	devname - String name of the device
- * 	fs      - Sampling frequency to initialize the module to
- * 	baud    - Baud rate to configure the UART
- * 	mode    - Initialization mode (found in VN200.h)
+ * 	dev      - Pointer to VN200_DEV instance to initialize
+ * 	devname  - String name of the device
+ * 	fs       - Sampling frequency to initialize the module to
+ * 	baud     - Baud rate to configure the UART
+ * 	mode     - Initialization mode (found in VN200.h)
+ * 	initTime - Timestamp to put on log directory and files
+ * 	key      - Numeric key to identify log files together
  *
  * Return value:
  *	On success, returns 0
  *	On failure, returns a negative number
  */
-int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
+int VN200Init(VN200_DEV *dev, char *devname, char *logDirName, int fs, int baud, int mode,
+        time_t *initTime, unsigned key) {
 
 #define CMD_BUFFER_SIZE 64
     char commandBuf[CMD_BUFFER_SIZE], logBuf[256];
     int commandBufLen, logBufLen;
 
-    char logFileDirName[512];
+    char logDirNameTemp[512];
+    time_t initTimeTemp;
 
     // Exit on error if invalid pointer
     if (dev == NULL) {
@@ -377,6 +336,12 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
         return -2;
     }
 
+    // If no time provided, use current time
+    if (initTime == NULL) {
+        initTimeTemp = time(NULL);
+        initTime = &initTimeTemp;
+    }
+
     // Ensure valid sample rate (later)
 
     // Initialize UART for all modes
@@ -386,17 +351,21 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     // Initialize log file for raw and parsed data
     // Since multiple log files will be generated for the run, put them in
     // the same directory
-    time_t dirtime = time(NULL);
-    generateFilename(logFileDirName, 512, &dirtime,
-            "log/data/VN200", "RUN", "d");
-    LogInit(&(dev->logFile), logFileDirName, "VN200", LOG_FILEEXT_LOG);
-    logDebug(L_INFO, "Logging to directory %s\n", logFileDirName);
+    if (logDirName == NULL) {
+        // If no directory name is provided, make one yourself
+        generateFilename(logDirNameTemp, 512, initTime,
+                "log/data/VN200", "RUN", key, "d");
+        logDirName = logDirNameTemp;
+    }
+
+    LogInit(&(dev->logFile), logDirName, "VN200", initTime, key, LOG_FILEEXT_LOG);
+    logDebug(L_INFO, "Logging VN200 data to directory %s\n", logDirName);
 
     // If GPS enabled, init GPS log file
     if (mode & VN200_INIT_MODE_GPS) {
 
         // Init csv file
-        LogInit(&(dev->logFileGPSParsed), logFileDirName, "VN200_GPS", LOG_FILEEXT_CSV);
+        LogInit(&(dev->logFileGPSParsed), logDirName, "VN200_GPS", initTime, key, LOG_FILEEXT_CSV);
 
         // Write header to CSV data
         logBufLen = snprintf(logBuf, 256, "gpstime,week,gpsfix,numsats,posx,posy,posz,velx,vely,velz,xacc,yacc,zacc,sacc,tacc,timestamp\n");
@@ -408,7 +377,7 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     if (mode & VN200_INIT_MODE_IMU) {
 
         // Init csv file
-        LogInit(&(dev->logFileIMUParsed), logFileDirName, "VN200_IMU", LOG_FILEEXT_CSV);
+        LogInit(&(dev->logFileIMUParsed), logDirName, "VN200_IMU", initTime, key, LOG_FILEEXT_CSV);
 
         // Write header to CSV data
         logBufLen = snprintf(logBuf, 256, "compx,compy,compz,accelx,accely,accelz,gyrox,gyroy,gyroz,temp,baro,timestamp\n");
@@ -423,27 +392,32 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
     UARTSetBaud(dev->fd, 57600);
     char *baudCommandString = "VNWRG,05,115200";
     VN200Command(dev, baudCommandString, strlen(baudCommandString), 0);
-    VN200FlushOutput(dev);
-    usleep(100000);
     UARTSetBaud(dev->fd, 115200);
-    VN200FlushInput(dev);
-    usleep(100000);
 
     // Request VN200 serial number
     commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNRRG,03");
     VN200Command(dev, commandBuf, commandBufLen, 0);
-    VN200FlushOutput(dev);
-    usleep(100000);
-    VN200FlushInput(dev);
-    usleep(100000);
 
     // Disable asynchronous output
     commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s", "VNWRG,06,0");
     VN200Command(dev, commandBuf, commandBufLen, 0);
-    VN200FlushOutput(dev);
-    usleep(100000);
-    VN200FlushInput(dev);
-    usleep(100000);
+
+    // Set sampling frequency (register 07)
+    dev->fs = fs;
+    commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%02d", "VNWRG,07,", dev->fs);
+    VN200Command(dev, commandBuf, commandBufLen, 1);
+
+    // Save register settings
+    char *writeNVMCommandString = "VNWNV";
+    VN200Command(dev, writeNVMCommandString, strlen(writeNVMCommandString), 0);
+
+    // Reset device with these settings
+    char *resetCommandString = "VNRST";
+    VN200Command(dev, resetCommandString, strlen(resetCommandString), 0);
+
+
+    // Wait 200ms for device to reset
+    usleep(1000000);
 
     if (mode == VN200_INIT_MODE_GPS) {
 
@@ -470,19 +444,6 @@ int VN200Init(VN200_DEV *dev, char *devname, int fs, int baud, int mode) {
 
     // Send mode command to UART
     VN200Command(dev, commandBuf, commandBufLen, 0);
-    VN200FlushOutput(dev);
-    usleep(100000);
-    VN200FlushInput(dev);
-    usleep(100000);
-
-    // Set sampling frequency (register 07)
-    dev->fs = fs;
-    commandBufLen = snprintf(commandBuf, CMD_BUFFER_SIZE, "%s%02d", "VNWRG,07,", dev->fs);
-    VN200Command(dev, commandBuf, commandBufLen, 1);
-    VN200FlushOutput(dev);
-    usleep(100000);
-    VN200FlushInput(dev);
-    usleep(100000);
 
     if (devname != NULL) {
         logDebug(L_INFO, "Finished configuring UART for device %s\n", devname);

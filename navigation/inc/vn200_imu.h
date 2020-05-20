@@ -24,7 +24,7 @@
 #include "vn200_struct.h"
 #include "vn200.h"
 
-int VN200IMUInit(VN200_DEV *dev, char *devname, int fs);
+int VN200IMUInit(VN200_DEV *dev, char *devname, char *logDirName, int fs, time_t *initTime, unsigned key);
 
 int VN200IMUPacketParse(unsigned char *buf, int len, IMU_DATA *data);
 

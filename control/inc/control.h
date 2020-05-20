@@ -30,6 +30,9 @@ typedef struct {
     // Serial device loggers
     LOG_FILE kangaroo_log, encoder_log;
 
+    // Time zero for all logging
+    double startTime;
+
 } CONTROL_PARAMS;
 
 #endif // __CONTROL_H

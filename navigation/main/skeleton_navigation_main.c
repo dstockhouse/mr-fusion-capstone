@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
         logDebug(L_INFO, "Navigation: Failed to initialize navigation sockets: %s\n", strerror(errno));
     }
 
-    // Loop until both sockets are connected
+    // Loop until all sockets are connected
     const int MAX_CONNECT_ATTEMPTS = 10000;
     int gConnected = 0, cConnected = 0, ipConnected = 0, numTries = 0; 
     while (!(gConnected && cConnected && ipConnected) && numTries < MAX_CONNECT_ATTEMPTS) {
