@@ -13,7 +13,7 @@
 
 #define IP_ADDR         "127.0.0.1"
 #define NAVIGATION_EXE  "./navigation/navigation_main.elf"
-#define CONTROL_EXE     "./sensors/robot_test/robot_test_main.elf"
+#define CONTROL_EXE     "./control/control_main.elf"
 
 void execChild(char *executable) {
 
@@ -30,7 +30,7 @@ void execChild(char *executable) {
 
 int main(int argc, char **argv) {
 
-    int rc;
+    int i, rc;
 
     pid_t nav_fork_rc, control_fork_rc;
 
@@ -124,14 +124,14 @@ int main(int argc, char **argv) {
     struct timespec startTime_ts;
     unsigned key;
 
-    // Initial zero time
-    getTimestamp(&startTime_ts, &startTime);
-
     // Random key
     srand(startTime_ts.tv_sec + startTime_ts.tv_nsec);
     key = rand();
 
-    // Send key to navigation
+    // Initial zero time
+    getTimestamp(&startTime_ts, &startTime);
+
+    // Send key to subsystems
     char tcpBuf[16] = "init";
     // Populate timestamp and key fields
     memcpy(&(tcpBuf[4]), &startTime, 8);
@@ -153,9 +153,125 @@ int main(int argc, char **argv) {
         logDebug(L_INFO, "SENT INIT MESSAGE TO CONTROL: ");
     }
 
+    // Delay to let subsystems start operation
+    sleep(2);
 
-    // Allow ten seconds for data collection
-    sleep(10);
+    // Non blocking terminal input
+    setStdinNoncanonical(1);
+
+    int loopContinue = 1;
+    double speed = 0.0, rotation = 0.0;
+    int escapeMode = 0;
+    double endTime;
+    while (loopContinue) {
+
+        // Get input from user nonblocking
+        char input[16];
+        rc = read(STDIN_FILENO, input, 16);
+
+        // speed = 0.0;
+        // rotation = 0.0;
+
+        for (i = 0; i < rc; i++) {
+            switch (input[i]) {
+
+                // Escape code
+                case '\033':
+                    escapeMode = 1;
+                    break;
+
+                    // Linear speed control
+                case 'A': // Up arrow
+                    if (escapeMode) {
+                        speed += 0.2;
+                        escapeMode = 0;
+                    }
+                    break;
+                case 'B': // Down arrow
+                    if (escapeMode) {
+                        speed -= 0.2;
+                        escapeMode = 0;
+                    }
+                    break;
+
+                    // Angular speed control
+                case 'C': // Left arrow
+                    if (escapeMode) {
+                        rotation += 0.2;
+                        escapeMode = 0;
+                    }
+                    break;
+                case 'D': // Right arrow
+                    if (escapeMode) {
+                        rotation -= 0.2;
+                        escapeMode = 0;
+                    }
+                    break;
+
+                case ' ':
+                    speed = 0;
+                    rotation = 0;
+                    break;
+
+                case 'q':
+                    // Exit loop
+                    loopContinue = 0;
+                    break;
+
+                    // Ignore parts of special characters
+                case '[':
+                case '~':
+                    // No input
+                    break;
+
+                default:
+                    strncpy(tcpBuf, "ctlx", 4);
+                    speed = 0;
+                    rotation = 0;
+                    escapeMode = 0;
+                    break;
+            }
+        }
+
+        if (speed > 0.8) {
+            speed = 0.8;
+        } else if (speed < -0.8) {
+            speed = -0.8;
+        }
+        if (rotation > 0.8) {
+            rotation = 0.8;
+        } else if (rotation < -0.8) {
+            rotation = -0.8;
+        }
+
+        // Send speed and rotation commands
+        strncpy(tcpBuf, "ctls", 4);
+        memcpy((unsigned char *) &(tcpBuf[4]), &speed, 8);
+        rc = TCPWrite(cSock, tcpBuf, 12);
+        if (rc < 12) {
+            logDebug(L_INFO, "FAILED TO SEND SPEED MESSAGE TO CONTROL (%d): %s\n",
+                    rc, strerror(errno));
+        }
+        strncpy(tcpBuf, "ctlr", 4);
+        memcpy((unsigned char *) &(tcpBuf[4]), &rotation, 8);
+        rc = TCPWrite(cSock, tcpBuf, 12);
+        if (rc < 12) {
+            logDebug(L_INFO, "FAILED TO SEND ROTATION MESSAGE TO CONTROL (%d): %s\n",
+                    rc, strerror(errno));
+        }
+
+        logDebug(L_INFO, "  S: %.3f  R: %.3f   \r", speed, rotation);
+
+        // Delay for the loop to run more slowly
+        struct timespec delaytime;
+        delaytime.tv_sec = 0;
+        delaytime.tv_nsec = 20000000; // 20 ms
+        nanosleep(&delaytime, NULL);
+
+        // Print data capture duration
+        getTimestamp(NULL, &endTime);
+        logDebug(L_INFO, "%.1lf\r", endTime);
+    }
 
     // Send stop message
     rc = TCPWrite(nSock, (unsigned char *) "stop", 4);
@@ -174,11 +290,14 @@ int main(int argc, char **argv) {
         logDebug(L_INFO, "SENT STOP MESSAGE TO CONTROL\n");
     }
 
+    setStdinNoncanonical(0);
+
     // Wait for child to complete
-    wait(&rc);
-    logDebug(L_INFO, "\nCHILD 1 EXITED WITH CODE %d\n\n", rc);
-    wait(&rc);
-    logDebug(L_INFO, "\nCHILD 2 EXITED WITH CODE %d\n\n", rc);
+    pid_t childPid;
+    childPid = wait(&rc);
+    logDebug(L_INFO, "\n%s EXITED WITH CODE %d\n\n", (childPid==nav_fork_rc)?"NAVIGATION":"CONTROL", rc);
+    childPid = wait(&rc);
+    logDebug(L_INFO, "\n%s EXITED WITH CODE %d\n\n", (childPid==nav_fork_rc)?"NAVIGATION":"CONTROL", rc);
 
     return rc;
 }

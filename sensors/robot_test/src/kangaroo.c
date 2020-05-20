@@ -7,10 +7,10 @@
  * 	Hardware abstraction for interfacing with the UART Kangaroo Motion Controller
  *
  * Author:
- * 	Duncan Patel
+ * 	David Stockhouse
  *
  * Revision 0.1
- * 	Last edited 03/05/2020
+ * 	Last edited 05/19/2020
  *
  ***************************************************************************/
 

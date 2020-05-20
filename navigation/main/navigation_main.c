@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 
     // Use logDebug(L_DEBUG, ...) just like printf
     // Debug levels are L_INFO, L_DEBUG, L_VDEBUG
-    logDebug(L_INFO, "Initializing...\n");
+    logDebug(L_INFO, "Navigation: Initializing...\n");
 
     char *devname;
     if (argc > 1) {
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     }
 
     // Loop until all sockets are connected
-    const int MAX_CONNECT_ATTEMPTS = 10000;
+    const int MAX_CONNECT_ATTEMPTS = 100;
     int gConnected = 0, numTries = 0; 
     while (!gConnected && numTries < MAX_CONNECT_ATTEMPTS) {
 
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     } else {
 
         // Wait for initialization message from guidance
-        logDebug(L_INFO, "Waiting for initialization message from guidance...\n");
+        logDebug(L_INFO, "Navigation: Waiting for initialization message from guidance...\n");
 
         // The message from guidance has the following form
         //      init[startTime][key]
@@ -159,9 +159,8 @@ int main(int argc, char **argv) {
             pollSock.events = POLLIN;
             rc = poll(&pollSock, 1, 10);
             if (rc > 0) {
-                logDebug(L_INFO, "Navigation: Poll event available\n");
                 if (pollSock.revents | POLLIN) {
-                    logDebug(L_INFO, "Navigation: Data available on socket\n");
+                    // logDebug(L_INFO, "Navigation: Data available on socket\n");
                 }
             } else if (rc < 0) {
                 logDebug(L_INFO, "Navigation: Poll failed: %s\n",
@@ -169,7 +168,6 @@ int main(int argc, char **argv) {
             }
 
             rc = TCPRead(navigation.guidance_sock, &(tcpBuf[numReceived]), 512 - numReceived);
-            logDebug(L_INFO, "Navigation: TCPRead returned %d\n", rc);
             usleep(100000);
             if (rc < 0) {
                 if (errno == EAGAIN) {
@@ -212,14 +210,14 @@ int main(int argc, char **argv) {
         } while (!messageReceived && numReceived < 512 && ((waitEndTime - waitStartTime) < MAX_TCP_WAIT));
 
         if (!messageReceived) {
-            logDebug(L_INFO, "\nNever received starting conditions from guidance, using defaults\n");
+            logDebug(L_INFO, "\nNavigation: Never received starting conditions from guidance, using defaults\n");
 
             getTimestamp(NULL, &(navigation.startTime));
             printf("Seeding RNG with %d\n", (unsigned) round(navigation.startTime));
             srand((unsigned) round(navigation.startTime));
             navigation.key = rand();
         } else {
-            logDebug(L_INFO, "\nInitial conditions received from guidance in %0.3lf seconds\n",
+            logDebug(L_INFO, "\nNavigation: Initial conditions received from guidance in %0.3lf seconds\n",
                     waitEndTime - waitStartTime);
         }
     }
@@ -235,7 +233,8 @@ int main(int argc, char **argv) {
                 "log", "MRFUSION_RUN", navigation.key, "d");
 
     // Append device logging information to 
-    strcat(logDirName, "/VN200");
+    strcat(logDirName, "/navigation");
+
 
     // Initialize VN200 device at 50Hz sample frequency, baud rate, for both IMU and GPS packets
     VN200Init(&(navigation.vn200), devname, logDirName, 50, VN200_BAUD,
@@ -251,13 +250,13 @@ int main(int argc, char **argv) {
 
     rc = ThreadAttrInit(&vn200Attr, 0);
     if (rc < 0) {
-        logDebug(L_INFO, "Failed to set thread attributes: %s\n",
+        logDebug(L_INFO, "Navigation: Failed to set thread attributes: %s\n",
                 strerror(errno));
         return 1;
     }
     rc = ThreadCreate(&vn200Thread, &vn200Attr, (void *(*)(void *)) &vn200_run, (void *) &navigation);
     if (rc < 0) {
-        logDebug(L_INFO, "Failed to start VN200 thread: %s\n",
+        logDebug(L_INFO, "Navigation: Failed to start VN200 thread: %s\n",
                 strerror(errno));
         return 1;
     }
@@ -265,9 +264,9 @@ int main(int argc, char **argv) {
     usleep(100000);
 
     if (interactiveMode) {
-        logDebug(L_INFO, "Press any key to end\n\n");
+        logDebug(L_INFO, "Navigation: Press any key to end\n\n");
     } else {
-        logDebug(L_INFO, "Executing until stop command\n\n");
+        logDebug(L_INFO, "Navigation: Executing until stop command\n\n");
     }
 
     // Loop Until ending
@@ -275,14 +274,14 @@ int main(int argc, char **argv) {
     int numReceived = 0;
     while (loopContinue) {
 
-        printf("  fx: %.3f  fy: %.3f  fz: %.3f\n",
-                imu_packet.accel[0], imu_packet.accel[1], imu_packet.accel[2]);
-
-        printf("  X: %.6f  Y: %.6f  Z: %.6f  fix: %d  sats: %d  \r\033[A",
-                gps_packet.PosX, gps_packet.PosY, gps_packet.PosZ,
-                gps_packet.GpsFix, gps_packet.NumSats);
-
         if (interactiveMode) {
+
+            printf("  fx: %.3f  fy: %.3f  fz: %.3f\n",
+                    imu_packet.accel[0], imu_packet.accel[1], imu_packet.accel[2]);
+
+            printf("  X: %.6f  Y: %.6f  Z: %.6f  fix: %d  sats: %d  \r\033[A",
+                    gps_packet.PosX, gps_packet.PosY, gps_packet.PosZ,
+                    gps_packet.GpsFix, gps_packet.NumSats);
 
             // Get input from user nonblocking
             char input[16];
@@ -299,7 +298,7 @@ int main(int argc, char **argv) {
 
             if (rc < 0) {
                 logDebug(L_INFO, "Navigation: Failed to read from TCP: %s\n", strerror(errno));
-            } else {
+            } else if (rc > 0) {
                 numReceived += rc;
 
                 if (numReceived >= 4) {
@@ -315,6 +314,11 @@ int main(int argc, char **argv) {
                     }
                 }
             }
+
+            if (numReceived >= 512) {
+                logDebug(L_INFO, "Navigation: Received maximum inputs without stop command; exiting\n");
+                loopContinue = 0;
+            }
         }
 
     } // while (loopContinue)
@@ -322,7 +326,7 @@ int main(int argc, char **argv) {
     vn200_continueRunning = 0;
     usleep(100000);
 
-    printf("\n\nAttempting to join reader thread...\n");
+    printf("\n\nAttempting to join VN200 reader thread...\n");
     int notJoined = 1;
     do {
 

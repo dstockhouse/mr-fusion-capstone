@@ -17,21 +17,20 @@
 #ifndef __CONTROL_H
 #define __CONTROL_H
 
-#include "logger.h"
+#include "kangaroo.h"
 
 typedef struct {
 
     // TCP Socket file descriptors
     int guidance_sock, navigation_sock;
 
-    // Serial device file descriptors
-    int kangaroo_fd, encoder_fd;
-
-    // Serial device loggers
-    LOG_FILE kangaroo_log, encoder_log;
+    KANGAROO_DEV kangaroo;
 
     // Time zero for all logging
     double startTime;
+
+    // Key to identify log files
+    unsigned key;
 
 } CONTROL_PARAMS;
 

@@ -19,6 +19,9 @@
 
 #include "control.h"
 
+// Allows main thread to stop running thread
+extern int encoder_continueRunning;
+
 int encoder_run(CONTROL_PARAMS *control);
 
 #endif // ENCODER_RUN_H
