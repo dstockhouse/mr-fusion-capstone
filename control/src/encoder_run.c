@@ -70,11 +70,11 @@ int encoder_run(CONTROL_PARAMS *control) {
                 if (packet.valid && packet.type == KPT_POS) {
                     if (packet.channel == LEFT_MOTOR_INDEX) {
                         lPos = packet.data;
-                        lTimestamp = packet.timestamp;
+                        lTimestamp = packet.timestamp - control->startTime;
                         newRawOdometry = 1;
                     } else if (packet.channel == RIGHT_MOTOR_INDEX) {
                         rPos = packet.data;
-                        rTimestamp = packet.timestamp;
+                        rTimestamp = packet.timestamp - control->startTime;
                         newRawOdometry = 1;
                     }
                 } else {

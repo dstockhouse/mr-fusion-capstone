@@ -15,6 +15,9 @@
 #define NAVIGATION_EXE  "./navigation/navigation_main.elf"
 #define CONTROL_EXE     "./control/control_main.elf"
 
+#undef IMAGEPROC_IP_ADDR
+#define IMAGEPROC_IP_ADDR "192.168.1.144"
+
 void execChild(char *executable) {
 
     int rc;
@@ -77,11 +80,13 @@ int main(int argc, char **argv) {
     // Set up TCP servers
     nSock = TCPServerInit(IP_ADDR, NAVIGATION_TCP_PORT);
     cSock = TCPServerInit(IP_ADDR, CONTROL_TCP_PORT);
+    ipSock = TCPServerInit(IMAGEPROC_IP_ADDR, IMAGEPROC_TCP_PORT);
     TCPSetNonBlocking(nSock);
     TCPSetNonBlocking(cSock);
+    TCPSetNonBlocking(ipSock);
 
     attempt = 0;
-    int nUnconnected = 1, cUnconnected = 1;
+    int nUnconnected = 1, cUnconnected = 1, ipUnconnected = 1;
     do {
         attempt++;
 
@@ -105,9 +110,19 @@ int main(int argc, char **argv) {
             }
         }
 
-    } while (attempt < maxAttempts && (nUnconnected || cUnconnected));
+        if (ipUnconnected) {
+            rc = TCPServerTryAccept(ipSock);
+            usleep(100000);
+            if (rc >= 0) {
+                ipUnconnected = 0;
+                ipSock = rc;
+                logDebug(L_INFO, "SUCCESSFUL TCP CONNECTION TO IMAGEPROC\n");
+            }
+        }
 
-    if (nUnconnected || cUnconnected) {
+    } while (attempt < maxAttempts && (nUnconnected || cUnconnected || ipUnconnected));
+
+    if (nUnconnected || cUnconnected || ipUnconnected) {
 
         logDebug(L_INFO, "MAX TCP CONNECTION ATTEMPTS EXCEEDED; EXITING\n");
 
@@ -116,7 +131,6 @@ int main(int argc, char **argv) {
         kill(control_fork_rc, SIGINT);
 
         return 1;
-
     }
 
     // Send it the initial conditions
@@ -151,6 +165,14 @@ int main(int argc, char **argv) {
                 rc, strerror(errno));
     } else {
         logDebug(L_INFO, "SENT INIT MESSAGE TO CONTROL: ");
+    }
+
+    rc = TCPWrite(ipSock, (unsigned char *) tcpBuf, 16);
+    if (rc < 16) {
+        logDebug(L_INFO, "FAILED TO SEND INIT MESSAGE TO IMAGEPROC (%d): %s\n",
+                rc, strerror(errno));
+    } else {
+        logDebug(L_INFO, "SENT INIT MESSAGE TO IMAGEPROC: ");
     }
 
     // Delay to let subsystems start operation
@@ -288,6 +310,14 @@ int main(int argc, char **argv) {
                 rc, strerror(errno));
     } else {
         logDebug(L_INFO, "SENT STOP MESSAGE TO CONTROL\n");
+    }
+
+    rc = TCPWrite(ipSock, (unsigned char *) "stop", 4);
+    if (rc < 4) {
+        logDebug(L_INFO, "FAILED TO SEND STOP MESSAGE TO IMAGEPROC (%d): %s\n",
+                rc, strerror(errno));
+    } else {
+        logDebug(L_INFO, "SENT STOP MESSAGE TO IMAGEPROC\n");
     }
 
     setStdinNoncanonical(0);
