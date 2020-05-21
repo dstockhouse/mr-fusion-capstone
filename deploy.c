@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <arpa/inet.h>
 
 #include "config.h"
 
@@ -81,7 +82,9 @@ int main(int argc, char **argv) {
     // Set up TCP servers
     nSock = TCPServerInit(IP_ADDR, NAVIGATION_TCP_PORT);
     cSock = TCPServerInit(IP_ADDR, CONTROL_TCP_PORT);
-    ipSock = TCPServerInit(IMAGEPROC_IP_ADDR, IMAGEPROC_TCP_PORT);
+    // ipSock = TCPServerInit(IMAGEPROC_IP_ADDR, IMAGEPROC_TCP_PORT);
+    // ipSock = TCPServerInit(INADDR_ANY, IMAGEPROC_TCP_PORT);
+    ipSock = TCPServerInit("192.168.1.105", IMAGEPROC_TCP_PORT);
     TCPSetNonBlocking(nSock);
     TCPSetNonBlocking(cSock);
     TCPSetNonBlocking(ipSock);
@@ -229,14 +232,14 @@ int main(int argc, char **argv) {
                     // Angular speed control
                 case 'C': // Left arrow
                     if (escapeMode) {
-                        rotation += 0.2;
+                        rotation -= 0.2;
                         escapeMode = 0;
                         speedChange = 1;
                     }
                     break;
                 case 'D': // Right arrow
                     if (escapeMode) {
-                        rotation -= 0.2;
+                        rotation += 0.2;
                         escapeMode = 0;
                         speedChange = 1;
                     }

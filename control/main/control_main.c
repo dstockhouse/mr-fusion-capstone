@@ -425,7 +425,7 @@ int main(int argc, char **argv) {
                                    BufferIndex(&tcpBuf, i+3) == 's') {
 
                             // Speed command
-                            logDebug(L_DEBUG, "Control: Received speed command from guidance\n");
+                            logDebug(L_VDEBUG, "Control: Received speed command from guidance\n");
                             if (BufferLength(&tcpBuf) >= i + 12) {
                                 unsigned char tempBuf[8];
                                 BufferCopy(&tcpBuf, tempBuf, i + 4, 8);
@@ -441,7 +441,7 @@ int main(int argc, char **argv) {
                                    BufferIndex(&tcpBuf, i+3) == 'r') {
 
                             // Rotation command
-                            logDebug(L_DEBUG, "Control: Received rotation command from guidance\n");
+                            logDebug(L_VDEBUG, "Control: Received rotation command from guidance\n");
                             if (BufferLength(&tcpBuf) >= i + 12) {
                                 unsigned char tempBuf[8];
                                 BufferCopy(&tcpBuf, tempBuf, i + 4, 8);
@@ -454,11 +454,11 @@ int main(int argc, char **argv) {
                     }
 
                     // Remove those bytes from the buffer
-                    logDebug(L_DEBUG, "Removing %d/%d: ", numParsed, BufferLength(&tcpBuf));
+                    logDebug(L_VDEBUG, "Removing %d/%d: ", numParsed, BufferLength(&tcpBuf));
                     for (i = 0; i < BufferLength(&tcpBuf); i++) {
-                        logDebug(L_DEBUG, "%c", BufferIndex(&tcpBuf, i));
+                        logDebug(L_VDEBUG, "%c", BufferIndex(&tcpBuf, i));
                     }
-                    logDebug(L_DEBUG, "\n");
+                    logDebug(L_VDEBUG, "\n");
                     BufferRemove(&tcpBuf, numParsed);
 
                 }
