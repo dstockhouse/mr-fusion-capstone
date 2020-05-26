@@ -3,7 +3,8 @@
 clear; clc; close all;
 addpath('../optical_flow');
 
-imagedir = 'tof_outdoor_robot_png1_05.04.2020';
+% imagedir = 'tof_outdoor_robot_png1_05.04.2020';
+imagedir = '../../../../mr_fusion_integrated_data/tof'
 fprintf('Reading images from %s...\n', imagedir);
 
 moviename = [imagedir '.mp4'];
