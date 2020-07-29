@@ -69,8 +69,7 @@ pub(self) fn establish_connection(socket: SocketAddrV4) -> TcpStream {
 
             // Using unwrap since we are guaranteed to get the mutex. Since we only have one thread.
             TO_UI.lock().unwrap().write_all(message.as_bytes())
-                .unwrap(); // Second unwrap because I am unsure of how to hand error if We
-                            // cannot send information to the pipe.
+                .expect("Failed to send bind failure to UI");
 
             panic!("{}", message)
         }
@@ -83,7 +82,8 @@ pub(self) fn establish_connection(socket: SocketAddrV4) -> TcpStream {
             let message = format!("Guidance unable to accept: {}", error);
             
             TO_UI.lock().unwrap() // Acquired mutex
-                .write_all(message.as_bytes()).unwrap(); // Sending message to UI
+                .write_all(message.as_bytes()) // Sending message to UI
+                .expect("Failed to send tcp accept error message to UI"); 
 
             panic!(message);
         }
