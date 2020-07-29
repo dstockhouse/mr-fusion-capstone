@@ -139,7 +139,7 @@ pub struct Vertex {
     pub(self) point: Point,
 
     // Key data to determine the shortest path using Dijkstra's Algorithm
-    pub parent: Option<VertexIndex>,
+    pub parent_vertex_index: Option<usize>,
     pub tentative_distance: f64,
     pub visited: bool
 }
@@ -157,35 +157,29 @@ impl Vertex {
         Vertex {
             name,
             point,
-            parent: None,
+            parent_vertex_index: None,
             tentative_distance: f64::MAX,
             visited: false
         }
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct EdgeIndex(pub usize);
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct VertexIndex(pub usize);
-
 // Element at a matrix_index[i][j] indicates an Edge Index
 #[derive(Debug, PartialEq)]
 pub struct MatrixIndex {
-    pub ith: VertexIndex,
-    pub jth: VertexIndex,
+    pub ith: usize,
+    pub jth: usize,
 }
 
 impl MatrixIndex {
 
     pub fn edge<'a, 'b>(&'a self, graph: &'b Graph) -> &'b Edge {
-        let edge_index = graph.connection_matrix[(self.ith.0, self.jth.0)].unwrap();
-        &graph.edges[edge_index.0]
+        let edge_index = graph.connection_matrix[(self.ith, self.jth)].unwrap();
+        &graph.edges[edge_index]
     }
 
     pub fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> (&'b Vertex, &'b Vertex) {
-        let (index_1, index_2) = (self.ith.0, self.jth.0);
+        let (index_1, index_2) = (self.ith, self.jth);
 
         (&graph.vertices[index_1], &graph.vertices[index_2])
     }
@@ -198,7 +192,7 @@ pub trait Vertices {
 pub struct Graph {
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
-    pub connection_matrix: DMatrix<Option<EdgeIndex>> // D stands for dynamic
+    pub connection_matrix: DMatrix<Option<usize>> // usize is indicies to the edges
 }
 
 impl Vertices for &Graph {
@@ -242,18 +236,20 @@ pub(self) fn connect_vertices_with_edges(
                 end_vertex_index = Some(vertex_index);
             }
         }
-
-        let (start_vertex_index, end_vertex_index) = match (start_vertex_index, end_vertex_index) {
-            // If both start and end vertex go assigned, life is good.
-            (Some(start_vertex_index), Some(end_vertex_index)) => 
-                (start_vertex_index, end_vertex_index),
+        
+        match (start_vertex_index, end_vertex_index) {
+            // If the start and end vertices have been assigned then we know the edge that connects those two vertices.
+            // The connection matrix should be updated to reflex that we know the edge and is associated vertices.
+            (Some(start_vertex_index), Some(end_vertex_index)) => {
+                connection_matrix[(start_vertex_index, end_vertex_index)] = Some(edge_index);
+                connection_matrix[(end_vertex_index, start_vertex_index)] = Some(edge_index);
+            },
             
-            // If either one of them didn't panic with some helpful information.
+            // If either one of them didn't get assigned, panic with some helpful information.
             _ => panic!("{} is dangling in the gpx file", edge.name)
         };
 
-        connection_matrix[(start_vertex_index, end_vertex_index)] = Some(EdgeIndex(edge_index));
-        connection_matrix[(end_vertex_index, start_vertex_index)] = Some(EdgeIndex(edge_index));
+        
     }
 
     Graph {
@@ -262,7 +258,6 @@ pub(self) fn connect_vertices_with_edges(
         connection_matrix
     }
 }
-
 
 pub fn initialize_from_gpx_file(name: &str) -> Graph {
     // Open file and read contents to memory

@@ -85,10 +85,7 @@ impl Graph {
     fn closest_edge_to(&self, robot_loc: &TangentialPoint) -> Result<MatrixIndex, Error> {
 
         let edges_and_indices = self.edges.iter()
-            .enumerate()
-            .map(|(index, edge)| 
-                (EdgeIndex(index), edge)
-            );
+            .enumerate();
         
         let mut closest_point = TangentialPoint::new(f64::MAX, f64::MAX, f64::MAX);
         let mut closest_edge_index = None;
@@ -137,14 +134,14 @@ impl Graph {
         }
     }
 
-    fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
+    fn connection_matrix_index_from(&self, edge_index: usize) -> Result<MatrixIndex, Error> {
 
         for row in 0..self.connection_matrix.nrows() {
             for col in 0..self.connection_matrix.ncols() {
                 if Some(edge_index) == self.connection_matrix[(row, col)] {
                     return Ok(MatrixIndex{ 
-                        ith: VertexIndex(row), 
-                        jth: VertexIndex(col),
+                        ith: row, 
+                        jth: col,
                     })
                 }
             }
@@ -153,25 +150,25 @@ impl Graph {
         Err(Error::PathPlanningEdgeIndexNotInConnectionMatrix)
     }
     
-    fn shortest_path(&mut self, start: VertexIndex, end: VertexIndex) -> Result<Path, Error> {
+    fn shortest_path(&mut self, start_vertex_index: usize, end_vertex_index: usize) -> Result<Path, Error> {
 
         // Initializing the the graph so all tentative distances are 0
         // and not parent vertices are set.
         for vertex in self.vertices.iter_mut() {
             vertex.tentative_distance = f64::MAX;
             vertex.visited = false;
-            vertex.parent = None;
+            vertex.parent_vertex_index = None;
         }
 
         // Setting the tentative distance of the start vertex to 0
-        self.vertices[start.0].tentative_distance = 0.0;
+        self.vertices[start_vertex_index].tentative_distance = 0.0;
 
-        let mut vertex_index = start; // Keeps track of currently visiting vertex
+        let mut vertex_index = start_vertex_index; // Keeps track of currently visiting vertex
         let mut nodes_not_visited = self.vertices.len();
 
-        while nodes_not_visited != 0 && vertex_index != end {
-            let mut vertex = &mut self.vertices[vertex_index.0] as *mut Vertex;
-            let connecting_edges = self.connection_matrix.row(vertex_index.0);
+        while nodes_not_visited != 0 && vertex_index != end_vertex_index {
+            let mut vertex = &mut self.vertices[vertex_index] as *mut Vertex;
+            let connecting_edges = self.connection_matrix.row(vertex_index);
             let adj_vertices = connecting_edges.iter()
                 .enumerate()
                 .filter(|(_, edge_index)| edge_index.is_some())
@@ -179,7 +176,7 @@ impl Graph {
 
             for (adj_vertex_index, edge_index) in adj_vertices {
                 let adj_vertex = &mut self.vertices[adj_vertex_index] as *mut Vertex;
-                let connecting_edge = &self.edges[edge_index.0];
+                let connecting_edge = &self.edges[edge_index];
 
                 // Using the unsafe keywords since more than one mutable reference is needed.
                 // One to the currently visiting vertex and the other to the adjacent vertex.
@@ -190,7 +187,7 @@ impl Graph {
 
                         if temp_distance < (*adj_vertex).tentative_distance {
                             (*adj_vertex).tentative_distance = temp_distance;
-                            (*adj_vertex).parent = Some(vertex_index);
+                            (*adj_vertex).parent_vertex_index = Some(vertex_index);
                         }
                     }
                 }
@@ -203,7 +200,7 @@ impl Graph {
             for (index, vertex) in self.vertices.iter().enumerate() {
                 if vertex.tentative_distance < min_dist && !vertex.visited {
                     min_dist = vertex.tentative_distance;
-                    vertex_index = VertexIndex(index);
+                    vertex_index = index;
                 }
             }
         }
@@ -211,7 +208,7 @@ impl Graph {
         // After completing the while loop, we have either found the shortest path,
         // or one does not exist. If one exists, then a stack of matrix indices will be outputted
         // otherwise, an error message will be returned, indicating the path does not exist.
-        let dest_vertex = &self.vertices[end.0];
+        let dest_vertex = &self.vertices[end_vertex_index];
         if dest_vertex.tentative_distance == f64::MAX {
             return Err(Error::PathPlanningPathDoesNotExist);
         }
@@ -219,10 +216,10 @@ impl Graph {
         // Pre allocating memory. Chosen path will never exceed the number of edges in the graph.
         let mut connection_matrix_indices = Vec::with_capacity(self.edges.len());
 
-        let mut path_vertex_index = end;
-        while path_vertex_index != start {
+        let mut path_vertex_index = end_vertex_index;
+        while path_vertex_index != start_vertex_index {
 
-            let parent_vertex_index = self.vertices[path_vertex_index.0].parent.unwrap();
+            let parent_vertex_index = self.vertices[path_vertex_index].parent_vertex_index.unwrap();
             let matrix_index = MatrixIndex {
                 ith: parent_vertex_index,
                 jth: path_vertex_index
