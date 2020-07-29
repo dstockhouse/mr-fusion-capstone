@@ -3,11 +3,14 @@ use std::io::BufReader;
 use std::f64;
 use std::ops::{Sub, Mul};
 
-pub mod conversions;
-
 use conversions::{IntoTangential};
 use gpx;
 use nalgebra::{DMatrix, Vector3};
+
+pub mod conversions;
+
+pub type EdgeIndex = usize;
+pub type VertexIndex = usize;
 
 // Clone trait only for unit testing
 #[derive(Debug, Clone, PartialEq)]
@@ -125,7 +128,7 @@ impl Edge {
 }
 
 pub trait Edges {
-    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge>;
+    fn edges<'edge, 'graph>(&'edge self, graph: &'graph Graph) -> Vec<&'graph Edge>;
 }
 
 #[derive(Debug, PartialEq)]
@@ -139,7 +142,7 @@ pub struct Vertex {
     pub(self) point: Point,
 
     // Key data to determine the shortest path using Dijkstra's Algorithm
-    pub parent_vertex_index: Option<usize>,
+    pub parent_vertex_index: Option<VertexIndex>,
     pub tentative_distance: f64,
     pub visited: bool
 }
@@ -167,8 +170,8 @@ impl Vertex {
 // Element at a matrix_index[i][j] indicates an Edge Index
 #[derive(Debug, PartialEq)]
 pub struct MatrixIndex {
-    pub ith: usize,
-    pub jth: usize,
+    pub ith: VertexIndex,
+    pub jth: VertexIndex,
 }
 
 impl MatrixIndex {
@@ -192,17 +195,17 @@ pub trait Vertices {
 pub struct Graph {
     pub vertices: Vec<Vertex>,
     pub edges: Vec<Edge>,
-    pub connection_matrix: DMatrix<Option<usize>> // usize is indicies to the edges
+    pub connection_matrix: DMatrix<Option<EdgeIndex>>
 }
 
 impl Vertices for &Graph {
-    fn vertices<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Vertex> {
+    fn vertices<'vertex, 'graph>(&'vertex self, graph: &'graph Graph) -> Vec<&'graph Vertex> {
         graph.vertices.iter().collect()
     }
 }
 
 impl Edges for &Graph {
-    fn edges<'a, 'b>(&'a self, graph: &'b Graph) -> Vec<&'b Edge> {
+    fn edges<'edge, 'graph>(&'edge self, graph: &'graph Graph) -> Vec<&'graph Edge> {
         graph.edges.iter().collect()
     }
 }

@@ -1,6 +1,6 @@
 use crate::graph;
 use crate::Error;
-use crate::graph::{MatrixIndex, EdgeIndex, VertexIndex, Vertex, Vertices, Edges};
+use crate::graph::{MatrixIndex, Vertex, Vertices, Edges};
 use crate::graph::conversions::{IntoTangential};
 use crate::path_planning::*;
 
@@ -27,7 +27,7 @@ fn robot_on_graph_true_case() {
     let king_front_entrance_edge_index = graph.edges.iter()
         .enumerate()
         .filter(|(_, edge)| edge.name.contains("Line 26"))
-        .map(|(edge_index, _)| EdgeIndex(edge_index))
+        .map(|(edge_index, _)| edge_index)
         .next().unwrap();
     let expected_matrix_index = graph.connection_matrix_index_from(king_front_entrance_edge_index);
 
@@ -67,13 +67,15 @@ fn robot_not_on_graph_within_radius() {
 fn connection_matrix_index_from_edge_index_single_edge() {
     
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
-    let edge_index = EdgeIndex(0);
+    let edge_index = 0;
+    let vertex_index_0 = 0;
+    let vertex_index_1 = 1;
 
     let matrix_index = graph.connection_matrix_index_from(edge_index);
 
     assert_eq!(matrix_index, Ok(MatrixIndex {
-        ith: VertexIndex(0), 
-        jth: VertexIndex(1)
+        ith: vertex_index_0, 
+        jth: vertex_index_1
     }));
 }
 
@@ -81,7 +83,7 @@ fn connection_matrix_index_from_edge_index_single_edge() {
 fn connection_matrix_index_from_edge_not_in_connection_matrix() {
     
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
-    let faulty_edge_index = EdgeIndex(1);
+    let faulty_edge_index = 1;
 
     let matrix_index = graph.connection_matrix_index_from(faulty_edge_index);
 
@@ -103,8 +105,8 @@ fn shortest_path_triangle() {
         .unwrap();
 
     let shortest_path = graph.shortest_path(
-        VertexIndex(start), 
-        VertexIndex(end)
+        start, 
+        end
     ).unwrap();
 
     let edges_chosen = shortest_path.edges(&graph);
@@ -136,8 +138,8 @@ fn shortest_path_school_map() {
         .unwrap();
 
     let path = graph.shortest_path(
-        VertexIndex(king_front_entrance), 
-        VertexIndex(library)
+        king_front_entrance, 
+        library
     ).unwrap();
 
     let edges_chosen = path.edges(&graph);
@@ -185,16 +187,16 @@ fn shortest_path_no_path() {
 
     // Use map preview for visual verification of points chosen for test
     let mut graph = graph::initialize_from_gpx_file("src/graph/Test Dijkstra.gpx");
-    let start = graph.vertices.iter()
+    let start_vertex_index = graph.vertices.iter()
         .position(|vertex| vertex.name.contains("Point 12"))
         .unwrap();
-    let end = graph.vertices.iter()
+    let end_vertex_index = graph.vertices.iter()
         .position(|vertex| vertex.name.contains("Point 16"))
         .unwrap();
 
     let shortest_path = graph.shortest_path(
-        VertexIndex(start),
-        VertexIndex(end)
+        start_vertex_index,
+        end_vertex_index
     );
 
     assert_eq!(shortest_path, Err(Error::PathPlanningPathDoesNotExist));
@@ -204,16 +206,16 @@ fn shortest_path_no_path() {
 fn shortest_path_dijkstra_graph() {
     // Use map preview for visual verification of points chosen for test
     let mut graph = graph::initialize_from_gpx_file("src/graph/Test Dijkstra.gpx");
-    let start = graph.vertices.iter()
+    let start_vertex_index = graph.vertices.iter()
         .position(|vertex| vertex.name.contains("Point 12"))
         .unwrap();
-    let end = graph.vertices.iter()
+    let end_vertex_index = graph.vertices.iter()
         .position(|vertex| vertex.name.contains("Point 5"))
         .unwrap();
 
     let shortest_path = graph.shortest_path(
-        VertexIndex(start),
-        VertexIndex(end)
+        start_vertex_index,
+        end_vertex_index
     ).unwrap();
 
     let vertices_chosen = shortest_path.vertices(&graph);
@@ -241,12 +243,14 @@ fn shortest_path_dijkstra_graph() {
 #[test]
 fn vertices_for_path_single_edge() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+    let vertex_index_0 = 0;
+    let vertex_index_1 = 1;
 
     let path = Path {
         indices: vec![
             MatrixIndex {
-                ith: VertexIndex(0),
-                jth: VertexIndex(1),
+                ith: vertex_index_0,
+                jth: vertex_index_1,
             }
         ]
     };
@@ -261,16 +265,19 @@ fn vertices_for_path_single_edge() {
 fn vertices_for_path_triangle() {
 
     let graph = graph::initialize_from_gpx_file("src/graph/Test Triangle.gpx");
+    let vertex_index_0 = 0;
+    let vertex_index_1 = 1;
+    let vertex_index_2 = 2;
 
     let path = Path {
         indices: vec![
             MatrixIndex {
-                ith: VertexIndex(0),
-                jth: VertexIndex(1),
+                ith: vertex_index_0,
+                jth: vertex_index_1,
             },
             MatrixIndex {
-                ith: VertexIndex(1),
-                jth: VertexIndex(2),
+                ith: vertex_index_1,
+                jth: vertex_index_2,
             }
         ]
     };

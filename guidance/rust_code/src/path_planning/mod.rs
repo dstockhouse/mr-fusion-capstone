@@ -134,7 +134,7 @@ impl Graph {
         }
     }
 
-    fn connection_matrix_index_from(&self, edge_index: usize) -> Result<MatrixIndex, Error> {
+    fn connection_matrix_index_from(&self, edge_index: EdgeIndex) -> Result<MatrixIndex, Error> {
 
         for row in 0..self.connection_matrix.nrows() {
             for col in 0..self.connection_matrix.ncols() {
@@ -150,7 +150,7 @@ impl Graph {
         Err(Error::PathPlanningEdgeIndexNotInConnectionMatrix)
     }
     
-    fn shortest_path(&mut self, start_vertex_index: usize, end_vertex_index: usize) -> Result<Path, Error> {
+    fn shortest_path(&mut self, start_vertex_index: VertexIndex, end_vertex_index: VertexIndex) -> Result<Path, Error> {
 
         // Initializing the the graph so all tentative distances are 0
         // and not parent vertices are set.

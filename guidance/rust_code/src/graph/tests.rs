@@ -36,7 +36,6 @@ fn full_graph_no_dangling_edge() {
             }
         }
     }
-    
 }
 
 #[test]
@@ -192,10 +191,12 @@ fn edge_initialization() {
 #[test]
 fn edge_from_connection_index() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+    let vertex_index_0 = 0;
+    let vertex_index_1 = 1;
 
     let matrix_index = MatrixIndex {
-        ith: VertexIndex(0),
-        jth: VertexIndex(1),
+        ith: vertex_index_0,
+        jth: vertex_index_1,
     };
 
     assert_eq!(&graph.edges[0], matrix_index.edge(&graph));
@@ -205,10 +206,12 @@ fn edge_from_connection_index() {
 #[test]
 fn vertices_from_connection_matrix() {
     let graph = graph::initialize_from_gpx_file("src/graph/Test Single Edge.gpx");
+    let vertex_index_0 = 0;
+    let vertex_index_1 = 1;
 
     let matrix_index = MatrixIndex {
-        ith: VertexIndex(0),
-        jth: VertexIndex(1),
+        ith: 0,
+        jth: 1,
     };
 
     assert_eq!(
