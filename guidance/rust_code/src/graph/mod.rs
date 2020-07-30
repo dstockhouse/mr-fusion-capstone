@@ -307,7 +307,5 @@ pub fn initialize_from_gpx_file(name: &str) -> Graph {
 
 }
 
-
-
 #[cfg(test)]
 mod tests;
