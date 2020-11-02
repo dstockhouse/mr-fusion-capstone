@@ -2,7 +2,6 @@
 //
 // https://www.geogebra.org/classic/jwwnnxy6
 
-
 use crate::graph::TangentialPoint;
 use cfg_if::cfg_if;
 
@@ -14,44 +13,39 @@ cfg_if! {
         const OFFSET_FACTOR: f64 = 0.09;
     }
     else { // Here we can tweek this factor when experimenting with the robot.
-        const OFFSET_FACTOR: f64 = 0.09; 
+        const OFFSET_FACTOR: f64 = 0.09;
     }
 }
 
 pub struct ProximityLine {
     m: f64,
-    b: f64
+    b: f64,
 }
 
 impl ProximityLine {
-    // Create the proximity line given the robot location and the next point we 
+    // Create the proximity line given the robot location and the next point we
     // wish to traverse to. Be sure to consult the proof of concept to get a
     // visual understanding for what this function is doing.
     //
     // https://www.geogebra.org/classic/jwwnnxy6
-    pub fn new (
-        robot_loc: &TangentialPoint, 
-        next_point: &TangentialPoint
-    ) -> Self {
+    pub fn new(robot_loc: &TangentialPoint, next_point: &TangentialPoint) -> Self {
         // The vector that goes from our robot to the next point to traverse.
         let ideal_traversal_v = next_point - robot_loc;
 
         // The amount we move back from next point to place our proximity line.
-        let proximity_offset = ideal_traversal_v * OFFSET_FACTOR; 
+        let proximity_offset = ideal_traversal_v * OFFSET_FACTOR;
 
         // A point that will lie on the proximity line
         let proximity_point = next_point - &proximity_offset;
 
-        // The slope of the proximity line. Garunteed to be perpendicular to the 
+        // The slope of the proximity line. Garunteed to be perpendicular to the
         // line that goes from our robot to the next desired point
-        let m = (-1.0)*ideal_traversal_v.x() / ideal_traversal_v.y();
-        
-        // The y intercept of our line
-        let b = proximity_point.y() - m*proximity_point.x();
+        let m = (-1.0) * ideal_traversal_v.x() / ideal_traversal_v.y();
 
-        ProximityLine{m, b}
-            
-        
+        // The y intercept of our line
+        let b = proximity_point.y() - m * proximity_point.x();
+
+        ProximityLine { m, b }
     }
 }
 

@@ -1,13 +1,13 @@
-use std::net::{Ipv4Addr, SocketAddrV4};
 use std::io::Write;
+use std::net::{Ipv4Addr, SocketAddrV4};
 
-use cfg_if::cfg_if;
 use crate::ui::TO_UI;
+use cfg_if::cfg_if;
 
 cfg_if! {
 
-    // This can be thought of as a #ifdef in c. In this case, if cargo test is run, then compile the 
-    // following code contained within the if statement. This mocks networking code reliant on 
+    // This can be thought of as a #ifdef in c. In this case, if cargo test is run, then compile the
+    // following code contained within the if statement. This mocks networking code reliant on
     // hardware.
     if #[cfg(test)] {
 
@@ -46,7 +46,7 @@ const IMAG_PROC_PORT: u16 = 31403;
 pub struct TcpStreams {
     nav: TcpStream,
     control: TcpStream,
-    imag_proc: TcpStream
+    imag_proc: TcpStream,
 }
 
 impl TcpStreams {
@@ -54,17 +54,15 @@ impl TcpStreams {
         TcpStreams {
             nav: establish_connection(SocketAddrV4::new(GUIDANCE_IP, NAV_PORT)),
             control: establish_connection(SocketAddrV4::new(GUIDANCE_IP, CONTROL_PORT)),
-            imag_proc: establish_connection(SocketAddrV4::new(GUIDANCE_IP, IMAG_PROC_PORT))
+            imag_proc: establish_connection(SocketAddrV4::new(GUIDANCE_IP, IMAG_PROC_PORT)),
         }
     }
 }
 
 pub(self) fn establish_connection(socket: SocketAddrV4) -> TcpStream {
-    
     let tcp_listener = match TcpListener::bind(socket) {
         Ok(tcp_listener) => tcp_listener,
         Err(error) => {
-
             let message = format!("Unable to bind to socket: {}", error);
 
             // Using unwrap since we are guaranteed to get the mutex. Since we only have one thread.
@@ -83,12 +81,11 @@ pub(self) fn establish_connection(socket: SocketAddrV4) -> TcpStream {
     match tcp_listener.accept() {
         Ok((tcp_stream, _socket_addr)) => tcp_stream,
         Err(error) => {
-
             let message = format!("Guidance unable to accept: {}", error);
             let mut to_ui = TO_UI.lock().unwrap();
             to_ui // Acquired mutex
                 .write_all(message.as_bytes()) // Sending message to UI
-                .expect("Failed to send tcp accept error message to UI"); 
+                .expect("Failed to send tcp accept error message to UI");
 
             // Dropping the lock to the UI so other tests wont have poison errors
             drop(to_ui);

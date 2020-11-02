@@ -3,5 +3,5 @@ pub enum States {
     Wait,
     PlanPath,
     Traverse,
-    Shutdown
+    Shutdown,
 }

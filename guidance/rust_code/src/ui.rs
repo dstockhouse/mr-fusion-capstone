@@ -1,5 +1,5 @@
-use lazy_static::*;
 use cfg_if::cfg_if;
+use lazy_static::*;
 
 use std::sync::Mutex;
 
@@ -22,7 +22,7 @@ cfg_if! {
 
         lazy_static! {
             // Opening the pipe with write permissions will block until the reader opens the file as well.
-            pub static ref TO_UI: Mutex<MockFile> = Mutex::new(MockFile::new());   
+            pub static ref TO_UI: Mutex<MockFile> = Mutex::new(MockFile::new());
         }
 
         lazy_static! {
@@ -39,9 +39,9 @@ cfg_if! {
                 .create_new(false)
                 .open(PATH_TO_UI_PIPE)
                 .unwrap() // Not sure how we want to handle an error here.
-            );   
+            );
         }
-        
+
         lazy_static! {
             pub static ref FROM_UI: Mutex<File> = Mutex::new(OpenOptions::new()
                 .read(true)
@@ -51,10 +51,3 @@ cfg_if! {
         }
     }
 }
-
-
-
-
-
-
-

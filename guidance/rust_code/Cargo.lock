@@ -113,7 +113,7 @@ dependencies = [
 
 [[package]]
 name = "fragile"
-version = "0.3.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -199,21 +199,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "mockall"
-version = "0.6.0"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "downcast 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "fragile 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fragile 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mockall_derive 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mockall_derive 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "predicates 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "predicates-tree 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "mockall_derive"
-version = "0.6.0"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -406,7 +406,7 @@ dependencies = [
  "geojson 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gpx 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mockall 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mockall 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -523,7 +523,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum downcast 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4bb454f0228b18c7f4c3b0ebbee346ed9c52e7443b0999cd543ff3571205701d"
 "checksum error-chain 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 "checksum float-cmp 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "da62c4f1b81918835a8c6a484a397775fff5953fe83529afd51b05f5c6a6617d"
-"checksum fragile 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "05f8140122fa0d5dcb9fc8627cfce2b37cc1500f752636d46ea28bc26785c2f9"
+"checksum fragile 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "69a039c3498dc930fe810151a34ba0c1c70b02b8625035592e74432f678591f2"
 "checksum generic-array 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0ed1e761351b56f54eb9dcd0cfaca9fd0daecf93918e1cfc01c8a3d26ee7adcd"
 "checksum geo-types 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "866e8f6dbd2218b05ea8a25daa1bfac32b0515fe7e0a37cb6a7b9ed0ed82a07e"
 "checksum geojson 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e4ac03428b3276fc7f1756eba0c76c7c0c91ef77e1c43fbdd47a460238419cb9"
@@ -535,8 +535,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum libm 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "7fc7aa29613bd6a620df431842069224d8bc9011086b1db4c0e0cd47fa03ec9a"
 "checksum matrixmultiply 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "d4f7ec66360130972f34830bfad9ef05c6610a43938a467bcc9ab9369ab3478f"
 "checksum memchr 2.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "3728d817d99e5ac407411fa471ff9800a778d88a24685968b36824eaf4bee400"
-"checksum mockall 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b95a7e7cfbce0e99ebbf5356a085d3b5e320a7ef300f77cd50a7148aa362e7c2"
-"checksum mockall_derive 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d5a615a1ad92048ad5d9633251edb7492b8abc057d7a679a9898476aef173935"
+"checksum mockall 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "01458f8a19b10cb28195290942e3149161c75acf67ebc8fbf714ab67a2b943bc"
+"checksum mockall_derive 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a673cb441f78cd9af4f5919c28576a3cc325fb6b54e42f7047dacce3c718c17b"
 "checksum nalgebra 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0abb021006c01b126a936a8dd1351e0720d83995f4fc942d0d426c654f990745"
 "checksum normalize-line-endings 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be"
 "checksum num-complex 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "b6b19411a9719e753aff12e5187b74d60d3dc449ec3f4dc21e3989c3f554bc95"
